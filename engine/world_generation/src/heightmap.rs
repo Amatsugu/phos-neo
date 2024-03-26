@@ -1,12 +1,8 @@
-mod data;
-use data::*;
+use crate::prelude::*;
+use bevy::math::IVec2;
+use noise::{NoiseFn, SuperSimplex};
 
-pub fn generate_heightmap(
-	height: usize,
-	width: usize,
-	cfg: &GenerationConfig,
-	seed: u32,
-) -> Map {
+pub fn generate_heightmap(height: usize, width: usize, cfg: &GenerationConfig, seed: u32) -> Map {
 	let mut chunks: Vec<Chunk> = Vec::with_capacity(height * width);
 	for z in 0..height {
 		for x in 0..width {
@@ -42,6 +38,7 @@ pub fn generate_chunk(
 	return Chunk {
 		points: result,
 		size: size,
+		chunk_offset: IVec2::new(chunk_x as i32, chunk_z as i32),
 	};
 }
 

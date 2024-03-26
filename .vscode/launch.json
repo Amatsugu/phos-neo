@@ -13,7 +13,7 @@
 			"program": "${workspaceRoot}/target/debug/phos.exe",
 			"args": [],
 			"cwd": "${workspaceRoot}",
-			"preLaunchTask": "build",
+			"preLaunchTask": "Build",
 		}
 	]
 }
