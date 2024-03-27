@@ -3,7 +3,7 @@
 members = [ 
 	"game/main",
 	"engine/world_generation"
-]
+, "game/camera_system"]
 resolver = "2"
 
 # Enable a small amount of optimization in debug mode

@@ -1286,6 +1286,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "camera_system"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "cc"
 version = "1.0.90"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2901,6 +2908,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy-inspector-egui",
+ "camera_system",
  "iyes_perf_ui",
  "noise 0.8.2",
  "world_generation",

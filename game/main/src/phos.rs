@@ -1,4 +1,5 @@
 use bevy::{pbr::CascadeShadowConfig, prelude::*};
+use camera_system::PhosCameraPlugin;
 use iyes_perf_ui::prelude::*;
 use world_generation::{
 	heightmap::generate_heightmap, hex_utils::to_hex_pos, mesh_generator::generate_chunk_mesh,
@@ -8,6 +9,7 @@ pub struct PhosGamePlugin;
 
 impl Plugin for PhosGamePlugin {
 	fn build(&self, app: &mut App) {
+		app.add_plugins(PhosCameraPlugin);
 		app.add_systems(Startup, init_game)
 			.add_systems(Startup, create_map);
 		app.add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
@@ -18,12 +20,6 @@ impl Plugin for PhosGamePlugin {
 }
 
 fn init_game(mut commands: Commands) {
-	commands.spawn((Camera3dBundle {
-		transform: Transform::from_xyz(-200., 300., -200.)
-			.looking_at(Vec3::new(1000., 0., 1000.), Vec3::Y),
-		..default()
-	},));
-
 	commands.spawn((
 		PerfUiRoot::default(),
 		PerfUiEntryFPS::default(),
