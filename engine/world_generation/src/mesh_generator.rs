@@ -1,5 +1,5 @@
 use crate::{
-	hex_utils::{to_hex_pos, INNER_RADIUS, OUTER_RADIUS},
+	hex_utils::{offset3d_to_world, INNER_RADIUS, OUTER_RADIUS},
 	prelude::*,
 };
 use bevy::{
@@ -20,17 +20,17 @@ const HEX_CORNERS: [Vec3; 6] = [
 ];
 
 pub fn generate_chunk_mesh(chunk: &Chunk) -> Mesh {
-	let vertex_count: usize = chunk.size * chunk.size;
+	let vertex_count: usize = Chunk::SIZE * Chunk::SIZE;
 	let mut verts = Vec::with_capacity(vertex_count);
 	let mut uvs = Vec::with_capacity(vertex_count);
 	let mut normals = Vec::with_capacity(vertex_count);
 	let mut indices = Vec::with_capacity(vertex_count);
 
-	for z in 0..chunk.size {
-		for x in 0..chunk.size {
-			let height = chunk.points[x + z * chunk.size];
+	for z in 0..Chunk::SIZE {
+		for x in 0..Chunk::SIZE {
+			let height = chunk.points[x + z * Chunk::SIZE];
 			let off_pos = Vec3::new(x as f32, height, z as f32);
-			let grid_pos = to_hex_pos(off_pos);
+			let grid_pos = offset3d_to_world(off_pos);
 			create_tile(grid_pos, &mut verts, &mut uvs, &mut normals, &mut indices);
 		}
 	}

@@ -19,7 +19,7 @@ pub struct PhosCameraPlugin;
 impl Plugin for PhosCameraPlugin {
 	fn build(&self, app: &mut App) {
 		app.add_systems(Startup, setup)
-			.add_systems(Update, (update_camera, grab_mouse));
+			.add_systems(Update, (update_camera, grab_mouse, update_camera_mouse));
 	}
 }
 
@@ -84,14 +84,15 @@ fn update_camera_mouse(
 
 	let (mut pitch, mut yaw, _) = transform.rotation.to_euler(EulerRot::XYZ);
 
-	pitch -= cam_rot.y.to_radians() ;
-	yaw -= cam_rot.x.to_radians() ;
+	pitch -= cam_rot.y.to_radians();
+	yaw -= cam_rot.x.to_radians();
 	pitch = pitch.clamp(-1.54, 1.54);
 	// if rot_x > PI && cam_rot.x < 2. * PI {
 	// 	rot_x = PI;
 	// }
 
-	transform.rotation = Quat::from_axis_angle(Vec3::Y, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
+	transform.rotation =
+		Quat::from_axis_angle(Vec3::Y, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
 }
 
 fn grab_mouse(

@@ -20,8 +20,11 @@ pub mod prelude {
 	}
 	pub struct Chunk {
 		pub points: Vec<f32>,
-		pub size: usize,
 		pub chunk_offset: IVec2,
+	}
+
+	impl Chunk {
+		pub const SIZE: usize = 32;
 	}
 	pub struct Map {
 		pub chunks: Vec<Chunk>,

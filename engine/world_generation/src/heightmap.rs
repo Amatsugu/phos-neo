@@ -6,30 +6,24 @@ pub fn generate_heightmap(height: usize, width: usize, cfg: &GenerationConfig, s
 	let mut chunks: Vec<Chunk> = Vec::with_capacity(height * width);
 	for z in 0..height {
 		for x in 0..width {
-			chunks.push(generate_chunk(x as f64, z as f64, 32, cfg, seed));
+			chunks.push(generate_chunk(x as f64, z as f64, cfg, seed));
 		}
 	}
 	return Map {
-		chunks: chunks,
-		height: height,
-		width: width,
+		chunks,
+		height,
+		width,
 	};
 }
 
-pub fn generate_chunk(
-	chunk_x: f64,
-	chunk_z: f64,
-	size: usize,
-	cfg: &GenerationConfig,
-	seed: u32,
-) -> Chunk {
-	let mut result: Vec<f32> = Vec::with_capacity(size * size);
+pub fn generate_chunk(chunk_x: f64, chunk_z: f64, cfg: &GenerationConfig, seed: u32) -> Chunk {
+	let mut result: Vec<f32> = Vec::with_capacity(Chunk::SIZE * Chunk::SIZE);
 	let noise = SuperSimplex::new(seed);
-	for z in 0..size {
-		for x in 0..size {
+	for z in 0..Chunk::SIZE {
+		for x in 0..Chunk::SIZE {
 			result.push(sample_point(
-				x as f64 + chunk_x * size as f64,
-				z as f64 + chunk_z * size as f64,
+				x as f64 + chunk_x * Chunk::SIZE as f64,
+				z as f64 + chunk_z * Chunk::SIZE as f64,
 				&cfg,
 				&noise,
 			));
@@ -37,7 +31,6 @@ pub fn generate_chunk(
 	}
 	return Chunk {
 		points: result,
-		size: size,
 		chunk_offset: IVec2::new(chunk_x as i32, chunk_z as i32),
 	};
 }

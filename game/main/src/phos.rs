@@ -1,10 +1,12 @@
 use bevy::{pbr::CascadeShadowConfig, prelude::*};
 use camera_system::PhosCameraPlugin;
 use iyes_perf_ui::prelude::*;
+use world_generation::hex_utils::offset_to_world;
 use world_generation::{
-	heightmap::generate_heightmap, hex_utils::to_hex_pos, mesh_generator::generate_chunk_mesh,
-	prelude::*,
+	heightmap::generate_heightmap, hex_utils::offset3d_to_world,
+	mesh_generator::generate_chunk_mesh, prelude::*,
 };
+
 pub struct PhosGamePlugin;
 
 impl Plugin for PhosGamePlugin {
@@ -74,10 +76,7 @@ fn create_map(
 
 	for chunk in heightmap.chunks {
 		let mesh = generate_chunk_mesh(&chunk);
-		let pos = to_hex_pos(
-			Vec3::new(chunk.chunk_offset.x as f32, 0., chunk.chunk_offset.y as f32)
-				* chunk.size as f32,
-		);
+		let pos = offset_to_world(chunk.chunk_offset * Chunk::SIZE as i32);
 		commands.spawn(PbrBundle {
 			mesh: meshes.add(mesh),
 			material: debug_material.clone(),
