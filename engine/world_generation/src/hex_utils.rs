@@ -139,12 +139,12 @@ impl HexCoord {
         return (hex * -1).zxy();
     }
 
-	pub fn scale(&self, dir: i32, radius: i32)-> HexCoord{
-		let s = Self::DIRECTIONS[dir % 6] * radius;
+	pub fn scale(&self, dir: i32, radius: usize)-> HexCoord{
+		let s = Self::DIRECTIONS[(dir % 6) as usize] * radius as i32;
 		return Self::from_offset(self.hex.xy() + s.xy());
 	}
 
-	pub fn get_neighbor(&self, dir: i32)-> HexCoord{
+	pub fn get_neighbor(&self, dir: usize)-> HexCoord{
 		let d = Self::DIRECTIONS[dir % 6];
 		return Self::from_offset(self.hex.xy() + d.xy());
 	}
