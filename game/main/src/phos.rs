@@ -79,8 +79,6 @@ fn create_map(
 	mut meshes: ResMut<Assets<Mesh>>,
 ) {
 	let heightmap = generate_heightmap(
-		32,
-		32,
 		&GenerationConfig {
 			layers: vec![
 				GeneratorLayer {
@@ -134,6 +132,8 @@ fn create_map(
 			],
 			noise_scale: 350.,
 			sea_level: 4.,
+			border_size: 16.,
+			size: (32, 32).into(),
 		},
 		2,
 	);

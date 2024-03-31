@@ -1,18 +1,20 @@
-use crate::prelude::*;
 use bevy::math::IVec2;
+use bevy::prelude::{FloatExt, Vec2};
 use noise::{NoiseFn, SuperSimplex};
 
-pub fn generate_heightmap(height: usize, width: usize, cfg: &GenerationConfig, seed: u32) -> Map {
-	let mut chunks: Vec<Chunk> = Vec::with_capacity(height * width);
-	for z in 0..height {
-		for x in 0..width {
+use crate::prelude::*;
+
+pub fn generate_heightmap(cfg: &GenerationConfig, seed: u32) -> Map {
+	let mut chunks: Vec<Chunk> = Vec::with_capacity(cfg.size.length_squared() as usize);
+	for z in 0..cfg.size.y {
+		for x in 0..cfg.size.x {
 			chunks.push(generate_chunk(x as f64, z as f64, cfg, seed));
 		}
 	}
 	return Map {
 		chunks,
-		height,
-		width,
+		height: cfg.size.y as usize,
+		width: cfg.size.x as usize,
 	};
 }
 
@@ -60,7 +62,7 @@ fn sample_point(x: f64, z: f64, cfg: &GenerationConfig, noise: &SuperSimplex) ->
 		}
 	}
 
-	return elevation as f32;
+	return (elevation as f32);
 }
 
 fn mask(mask: f64, value: f64, sea_level: f64) -> f64 {

@@ -1,11 +1,13 @@
 pub mod prelude {
 	use crate::hex_utils::HexCoord;
-	use bevy::math::IVec2;
+	use bevy::math::{IVec2, UVec2};
 	use bevy::prelude::Resource;
 
 	pub struct GenerationConfig {
 		pub noise_scale: f64,
 		pub sea_level: f64,
+		pub border_size: f32,
+		pub size: UVec2,
 		pub layers: Vec<GeneratorLayer>,
 	}
 	pub struct GeneratorLayer {
