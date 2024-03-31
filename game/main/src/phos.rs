@@ -132,7 +132,7 @@ fn create_map(
 			],
 			noise_scale: 350.,
 			sea_level: 4.,
-			border_size: 16.,
+			border_size: 64.,
 			size: (32, 32).into(),
 		},
 		2,

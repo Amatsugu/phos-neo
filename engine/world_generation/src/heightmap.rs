@@ -62,7 +62,18 @@ fn sample_point(x: f64, z: f64, cfg: &GenerationConfig, noise: &SuperSimplex) ->
 		}
 	}
 
-	return (elevation as f32);
+	let outer = cfg.size.as_vec2() * Chunk::SIZE as f32;
+
+	let p = Vec2::new(x as f32, z as f32);
+	let d1 = p.x.min(p.y);
+	let od = outer - p;
+	let d2 = od.x.min(od.y);
+	let d = d1
+		.min(d2)
+		.min(cfg.border_size)
+		.remap(0., cfg.border_size, 0., 1.);
+
+	return (elevation as f32) * d;
 }
 
 fn mask(mask: f64, value: f64, sea_level: f64) -> f64 {
