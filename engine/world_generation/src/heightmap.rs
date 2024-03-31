@@ -17,16 +17,17 @@ pub fn generate_heightmap(height: usize, width: usize, cfg: &GenerationConfig, s
 }
 
 pub fn generate_chunk(chunk_x: f64, chunk_z: f64, cfg: &GenerationConfig, seed: u32) -> Chunk {
-	let mut result: Vec<f32> = Vec::with_capacity(Chunk::SIZE * Chunk::SIZE);
+	let mut result: [f32; Chunk::SIZE * Chunk::SIZE] = [0.; Chunk::SIZE * Chunk::SIZE];
 	let noise = SuperSimplex::new(seed);
 	for z in 0..Chunk::SIZE {
 		for x in 0..Chunk::SIZE {
-			result.push(sample_point(
+			let sample = sample_point(
 				x as f64 + chunk_x * Chunk::SIZE as f64,
 				z as f64 + chunk_z * Chunk::SIZE as f64,
 				&cfg,
 				&noise,
-			));
+			);
+			result[x + z * Chunk::SIZE] = sample;
 		}
 	}
 	return Chunk {

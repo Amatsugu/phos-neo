@@ -83,7 +83,6 @@ fn update_camera_mouse(
 		return;
 	}
 	let mut transform = cam_query.single_mut();
-	let window_scale = window.height().min(window.width());
 
 	for ev in mouse_move.read() {
 		let (mut yaw, mut pitch, _) = transform.rotation.to_euler(EulerRot::YXZ);

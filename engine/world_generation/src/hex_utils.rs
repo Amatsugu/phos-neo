@@ -16,11 +16,13 @@ pub fn offset_to_world(offset: IVec2, height: f32) -> Vec3 {
 }
 
 pub fn offset_to_hex(offset: IVec2) -> IVec3 {
-	return IVec3 {
-		x: offset.x,
+	let mut v = IVec3 {
+		x: offset.x - (offset.y / 2),
 		y: offset.y,
-		z: -offset.x - offset.y,
+		z: 0,
 	};
+	v.z = -v.x - v.y;
+	return v;
 }
 
 pub fn snap_to_hex_grid(world_pos: Vec3) -> Vec3 {
@@ -54,21 +56,29 @@ pub struct HexCoord {
 
 impl HexCoord {
 	pub const DIRECTIONS: [IVec3; 6] = [
-		IVec3::new(1, 1, 0),
+		IVec3::new(0, 1, -1),
 		IVec3::new(1, 0, -1),
 		IVec3::new(1, -1, 0),
 		IVec3::new(0, -1, 1),
 		IVec3::new(-1, 0, 1),
-		IVec3::new(0, 1, -1),
+		IVec3::new(-1, 1, 0),
 	];
 
 	pub const ZERO: HexCoord = HexCoord { hex: IVec3::ZERO };
 
 	pub fn new(x: i32, z: i32) -> Self {
-		return Self::from_offset(IVec2::new(x, z));
+		return HexCoord {
+			hex: IVec3::new(x, z, -x - z),
+		};
+	}
+
+	pub fn from_hex(hex: IVec2) -> Self {
+		return HexCoord {
+			hex: IVec3::new(hex.x, hex.y, -hex.x - hex.y),
+		};
 	}
 	pub fn from_grid_pos(x: usize, z: usize) -> Self {
-		return HexCoord::new(x as i32, z as i32);
+		return HexCoord::new(x as i32 - (z as i32 / 2), z as i32);
 	}
 	pub fn from_offset(offset_pos: IVec2) -> Self {
 		return HexCoord {
@@ -77,11 +87,12 @@ impl HexCoord {
 	}
 
 	pub fn is_in_bounds(&self, map_height: usize, map_width: usize) -> bool {
-		if self.hex.x < 0 || self.hex.y < 0 {
+		let off = self.to_offset();
+		if off.x < 0 || off.y < 0 {
 			return false;
 		}
 
-		if self.hex.x >= map_width as i32 || self.hex.y >= map_height as i32 {
+		if off.x >= map_width as i32 || off.y >= map_height as i32 {
 			return false;
 		}
 
@@ -89,33 +100,36 @@ impl HexCoord {
 	}
 
 	pub fn to_chunk_pos(&self) -> IVec2 {
+		let off = self.to_offset();
+
 		return IVec2 {
-			x: (self.hex.x as f32 / Chunk::SIZE as f32).floor() as i32,
-			y: (self.hex.y as f32 / Chunk::SIZE as f32).floor() as i32,
+			x: (off.x as f32 / Chunk::SIZE as f32).floor() as i32,
+			y: (off.y as f32 / Chunk::SIZE as f32).floor() as i32,
 		};
 	}
 
 	pub fn to_chunk(&self) -> HexCoord {
 		let c_pos = self.to_chunk_pos();
+		let off = self.to_offset();
 		return HexCoord::from_offset(
 			(
-				self.hex.x - (c_pos.x * Chunk::SIZE as i32),
-				self.hex.y - (c_pos.y * Chunk::SIZE as i32),
+				off.x - (c_pos.x * Chunk::SIZE as i32),
+				off.y - (c_pos.y * Chunk::SIZE as i32),
 			)
 				.into(),
 		);
 	}
 
 	pub fn to_world(&self, height: f32) -> Vec3 {
-		return offset_to_world(self.hex.xy(), height);
+		return offset_to_world(self.to_offset(), height);
 	}
 
 	pub fn to_offset(&self) -> IVec2 {
-		return self.hex.xy();
+		return IVec2::new(self.hex.x + (self.hex.y / 2), self.hex.y);
 	}
 
 	pub fn to_index(&self, width: usize) -> i32 {
-		return self.hex.x + self.hex.y * width as i32 + self.hex.y / 2;
+		return (self.hex.x + self.hex.y * width as i32) + (self.hex.y / 2);
 	}
 	pub fn to_chunk_index(&self, width: usize) -> i32 {
 		let pos = self.to_chunk_pos();
@@ -150,7 +164,7 @@ impl HexCoord {
 				pc = Self::slide_left(pc);
 			}
 		}
-		return HexCoord::from_offset(pc.xy() + center.hex.xy());
+		return HexCoord::from_hex(pc.xy() + center.hex.xy());
 	}
 
 	fn slide_left(hex: IVec3) -> IVec3 {
@@ -163,12 +177,12 @@ impl HexCoord {
 
 	pub fn scale(&self, dir: i32, radius: usize) -> HexCoord {
 		let s = Self::DIRECTIONS[(dir % 6) as usize] * radius as i32;
-		return Self::from_offset(self.hex.xy() + s.xy());
+		return Self::from_hex(self.hex.xy() + s.xy());
 	}
 
 	pub fn get_neighbor(&self, dir: usize) -> HexCoord {
 		let d = Self::DIRECTIONS[dir % 6];
-		return Self::from_offset(self.hex.xy() + d.xy());
+		return Self::from_hex(self.hex.xy() + d.xy());
 	}
 
 	pub fn get_neighbors(&self) -> [HexCoord; 6] {

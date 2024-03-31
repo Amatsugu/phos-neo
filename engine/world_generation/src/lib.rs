@@ -21,7 +21,7 @@ pub mod prelude {
 		pub first_layer_mask: bool,
 	}
 	pub struct Chunk {
-		pub points: Vec<f32>,
+		pub points: [f32; Chunk::SIZE * Chunk::SIZE],
 		pub chunk_offset: IVec2,
 	}
 
@@ -39,16 +39,18 @@ pub mod prelude {
 	impl Map {
 		pub fn get_neighbors(&self, pos: &HexCoord) -> [Option<f32>; 6] {
 			let mut results: [Option<f32>; 6] = [None; 6];
+			let w = self.width * Chunk::SIZE;
+			let h = self.height * Chunk::SIZE;
 			let n_tiles = pos.get_neighbors();
 			for i in 0..6 {
 				let n_tile = n_tiles[i];
-				if !n_tile.is_in_bounds(self.height, self.width) {
+				if !n_tile.is_in_bounds(h, w) {
 					continue;
 				}
 				let c_idx = n_tile.to_chunk_index(self.width);
 				let chunk = &self.chunks[c_idx as usize];
 				let local = n_tile.to_chunk_local_index();
-				results[i] = (Some(chunk.points[local as usize]));
+				results[i] = Some(chunk.points[local as usize]);
 			}
 			return results;
 		}

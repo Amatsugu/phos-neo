@@ -1,12 +1,9 @@
-use bevy::asset::io::memory::Value::Vec;
-use bevy::pbr::wireframe::{WireframeConfig, WireframePlugin};
 use bevy::{pbr::CascadeShadowConfig, prelude::*};
 use camera_system::PhosCameraPlugin;
 use iyes_perf_ui::prelude::*;
 use world_generation::hex_utils::{offset_to_world, HexCoord};
 use world_generation::{
-	heightmap::generate_heightmap, hex_utils::offset3d_to_world,
-	mesh_generator::generate_chunk_mesh, prelude::*,
+	heightmap::generate_heightmap, mesh_generator::generate_chunk_mesh, prelude::*,
 };
 
 pub struct PhosGamePlugin;
@@ -15,17 +12,11 @@ impl Plugin for PhosGamePlugin {
 	fn build(&self, app: &mut App) {
 		app.add_plugins(PhosCameraPlugin);
 		app.add_systems(Startup, init_game)
-			.add_systems(Startup, create_map)
-			.add_systems(Update, draw_gizmos);
+			.add_systems(Startup, create_map);
 		app.add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
 			.add_plugins(bevy::diagnostic::EntityCountDiagnosticsPlugin)
 			.add_plugins(bevy::diagnostic::SystemInformationDiagnosticsPlugin)
 			.add_plugins(PerfUiPlugin);
-		app.add_plugins(WireframePlugin);
-		// app.insert_resource(WireframeConfig {
-		// 	global: true,
-		// 	default_color: Color::CYAN,
-		// });
 	}
 }
 
@@ -33,7 +24,9 @@ fn init_game(mut commands: Commands) {
 	commands.spawn((
 		PerfUiRoot::default(),
 		PerfUiEntryFPS::default(),
-		PerfUiEntryClock::default(),
+		PerfUiEntryFPSWorst::default(),
+		PerfUiEntryFrameTime::default(),
+		PerfUiEntryFrameTimeWorst::default(),
 	));
 
 	commands.spawn(DirectionalLightBundle {
@@ -42,7 +35,7 @@ fn init_game(mut commands: Commands) {
 			..default()
 		},
 		cascade_shadow_config: CascadeShadowConfig {
-			bounds: vec![500., 1000., 5000., 10000.],
+			bounds: vec![500., 1000., 2000., 5000.],
 			..default()
 		},
 		transform: Transform::from_xyz(500., 160.0, 500.).looking_at(Vec3::ZERO, Vec3::Y),
@@ -55,8 +48,8 @@ fn draw_gizmos(mut gizmos: Gizmos, hm: Res<Map>) {
 	gizmos.arrow(Vec3::ZERO, Vec3::Z * 1.5, Color::BLUE);
 	gizmos.arrow(Vec3::ZERO, Vec3::X * 1.5, Color::RED);
 
-	let ch = &hm.chunks[0];
-	let coord = HexCoord::new(16, 16);
+	let coord = HexCoord::from_grid_pos(64, 14);
+	let ch = &hm.chunks[coord.to_chunk_index(hm.width) as usize];
 	let h = ch.points[coord.to_chunk_local_index() as usize];
 	gizmos.ray(coord.to_world(h), Vec3::Y, Color::RED);
 	gizmos.ray(coord.to_world(h), Vec3::Z * 1.5, Color::BLUE);
@@ -65,10 +58,18 @@ fn draw_gizmos(mut gizmos: Gizmos, hm: Res<Map>) {
 	// let h = ch.points[t.to_chunk_local_index() as usize];
 	// gizmos.ray(t.to_world(h), Vec3::Y * 1., Color::PINK);
 	let n = coord.get_neighbors();
+	let nh = hm.get_neighbors(&coord);
 	for i in 0..6 {
 		let t = n[i];
-		let h = ch.points[t.to_chunk_local_index() as usize];
-		gizmos.ray(t.to_world(h), Vec3::Y * (i + 1) as f32, Color::CYAN);
+		let h = nh[i];
+		if h.is_none() {
+			continue;
+		}
+		gizmos.ray(
+			t.to_world(h.unwrap()),
+			Vec3::Y * (i + 1) as f32,
+			Color::CYAN,
+		);
 	}
 }
 
@@ -78,8 +79,8 @@ fn create_map(
 	mut meshes: ResMut<Assets<Mesh>>,
 ) {
 	let heightmap = generate_heightmap(
-		1,
-		1,
+		32,
+		32,
 		&GenerationConfig {
 			layers: vec![
 				GeneratorLayer {
