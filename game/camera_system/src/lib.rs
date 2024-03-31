@@ -18,20 +18,22 @@ pub struct PhosCameraPlugin;
 
 impl Plugin for PhosCameraPlugin {
 	fn build(&self, app: &mut App) {
-		app.add_systems(Startup, setup)
-			.add_systems(Update, (update_camera, grab_mouse, update_camera_mouse));
+		app.add_systems(Startup, setup).add_systems(
+			Update,
+			(grab_mouse, (update_camera, update_camera_mouse).chain()),
+		);
 	}
 }
 
 fn setup(mut commands: Commands) {
 	commands.spawn((
 		Camera3dBundle {
-			transform: Transform::from_xyz(-200., 300., -200.)
+			transform: Transform::from_xyz(0., 30., 0.)
 				.looking_at(Vec3::new(1000., 0., 1000.), Vec3::Y),
 			..default()
 		},
 		PhosCamera {
-			speed: 100.,
+			speed: 50.,
 			..default()
 		},
 	));
@@ -56,17 +58,18 @@ fn update_camera(
 	if keyboard_input.pressed(KeyCode::KeyS) {
 		move_vec += Vec3::Z;
 	}
+
+	let rot = transform.rotation;
+	move_vec = (rot * move_vec.normalize_or_zero()) * cam.speed * time.delta_seconds();
+
 	if keyboard_input.pressed(KeyCode::ShiftLeft) {
-		move_vec += Vec3::NEG_Y;
+		move_vec += Vec3::from(transform.down());
 	}
 	if keyboard_input.pressed(KeyCode::Space) {
-		move_vec += Vec3::Y;
+		move_vec += Vec3::from(transform.up());
 	}
-	if move_vec.length_squared() == 0. {
-		return;
-	}
-	let rot = transform.rotation;
-	transform.translation += (rot * move_vec.normalize()) * cam.speed * time.delta_seconds();
+
+	transform.translation += move_vec.normalize_or_zero() * cam.speed * time.delta_seconds();
 }
 
 fn update_camera_mouse(
@@ -80,19 +83,25 @@ fn update_camera_mouse(
 		return;
 	}
 	let mut transform = cam_query.single_mut();
-	let cam_rot = mouse_move.read().map(|event| event.delta).sum::<Vec2>() * time.delta_seconds();
+	let window_scale = window.height().min(window.width());
 
-	let (mut pitch, mut yaw, _) = transform.rotation.to_euler(EulerRot::XYZ);
+	for ev in mouse_move.read() {
+		let (mut yaw, mut pitch, _) = transform.rotation.to_euler(EulerRot::YXZ);
+		match window.cursor.grab_mode {
+			CursorGrabMode::None => (),
+			_ => {
+				// Using smallest of height or width ensures equal vertical and horizontal sensitivity
+				pitch -= (ev.delta.y * time.delta_seconds() * 5.).to_radians();
+				yaw -= (ev.delta.x * time.delta_seconds() * 5.).to_radians();
+			}
+		}
 
-	pitch -= cam_rot.y.to_radians();
-	yaw -= cam_rot.x.to_radians();
-	pitch = pitch.clamp(-1.54, 1.54);
-	// if rot_x > PI && cam_rot.x < 2. * PI {
-	// 	rot_x = PI;
-	// }
+		pitch = pitch.clamp(-1.54, 1.54);
 
-	transform.rotation =
-		Quat::from_axis_angle(Vec3::Y, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
+		// Order is important to prevent unintended roll
+		transform.rotation =
+			Quat::from_axis_angle(Vec3::Y, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
+	}
 }
 
 fn grab_mouse(

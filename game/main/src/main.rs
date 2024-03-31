@@ -20,7 +20,6 @@ fn main() {
 				}),
 				..default()
 			}),
-			WireframePlugin,
 			WorldInspectorPlugin::new(),
 			PhosGamePlugin,
 		))
