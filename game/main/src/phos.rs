@@ -6,13 +6,15 @@ use world_generation::{
 	heightmap::generate_heightmap, mesh_generator::generate_chunk_mesh, prelude::*,
 };
 
+use crate::prelude::*;
+
 pub struct PhosGamePlugin;
 
 impl Plugin for PhosGamePlugin {
 	fn build(&self, app: &mut App) {
 		app.add_plugins(PhosCameraPlugin);
 		app.add_systems(Startup, init_game)
-			.add_systems(Startup, create_map);
+			.add_systems(Startup, (load_textures, create_map).chain());
 		app.add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
 			.add_plugins(bevy::diagnostic::EntityCountDiagnosticsPlugin)
 			.add_plugins(bevy::diagnostic::SystemInformationDiagnosticsPlugin)
@@ -38,8 +40,15 @@ fn init_game(mut commands: Commands) {
 			bounds: vec![500., 1000., 2000., 5000.],
 			..default()
 		},
-		transform: Transform::from_xyz(500., 160.0, 500.).looking_at(Vec3::ZERO, Vec3::Y),
+		transform: Transform::from_xyz(500., 260.0, 500.).looking_at(Vec3::ZERO, Vec3::Y),
 		..default()
+	});
+}
+
+fn load_textures(mut commands: Commands, asset_server: Res<AssetServer>) {
+	let main_tex = asset_server.load("textures/world/test2.png");
+	commands.insert_resource(ChunkAtlas {
+		handle: main_tex.clone(),
 	});
 }
 
@@ -77,6 +86,7 @@ fn create_map(
 	mut commands: Commands,
 	mut materials: ResMut<Assets<StandardMaterial>>,
 	mut meshes: ResMut<Assets<Mesh>>,
+	atlas: Res<ChunkAtlas>,
 ) {
 	let heightmap = generate_heightmap(
 		&GenerationConfig {
@@ -133,13 +143,13 @@ fn create_map(
 			noise_scale: 350.,
 			sea_level: 4.,
 			border_size: 64.,
-			size: (32, 32).into(),
+			size: UVec2::splat(1024 / Chunk::SIZE as u32),
 		},
 		2,
 	);
 
-	let debug_material = materials.add(StandardMaterial {
-		// base_color_texture: Some(images.add(uv_debug_texture())),
+	let chunk_material = materials.add(StandardMaterial {
+		base_color_texture: Some(atlas.handle.clone()),
 		..default()
 	});
 
@@ -148,7 +158,7 @@ fn create_map(
 		let pos = offset_to_world(chunk.chunk_offset * Chunk::SIZE as i32, 0.);
 		commands.spawn(PbrBundle {
 			mesh: meshes.add(mesh),
-			material: debug_material.clone(),
+			material: chunk_material.clone(),
 			transform: Transform::from_translation(pos),
 			..default()
 		});

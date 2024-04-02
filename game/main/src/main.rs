@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 mod phos;
+mod prelude;
+
 use phos::PhosGamePlugin;
 
 fn main() {

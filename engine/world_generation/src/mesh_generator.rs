@@ -10,6 +10,7 @@ use bevy::{
 		render_asset::RenderAssetUsages,
 	},
 };
+use std::vec::Vec;
 
 const HEX_CORNERS: [Vec3; 6] = [
 	Vec3::new(0., 0., OUTER_RADIUS),
@@ -35,7 +36,14 @@ pub fn generate_chunk_mesh(chunk: &Chunk, map: &Map) -> Mesh {
 				IVec2::new(x as i32, z as i32) + (chunk.chunk_offset * Chunk::SIZE as i32),
 			);
 			let n = map.get_neighbors(&coord);
-			create_tile(tile_pos, &n, &mut verts, &mut uvs, &mut indices, 0);
+			create_tile(
+				tile_pos,
+				&n,
+				&mut verts,
+				&mut uvs,
+				&mut indices,
+				((x + z * Chunk::SIZE) % 32) as u32,
+			);
 		}
 	}
 
@@ -60,13 +68,23 @@ fn create_tile(
 	indices: &mut Vec<u32>,
 	texture_index: u32,
 ) {
+	let tex_x = texture_index % 11;
+	let tex_y = texture_index / 11;
+	let x_min = tex_x as f32 / 11.;
+	let x_max = (tex_x + 1) as f32 / 11.;
+	let y_min = tex_y as f32 / 8.;
+	let tx_unit = x_max - x_min;
+
+	let uv_offset = Vec2::new(x_min + tx_unit / 2., y_min + tx_unit / 2.);
+
 	let idx = verts.len() as u32;
-	uvs.push(pos.xz());
+	uvs.push(uv_offset);
 	verts.push(pos);
 	for i in 0..6 {
 		let p = pos + HEX_CORNERS[i];
 		verts.push(p);
-		uvs.push(p.xz());
+		let uv = (HEX_CORNERS[i].xz() * tx_unit / 2.) + uv_offset;
+		uvs.push(uv);
 		indices.push(idx);
 		indices.push(idx + 1 + i as u32);
 		indices.push(idx + 1 + ((i as u32 + 1) % 6));
@@ -77,7 +95,16 @@ fn create_tile(
 		match cur_n {
 			Some(n_height) => {
 				if n_height < pos.y {
-					create_tile_wall(pos, i, n_height, verts, uvs, indices, texture_index);
+					create_tile_wall(
+						pos,
+						i,
+						n_height,
+						verts,
+						uvs,
+						indices,
+						Vec2::new(x_min, y_min),
+						Vec2::new(x_min + tx_unit, y_min + tx_unit),
+					);
 				}
 			}
 			_ => {}
@@ -92,7 +119,8 @@ fn create_tile_wall(
 	verts: &mut Vec<Vec3>,
 	uvs: &mut Vec<Vec2>,
 	indices: &mut Vec<u32>,
-	_texture_index: u32,
+	tx_min: Vec2,
+	tx_max: Vec2,
 ) {
 	let p1 = HEX_CORNERS[(dir) % 6] + pos;
 	let p2 = HEX_CORNERS[(dir + 1) % 6] + pos;
@@ -114,8 +142,9 @@ fn create_tile_wall(
 	indices.push(idx + 2);
 	indices.push(idx + 3);
 
-	uvs.push(Vec2::new(0., 0.));
-	uvs.push(Vec2::new(1., 0.));
-	uvs.push(Vec2::new(0., 1.));
-	uvs.push(Vec2::new(1., 1.));
+	//TODO: scale texture based on height
+	uvs.push(tx_min);
+	uvs.push(Vec2::new(tx_max.x, tx_min.y));
+	uvs.push(Vec2::new(tx_min.x, tx_max.y));
+	uvs.push(tx_max);
 }

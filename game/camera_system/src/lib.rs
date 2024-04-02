@@ -33,7 +33,7 @@ fn setup(mut commands: Commands) {
 			..default()
 		},
 		PhosCamera {
-			speed: 50.,
+			speed: 100.,
 			..default()
 		},
 	));

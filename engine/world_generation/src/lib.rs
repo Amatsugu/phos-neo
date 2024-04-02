@@ -28,7 +28,7 @@ pub mod prelude {
 	}
 
 	impl Chunk {
-		pub const SIZE: usize = 32;
+		pub const SIZE: usize = 64;
 	}
 
 	#[derive(Resource)]
