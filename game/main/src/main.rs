@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::window::PresentMode;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 mod phos;
 mod prelude;
@@ -13,11 +14,8 @@ fn main() {
 					title: "Phos".into(),
 					name: Some("phos".into()),
 					resolution: (1920.0, 1080.0).into(),
-					resizable: false,
-					enabled_buttons: bevy::window::EnabledButtons {
-						maximize: false,
-						..Default::default()
-					},
+					resizable: true,
+					present_mode: PresentMode::AutoNoVsync,
 					..default()
 				}),
 				..default()

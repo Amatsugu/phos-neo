@@ -29,7 +29,7 @@ pub fn generate_chunk(chunk_x: f64, chunk_z: f64, cfg: &GenerationConfig, seed: 
 				&cfg,
 				&noise,
 			);
-			result[x + z * Chunk::SIZE] = sample.floor();
+			result[x + z * Chunk::SIZE] = sample;
 		}
 	}
 	return Chunk {

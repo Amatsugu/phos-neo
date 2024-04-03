@@ -1,3 +1,5 @@
+use bevy::pbr::MaterialExtension;
+use bevy::render::render_resource::{AsBindGroup, ShaderRef};
 use bevy::{pbr::CascadeShadowConfig, prelude::*};
 use camera_system::PhosCameraPlugin;
 use iyes_perf_ui::prelude::*;
@@ -165,4 +167,17 @@ fn create_map(
 	}
 
 	commands.insert_resource(heightmap);
+}
+
+#[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
+struct ChunkMaterial {
+	#[texture(0, dimension = "2d_array")]
+	#[sampler(1)]
+	array_texture: Handle<Image>,
+}
+
+impl MaterialExtension for ChunkMaterial {
+	fn fragment_shader() -> ShaderRef {
+		"shaders/world/chunk.wgsl".into()
+	}
 }

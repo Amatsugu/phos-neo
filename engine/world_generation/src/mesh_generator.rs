@@ -71,11 +71,10 @@ fn create_tile(
 	let tex_x = texture_index % 11;
 	let tex_y = texture_index / 11;
 	let x_min = tex_x as f32 / 11.;
-	let x_max = (tex_x + 1) as f32 / 11.;
 	let y_min = tex_y as f32 / 8.;
-	let tx_unit = x_max - x_min;
+	const TX_UNIT: Vec2 = Vec2::new(1. / 11., 1. / 8.);
 
-	let uv_offset = Vec2::new(x_min + tx_unit / 2., y_min + tx_unit / 2.);
+	let uv_offset = Vec2::new(x_min + TX_UNIT.x / 2., y_min + TX_UNIT.y / 2.);
 
 	let idx = verts.len() as u32;
 	uvs.push(uv_offset);
@@ -83,7 +82,7 @@ fn create_tile(
 	for i in 0..6 {
 		let p = pos + HEX_CORNERS[i];
 		verts.push(p);
-		let uv = (HEX_CORNERS[i].xz() * tx_unit / 2.) + uv_offset;
+		let uv = (HEX_CORNERS[i].xz() * TX_UNIT / 2.) + uv_offset;
 		uvs.push(uv);
 		indices.push(idx);
 		indices.push(idx + 1 + i as u32);
@@ -103,7 +102,7 @@ fn create_tile(
 						uvs,
 						indices,
 						Vec2::new(x_min, y_min),
-						Vec2::new(x_min + tx_unit, y_min + tx_unit),
+						Vec2::new(x_min + TX_UNIT.x, y_min + TX_UNIT.y),
 					);
 				}
 			}
