@@ -74,7 +74,7 @@ fn create_tile(
 	let y_min = tex_y as f32 / 8.;
 	const TX_UNIT: Vec2 = Vec2::new(1. / 11., 1. / 8.);
 
-	let uv_offset = Vec2::new(x_min + TX_UNIT.x / 2., y_min + TX_UNIT.y / 2.);
+	let uv_offset = Vec2::splat(0.5);
 
 	let idx = verts.len() as u32;
 	uvs.push(uv_offset);
@@ -82,7 +82,7 @@ fn create_tile(
 	for i in 0..6 {
 		let p = pos + HEX_CORNERS[i];
 		verts.push(p);
-		let uv = (HEX_CORNERS[i].xz() * TX_UNIT / 2.) + uv_offset;
+		let uv = (HEX_CORNERS[i].xz() / 2.) + uv_offset;
 		uvs.push(uv);
 		indices.push(idx);
 		indices.push(idx + 1 + i as u32);
@@ -94,16 +94,7 @@ fn create_tile(
 		match cur_n {
 			Some(n_height) => {
 				if n_height < pos.y {
-					create_tile_wall(
-						pos,
-						i,
-						n_height,
-						verts,
-						uvs,
-						indices,
-						Vec2::new(x_min, y_min),
-						Vec2::new(x_min + TX_UNIT.x, y_min + TX_UNIT.y),
-					);
+					create_tile_wall(pos, i, n_height, verts, uvs, indices, Vec2::ZERO, Vec2::ONE);
 				}
 			}
 			_ => {}

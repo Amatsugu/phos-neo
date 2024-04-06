@@ -1,4 +1,4 @@
-use bevy::pbr::MaterialExtension;
+use bevy::pbr::{ExtendedMaterial, MaterialExtension};
 use bevy::render::render_resource::{AsBindGroup, ShaderRef};
 use bevy::{pbr::CascadeShadowConfig, prelude::*};
 use camera_system::PhosCameraPlugin;
@@ -47,11 +47,22 @@ fn init_game(mut commands: Commands) {
 	});
 }
 
-fn load_textures(mut commands: Commands, asset_server: Res<AssetServer>) {
-	let main_tex = asset_server.load("textures/world/test2.png");
+fn load_textures(
+	mut commands: Commands,
+	asset_server: Res<AssetServer>,
+	mut images: ResMut<Assets<Image>>,
+) {
+	let main_tex = asset_server.load("textures/world/stack.png");
 	commands.insert_resource(ChunkAtlas {
 		handle: main_tex.clone(),
 	});
+
+	//todo: wait for texture to load
+	let image = images.get_mut(&main_tex).unwrap();
+
+	// Create a new array texture asset from the loaded texture.
+	let array_layers = 7;
+	image.reinterpret_stacked_2d_as_array(array_layers);
 }
 
 fn draw_gizmos(mut gizmos: Gizmos, hm: Res<Map>) {
@@ -84,9 +95,10 @@ fn draw_gizmos(mut gizmos: Gizmos, hm: Res<Map>) {
 	}
 }
 
+//todo: run after textures are ready
 fn create_map(
 	mut commands: Commands,
-	mut materials: ResMut<Assets<StandardMaterial>>,
+	mut materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, ChunkMaterial>>>,
 	mut meshes: ResMut<Assets<Mesh>>,
 	atlas: Res<ChunkAtlas>,
 ) {
@@ -150,15 +162,20 @@ fn create_map(
 		2,
 	);
 
-	let chunk_material = materials.add(StandardMaterial {
-		base_color_texture: Some(atlas.handle.clone()),
-		..default()
+	let chunk_material = materials.add(ExtendedMaterial {
+		base: StandardMaterial {
+			base_color: Color::WHITE,
+			..default()
+		},
+		extension: ChunkMaterial {
+			array_texture: atlas.handle.clone(),
+		},
 	});
 
 	for chunk in &heightmap.chunks {
 		let mesh = generate_chunk_mesh(&chunk, &heightmap);
 		let pos = offset_to_world(chunk.chunk_offset * Chunk::SIZE as i32, 0.);
-		commands.spawn(PbrBundle {
+		commands.spawn(MaterialMeshBundle {
 			mesh: meshes.add(mesh),
 			material: chunk_material.clone(),
 			transform: Transform::from_translation(pos),
