@@ -1,3 +1,4 @@
+use bevy::asset::LoadState;
 use bevy::pbr::{ExtendedMaterial, MaterialExtension};
 use bevy::render::render_resource::{AsBindGroup, ShaderRef};
 use bevy::{pbr::CascadeShadowConfig, prelude::*};
@@ -14,9 +15,12 @@ pub struct PhosGamePlugin;
 
 impl Plugin for PhosGamePlugin {
 	fn build(&self, app: &mut App) {
-		app.add_plugins(PhosCameraPlugin);
+		app.add_plugins(PhosCameraPlugin).add_plugins(MaterialPlugin::<
+			ExtendedMaterial<StandardMaterial, ChunkMaterial>,
+		>::default());
 		app.add_systems(Startup, init_game)
 			.add_systems(Startup, (load_textures, create_map).chain());
+		app.add_systems(Update, (check_texture, spawn_map));
 		app.add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
 			.add_plugins(bevy::diagnostic::EntityCountDiagnosticsPlugin)
 			.add_plugins(bevy::diagnostic::SystemInformationDiagnosticsPlugin)
@@ -45,24 +49,42 @@ fn init_game(mut commands: Commands) {
 		transform: Transform::from_xyz(500., 260.0, 500.).looking_at(Vec3::ZERO, Vec3::Y),
 		..default()
 	});
+
+	commands.insert_resource(PhosMap::default());
 }
 
 fn load_textures(
 	mut commands: Commands,
 	asset_server: Res<AssetServer>,
-	mut images: ResMut<Assets<Image>>,
 ) {
 	let main_tex = asset_server.load("textures/world/stack.png");
 	commands.insert_resource(ChunkAtlas {
 		handle: main_tex.clone(),
+		is_loaded: false,
 	});
+}
 
-	//todo: wait for texture to load
-	let image = images.get_mut(&main_tex).unwrap();
+fn check_texture(
+	asset_server: Res<AssetServer>,
+	mut atlas: ResMut<ChunkAtlas>,
+	mut map: ResMut<PhosMap>,
+	mut images: ResMut<Assets<Image>>,
+) {
+	if atlas.is_loaded {
+		return;
+	}
 
-	// Create a new array texture asset from the loaded texture.
+	if asset_server.load_state(atlas.handle.clone()) != LoadState::Loaded {
+		return;
+	}
+	let image = images.get_mut(&atlas.handle).unwrap();
+
 	let array_layers = 7;
 	image.reinterpret_stacked_2d_as_array(array_layers);
+
+	atlas.is_loaded = true;
+	map.ready = true;
+	map.regenerate = true;
 }
 
 fn draw_gizmos(mut gizmos: Gizmos, hm: Res<Map>) {
@@ -95,13 +117,7 @@ fn draw_gizmos(mut gizmos: Gizmos, hm: Res<Map>) {
 	}
 }
 
-//todo: run after textures are ready
-fn create_map(
-	mut commands: Commands,
-	mut materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, ChunkMaterial>>>,
-	mut meshes: ResMut<Assets<Mesh>>,
-	atlas: Res<ChunkAtlas>,
-) {
+fn create_map(mut commands: Commands) {
 	let heightmap = generate_heightmap(
 		&GenerationConfig {
 			layers: vec![
@@ -162,6 +178,21 @@ fn create_map(
 		2,
 	);
 
+	commands.insert_resource(heightmap);
+}
+
+fn spawn_map(
+	heightmap: Res<Map>,
+	mut commands: Commands,
+	mut materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, ChunkMaterial>>>,
+	mut meshes: ResMut<Assets<Mesh>>,
+	atlas: Res<ChunkAtlas>,
+	mut map: ResMut<PhosMap>,
+) {
+	if !map.ready || !map.regenerate {
+		return;
+	}
+	map.regenerate = false;
 	let chunk_material = materials.add(ExtendedMaterial {
 		base: StandardMaterial {
 			base_color: Color::WHITE,
@@ -175,21 +206,22 @@ fn create_map(
 	for chunk in &heightmap.chunks {
 		let mesh = generate_chunk_mesh(&chunk, &heightmap);
 		let pos = offset_to_world(chunk.chunk_offset * Chunk::SIZE as i32, 0.);
-		commands.spawn(MaterialMeshBundle {
-			mesh: meshes.add(mesh),
-			material: chunk_material.clone(),
-			transform: Transform::from_translation(pos),
-			..default()
-		});
+		commands.spawn((
+			MaterialMeshBundle {
+				mesh: meshes.add(mesh),
+				material: chunk_material.clone(),
+				transform: Transform::from_translation(pos),
+				..default()
+			},
+			PhosChunk,
+		));
 	}
-
-	commands.insert_resource(heightmap);
 }
 
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 struct ChunkMaterial {
-	#[texture(0, dimension = "2d_array")]
-	#[sampler(1)]
+	#[texture(100, dimension = "2d_array")]
+	#[sampler(101)]
 	array_texture: Handle<Image>,
 }
 
