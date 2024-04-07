@@ -29,7 +29,6 @@ pub fn generate_chunk_mesh(chunk: &Chunk, map: &Map) -> Mesh {
 	let mut verts = Vec::with_capacity(vertex_count);
 	let mut uvs = Vec::with_capacity(vertex_count);
 	let mut indices = Vec::with_capacity(vertex_count);
-	let mut tex = Vec::with_capacity(vertex_count);
 
 	for z in 0..Chunk::SIZE {
 		for x in 0..Chunk::SIZE {
@@ -46,7 +45,7 @@ pub fn generate_chunk_mesh(chunk: &Chunk, map: &Map) -> Mesh {
 				&mut verts,
 				&mut uvs,
 				&mut indices,
-				&mut tex,
+				// &mut tex,
 				(height % 7.) as u32,
 			);
 		}
@@ -58,9 +57,7 @@ pub fn generate_chunk_mesh(chunk: &Chunk, map: &Map) -> Mesh {
 	)
 		.with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, verts)
 		.with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uvs)
-		.with_inserted_attribute(Mesh::ATTRIBUTE_UV_1, tex)
 		.with_inserted_indices(Indices::U32(indices))
-		// .with_inserted_attribute(ATTRIBUTE_TEXTURE_INDEX, tex)
 		.with_duplicated_vertices()
 		.with_computed_flat_normals();
 	return mesh;
@@ -72,24 +69,22 @@ fn create_tile(
 	verts: &mut Vec<Vec3>,
 	uvs: &mut Vec<Vec2>,
 	indices: &mut Vec<u32>,
-	tex: &mut Vec<Vec2>,
 	texture_index: u32,
 ) {
 	let uv_offset = Vec2::splat(0.5);
+	let tex_off = Vec2::new(texture_index as f32, 0.);
 
 	let idx = verts.len() as u32;
-	uvs.push(uv_offset);
+	uvs.push(uv_offset + tex_off);
 	verts.push(pos);
-	tex.push(Vec2::splat(texture_index as f32));
 	for i in 0..6 {
 		let p = pos + HEX_CORNERS[i];
 		verts.push(p);
 		let uv = (HEX_CORNERS[i].xz() / 2.) + uv_offset;
-		uvs.push(uv);
+		uvs.push(uv + tex_off);
 		indices.push(idx);
 		indices.push(idx + 1 + i as u32);
 		indices.push(idx + 1 + ((i as u32 + 1) % 6));
-		tex.push(Vec2::splat(texture_index as f32));
 	}
 
 	for i in 0..neighbors.len() {
@@ -97,7 +92,7 @@ fn create_tile(
 		match cur_n {
 			Some(n_height) => {
 				if n_height < pos.y {
-					create_tile_wall(pos, i, n_height, verts, uvs, indices, tex, texture_index);
+					create_tile_wall(pos, i, n_height, verts, uvs, indices, tex_off);
 				}
 			}
 			_ => {}
@@ -112,8 +107,7 @@ fn create_tile_wall(
 	verts: &mut Vec<Vec3>,
 	uvs: &mut Vec<Vec2>,
 	indices: &mut Vec<u32>,
-	tex: &mut Vec<Vec2>,
-	texture_index: u32,
+	tex_off: Vec2,
 ) {
 	let p1 = HEX_CORNERS[(dir) % 6] + pos;
 	let p2 = HEX_CORNERS[(dir + 1) % 6] + pos;
@@ -135,13 +129,8 @@ fn create_tile_wall(
 	indices.push(idx + 2);
 	indices.push(idx + 3);
 
-	tex.push(Vec2::splat(texture_index as f32));
-	tex.push(Vec2::splat(texture_index as f32));
-	tex.push(Vec2::splat(texture_index as f32));
-	tex.push(Vec2::splat(texture_index as f32));
-
-	uvs.push(Vec2::ZERO);
-	uvs.push(Vec2::new(1., 0.));
-	uvs.push(Vec2::new(0., pos.y - height));
-	uvs.push(Vec2::new(1., pos.y - height));
+	uvs.push(Vec2::ZERO + tex_off);
+	uvs.push(Vec2::new(1., 0.) + tex_off);
+	uvs.push(Vec2::new(0., pos.y - height) + tex_off);
+	uvs.push(Vec2::new(1., pos.y - height) + tex_off);
 }

@@ -30,6 +30,7 @@ fn fragment(
 //	vin.world_position = in.world_position;
 //	vin.world_normal = in.world_normal;
 //	vin.uv = in.uv;
+
     // generate a PbrInput struct from the StandardMaterial bindings
     var pbr_input = pbr_input_from_standard_material(in, is_front);
 
@@ -44,8 +45,10 @@ fn fragment(
     var out: FragmentOutput;
     // apply lighting
 
-    let layer = u32(in.uv_b.x);
-    out.color = textureSample(array_texture, array_texture_sampler, in.uv, layer);
+	let index = floor(in.uv.x - 1) + 1;
+    var uv = in.uv;
+    uv.x = in.uv.x - index;
+    out.color = textureSample(array_texture, array_texture_sampler, uv, u32(index));
 
     out.color *= apply_pbr_lighting(pbr_input);
 
@@ -55,8 +58,6 @@ fn fragment(
     // note this does not include fullscreen postprocessing effects like bloom.
     out.color = main_pass_post_lighting_processing(pbr_input, out.color);
 
-    // we can optionally modify the final result here
-    out.color = out.color * 2.0;
 #endif
 
     return out;
