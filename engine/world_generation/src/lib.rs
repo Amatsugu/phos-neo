@@ -2,6 +2,8 @@ pub mod prelude {
 	use crate::hex_utils::HexCoord;
 	use bevy::math::{IVec2, UVec2};
 	use bevy::prelude::Resource;
+	use bevy::render::mesh::MeshVertexAttribute;
+	use bevy::render::render_resource::VertexFormat;
 
 	pub struct GenerationConfig {
 		pub noise_scale: f64,
@@ -10,6 +12,7 @@ pub mod prelude {
 		pub size: UVec2,
 		pub layers: Vec<GeneratorLayer>,
 	}
+
 	pub struct GeneratorLayer {
 		pub strength: f64,
 		pub min_value: f64,
@@ -22,6 +25,7 @@ pub mod prelude {
 		pub layers: usize,
 		pub first_layer_mask: bool,
 	}
+
 	pub struct Chunk {
 		pub points: [f32; Chunk::SIZE * Chunk::SIZE],
 		pub chunk_offset: IVec2,
@@ -57,6 +61,9 @@ pub mod prelude {
 			return results;
 		}
 	}
+
+	pub const ATTRIBUTE_TEXTURE_INDEX: MeshVertexAttribute =
+		MeshVertexAttribute::new("TextureIndex", 988540917, VertexFormat::Uint32);
 }
 
 pub mod heightmap;

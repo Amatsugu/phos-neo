@@ -1,6 +1,8 @@
 use bevy::prelude::*;
+use bevy::render::texture::{ImageAddressMode, ImageFilterMode, ImageSamplerDescriptor};
 use bevy::window::PresentMode;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
+
 mod phos;
 mod prelude;
 
@@ -19,6 +21,13 @@ fn main() {
 					..default()
 				}),
 				..default()
+			}).set(ImagePlugin {
+				default_sampler: ImageSamplerDescriptor {
+					address_mode_u: ImageAddressMode::Repeat,
+					address_mode_v: ImageAddressMode::Repeat,
+					mag_filter: ImageFilterMode::Nearest,
+					..default()
+				}
 			}),
 			WorldInspectorPlugin::new(),
 			PhosGamePlugin,

@@ -11,6 +11,8 @@ use bevy::{
 	},
 };
 use std::vec::Vec;
+use bevy::render::mesh::MeshVertexAttribute;
+use bevy::render::render_resource::VertexFormat;
 
 const HEX_CORNERS: [Vec3; 6] = [
 	Vec3::new(0., 0., OUTER_RADIUS),
@@ -21,11 +23,13 @@ const HEX_CORNERS: [Vec3; 6] = [
 	Vec3::new(-INNER_RADIUS, 0., 0.5 * OUTER_RADIUS),
 ];
 
+
 pub fn generate_chunk_mesh(chunk: &Chunk, map: &Map) -> Mesh {
 	let vertex_count: usize = Chunk::SIZE * Chunk::SIZE * 6;
 	let mut verts = Vec::with_capacity(vertex_count);
 	let mut uvs = Vec::with_capacity(vertex_count);
 	let mut indices = Vec::with_capacity(vertex_count);
+	let mut tex = Vec::with_capacity(vertex_count);
 
 	for z in 0..Chunk::SIZE {
 		for x in 0..Chunk::SIZE {
@@ -42,7 +46,8 @@ pub fn generate_chunk_mesh(chunk: &Chunk, map: &Map) -> Mesh {
 				&mut verts,
 				&mut uvs,
 				&mut indices,
-				((x + z * Chunk::SIZE) % 32) as u32,
+				&mut tex,
+				(height % 7.) as u32,
 			);
 		}
 	}
@@ -51,34 +56,31 @@ pub fn generate_chunk_mesh(chunk: &Chunk, map: &Map) -> Mesh {
 		PrimitiveTopology::TriangleList,
 		RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
 	)
-	.with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, verts)
-	.with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uvs)
-	.with_inserted_indices(Indices::U32(indices))
-	.with_duplicated_vertices()
-	.with_computed_flat_normals();
+		.with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, verts)
+		.with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uvs)
+		.with_inserted_attribute(Mesh::ATTRIBUTE_UV_1, tex)
+		.with_inserted_indices(Indices::U32(indices))
+		// .with_inserted_attribute(ATTRIBUTE_TEXTURE_INDEX, tex)
+		.with_duplicated_vertices()
+		.with_computed_flat_normals();
 	return mesh;
 }
 
-//TODO: figure out texture index
 fn create_tile(
 	pos: Vec3,
 	neighbors: &[Option<f32>; 6],
 	verts: &mut Vec<Vec3>,
 	uvs: &mut Vec<Vec2>,
 	indices: &mut Vec<u32>,
+	tex: &mut Vec<Vec2>,
 	texture_index: u32,
 ) {
-	let tex_x = texture_index % 11;
-	let tex_y = texture_index / 11;
-	let x_min = tex_x as f32 / 11.;
-	let y_min = tex_y as f32 / 8.;
-	const TX_UNIT: Vec2 = Vec2::new(1. / 11., 1. / 8.);
-
 	let uv_offset = Vec2::splat(0.5);
 
 	let idx = verts.len() as u32;
 	uvs.push(uv_offset);
 	verts.push(pos);
+	tex.push(Vec2::splat(texture_index as f32));
 	for i in 0..6 {
 		let p = pos + HEX_CORNERS[i];
 		verts.push(p);
@@ -87,6 +89,7 @@ fn create_tile(
 		indices.push(idx);
 		indices.push(idx + 1 + i as u32);
 		indices.push(idx + 1 + ((i as u32 + 1) % 6));
+		tex.push(Vec2::splat(texture_index as f32));
 	}
 
 	for i in 0..neighbors.len() {
@@ -94,7 +97,7 @@ fn create_tile(
 		match cur_n {
 			Some(n_height) => {
 				if n_height < pos.y {
-					create_tile_wall(pos, i, n_height, verts, uvs, indices, Vec2::ZERO, Vec2::ONE);
+					create_tile_wall(pos, i, n_height, verts, uvs, indices, tex, texture_index);
 				}
 			}
 			_ => {}
@@ -109,8 +112,8 @@ fn create_tile_wall(
 	verts: &mut Vec<Vec3>,
 	uvs: &mut Vec<Vec2>,
 	indices: &mut Vec<u32>,
-	tx_min: Vec2,
-	tx_max: Vec2,
+	tex: &mut Vec<Vec2>,
+	texture_index: u32,
 ) {
 	let p1 = HEX_CORNERS[(dir) % 6] + pos;
 	let p2 = HEX_CORNERS[(dir + 1) % 6] + pos;
@@ -132,9 +135,13 @@ fn create_tile_wall(
 	indices.push(idx + 2);
 	indices.push(idx + 3);
 
-	//TODO: scale texture based on height
-	uvs.push(tx_min);
-	uvs.push(Vec2::new(tx_max.x, tx_min.y));
-	uvs.push(Vec2::new(tx_min.x, tx_max.y));
-	uvs.push(tx_max);
+	tex.push(Vec2::splat(texture_index as f32));
+	tex.push(Vec2::splat(texture_index as f32));
+	tex.push(Vec2::splat(texture_index as f32));
+	tex.push(Vec2::splat(texture_index as f32));
+
+	uvs.push(Vec2::ZERO);
+	uvs.push(Vec2::new(1., 0.));
+	uvs.push(Vec2::new(0., pos.y - height));
+	uvs.push(Vec2::new(1., pos.y - height));
 }

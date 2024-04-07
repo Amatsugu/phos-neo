@@ -1,6 +1,5 @@
 use bevy::asset::LoadState;
-use bevy::pbr::{ExtendedMaterial, MaterialExtension};
-use bevy::render::render_resource::{AsBindGroup, ShaderRef};
+use bevy::pbr::{ExtendedMaterial};
 use bevy::{pbr::CascadeShadowConfig, prelude::*};
 use camera_system::PhosCameraPlugin;
 use iyes_perf_ui::prelude::*;
@@ -8,7 +7,6 @@ use world_generation::hex_utils::{offset_to_world, HexCoord};
 use world_generation::{
 	heightmap::generate_heightmap, mesh_generator::generate_chunk_mesh, prelude::*,
 };
-
 use crate::prelude::*;
 
 pub struct PhosGamePlugin;
@@ -81,6 +79,7 @@ fn check_texture(
 
 	let array_layers = 7;
 	image.reinterpret_stacked_2d_as_array(array_layers);
+
 
 	atlas.is_loaded = true;
 	map.ready = true;
@@ -175,7 +174,7 @@ fn create_map(mut commands: Commands) {
 			border_size: 64.,
 			size: UVec2::splat(1024 / Chunk::SIZE as u32),
 		},
-		2,
+		4,
 	);
 
 	commands.insert_resource(heightmap);
@@ -218,15 +217,3 @@ fn spawn_map(
 	}
 }
 
-#[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
-struct ChunkMaterial {
-	#[texture(100, dimension = "2d_array")]
-	#[sampler(101)]
-	array_texture: Handle<Image>,
-}
-
-impl MaterialExtension for ChunkMaterial {
-	fn fragment_shader() -> ShaderRef {
-		"shaders/world/chunk.wgsl".into()
-	}
-}
