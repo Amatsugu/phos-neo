@@ -11,8 +11,6 @@ use bevy::{
 	},
 };
 use std::vec::Vec;
-use bevy::render::mesh::MeshVertexAttribute;
-use bevy::render::render_resource::VertexFormat;
 
 const HEX_CORNERS: [Vec3; 6] = [
 	Vec3::new(0., 0., OUTER_RADIUS),
@@ -22,7 +20,6 @@ const HEX_CORNERS: [Vec3; 6] = [
 	Vec3::new(-INNER_RADIUS, 0., -0.5 * OUTER_RADIUS),
 	Vec3::new(-INNER_RADIUS, 0., 0.5 * OUTER_RADIUS),
 ];
-
 
 pub fn generate_chunk_mesh(chunk: &Chunk, map: &Map) -> Mesh {
 	let vertex_count: usize = Chunk::SIZE * Chunk::SIZE * 6;
@@ -55,11 +52,11 @@ pub fn generate_chunk_mesh(chunk: &Chunk, map: &Map) -> Mesh {
 		PrimitiveTopology::TriangleList,
 		RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
 	)
-		.with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, verts)
-		.with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uvs)
-		.with_inserted_indices(Indices::U32(indices))
-		.with_duplicated_vertices()
-		.with_computed_flat_normals();
+	.with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, verts)
+	.with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uvs)
+	.with_inserted_indices(Indices::U32(indices))
+	.with_duplicated_vertices()
+	.with_computed_flat_normals();
 	return mesh;
 }
 

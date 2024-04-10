@@ -3,10 +3,8 @@
 	"tasks": [
 		{
 			"type": "cargo",
-			"command": "",
-			"args": [
-				"build"
-			],
+			"command": "build",
+			"args": [],
 			"problemMatcher": [
 				"$rustc"
 			],

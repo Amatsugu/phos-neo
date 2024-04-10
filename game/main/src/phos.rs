@@ -1,21 +1,22 @@
+use crate::prelude::*;
 use bevy::asset::LoadState;
-use bevy::pbr::{ExtendedMaterial};
+use bevy::pbr::ExtendedMaterial;
 use bevy::{pbr::CascadeShadowConfig, prelude::*};
 use camera_system::PhosCameraPlugin;
 use iyes_perf_ui::prelude::*;
-use world_generation::hex_utils::{offset_to_world, HexCoord};
+use world_generation::hex_utils::offset_to_world;
 use world_generation::{
 	heightmap::generate_heightmap, mesh_generator::generate_chunk_mesh, prelude::*,
 };
-use crate::prelude::*;
 
 pub struct PhosGamePlugin;
 
 impl Plugin for PhosGamePlugin {
 	fn build(&self, app: &mut App) {
-		app.add_plugins(PhosCameraPlugin).add_plugins(MaterialPlugin::<
-			ExtendedMaterial<StandardMaterial, ChunkMaterial>,
-		>::default());
+		app.add_plugins(PhosCameraPlugin)
+			.add_plugins(MaterialPlugin::<
+				ExtendedMaterial<StandardMaterial, ChunkMaterial>,
+			>::default());
 		app.add_systems(Startup, init_game)
 			.add_systems(Startup, (load_textures, create_map).chain());
 		app.add_systems(Update, (check_texture, spawn_map));
@@ -51,10 +52,7 @@ fn init_game(mut commands: Commands) {
 	commands.insert_resource(PhosMap::default());
 }
 
-fn load_textures(
-	mut commands: Commands,
-	asset_server: Res<AssetServer>,
-) {
+fn load_textures(mut commands: Commands, asset_server: Res<AssetServer>) {
 	let main_tex = asset_server.load("textures/world/stack.png");
 	commands.insert_resource(ChunkAtlas {
 		handle: main_tex.clone(),
@@ -80,40 +78,9 @@ fn check_texture(
 	let array_layers = 7;
 	image.reinterpret_stacked_2d_as_array(array_layers);
 
-
 	atlas.is_loaded = true;
 	map.ready = true;
 	map.regenerate = true;
-}
-
-fn draw_gizmos(mut gizmos: Gizmos, hm: Res<Map>) {
-	gizmos.arrow(Vec3::ZERO, Vec3::Y * 1.5, Color::GREEN);
-	gizmos.arrow(Vec3::ZERO, Vec3::Z * 1.5, Color::BLUE);
-	gizmos.arrow(Vec3::ZERO, Vec3::X * 1.5, Color::RED);
-
-	let coord = HexCoord::from_grid_pos(64, 14);
-	let ch = &hm.chunks[coord.to_chunk_index(hm.width) as usize];
-	let h = ch.points[coord.to_chunk_local_index() as usize];
-	gizmos.ray(coord.to_world(h), Vec3::Y, Color::RED);
-	gizmos.ray(coord.to_world(h), Vec3::Z * 1.5, Color::BLUE);
-
-	// let t = coord.get_neighbor(5);
-	// let h = ch.points[t.to_chunk_local_index() as usize];
-	// gizmos.ray(t.to_world(h), Vec3::Y * 1., Color::PINK);
-	let n = coord.get_neighbors();
-	let nh = hm.get_neighbors(&coord);
-	for i in 0..6 {
-		let t = n[i];
-		let h = nh[i];
-		if h.is_none() {
-			continue;
-		}
-		gizmos.ray(
-			t.to_world(h.unwrap()),
-			Vec3::Y * (i + 1) as f32,
-			Color::CYAN,
-		);
-	}
 }
 
 fn create_map(mut commands: Commands) {
@@ -216,4 +183,3 @@ fn spawn_map(
 		));
 	}
 }
-

@@ -69,3 +69,4 @@ pub mod prelude {
 pub mod heightmap;
 pub mod hex_utils;
 pub mod mesh_generator;
+pub mod tile_manager;
