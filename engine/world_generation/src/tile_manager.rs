@@ -1,29 +1,36 @@
 use std::{collections::HashMap, fs};
 
-use bevy::ecs::system::Resource;
+use asset_loader::create_asset_loader;
+use bevy::{
+	asset::{Asset, AssetLoader, AsyncReadExt},
+	ecs::system::Resource,
+	reflect::TypePath,
+};
 use serde::{Deserialize, Serialize};
-
-#[derive(Resource)]
+#[derive(Resource, Debug)]
 pub struct TileManager {
-	pub tiles: HashMap<u32, TileDefination>,
+	pub tiles: HashMap<u32, TileAsset>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct TileDefination {
+#[derive(Serialize, Deserialize, Debug, TypePath, Asset)]
+pub struct TileAsset {
+	#[serde(skip_serializing, skip_deserializing)]
 	pub id: u32,
+	pub name: String,
 	pub texture_id: u32,
 	pub side_texture_id: u32,
 }
 
+create_asset_loader!(TileAssetPlugin, TileAssetLoader, TileAsset, &["tile.json"]);
+
 impl TileManager {
-	pub fn new(path: String) -> Option<Self> {
+	pub fn new(path: &str) -> Result<Self, String> {
 		let mut cur_id: u32 = 0;
 
 		let paths = fs::read_dir(path);
 
 		if paths.is_err() {
-			print!("{}", paths.err().unwrap());
-			return None;
+			return Err(paths.err().unwrap().to_string());
 		}
 
 		let mut manager = TileManager {
@@ -37,16 +44,14 @@ impl TileManager {
 			}
 			let data = fs::read_to_string(cur_path);
 			if data.is_err() {
-				print!("{}", data.err().unwrap());
-				return None;
+				return Err(data.err().unwrap().to_string());
 			}
 
-			let result: Result<TileDefination, serde_json::Error> =
+			let result: Result<TileAsset, serde_json::Error> =
 				serde_json::from_str(data.unwrap().as_str());
 
 			if result.is_err() {
-				print!("{}", result.err().unwrap());
-				return None;
+				return Err(result.err().unwrap().to_string());
 			}
 
 			let mut tile = result.unwrap();
@@ -56,6 +61,6 @@ impl TileManager {
 			cur_id += 1;
 		}
 
-		return Some(manager);
+		return Ok(manager);
 	}
 }

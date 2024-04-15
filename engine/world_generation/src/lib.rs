@@ -1,3 +1,8 @@
+pub mod heightmap;
+pub mod hex_utils;
+pub mod mesh_generator;
+pub mod tile_manager;
+
 pub mod prelude {
 	use crate::hex_utils::HexCoord;
 	use bevy::math::{IVec2, UVec2};
@@ -65,8 +70,3 @@ pub mod prelude {
 	pub const ATTRIBUTE_TEXTURE_INDEX: MeshVertexAttribute =
 		MeshVertexAttribute::new("TextureIndex", 988540917, VertexFormat::Uint32);
 }
-
-pub mod heightmap;
-pub mod hex_utils;
-pub mod mesh_generator;
-pub mod tile_manager;

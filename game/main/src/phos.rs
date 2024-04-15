@@ -2,9 +2,12 @@ use crate::prelude::*;
 use bevy::asset::LoadState;
 use bevy::pbr::ExtendedMaterial;
 use bevy::{pbr::CascadeShadowConfig, prelude::*};
+use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
+use bevy_rapier3d::render::RapierDebugRenderPlugin;
 use camera_system::PhosCameraPlugin;
 use iyes_perf_ui::prelude::*;
 use world_generation::hex_utils::offset_to_world;
+use world_generation::tile_manager::{TileAsset, TileAssetPlugin};
 use world_generation::{
 	heightmap::generate_heightmap, mesh_generator::generate_chunk_mesh, prelude::*,
 };
@@ -17,13 +20,24 @@ impl Plugin for PhosGamePlugin {
 			.add_plugins(MaterialPlugin::<
 				ExtendedMaterial<StandardMaterial, ChunkMaterial>,
 			>::default());
+
+		//Systems - Startup
 		app.add_systems(Startup, init_game)
 			.add_systems(Startup, (load_textures, create_map).chain());
-		app.add_systems(Update, (check_texture, spawn_map));
+		//Systems - Update
+		app.add_systems(Update, (check_texture, spawn_map, print_tiles));
+
+		//Perf UI
 		app.add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
 			.add_plugins(bevy::diagnostic::EntityCountDiagnosticsPlugin)
 			.add_plugins(bevy::diagnostic::SystemInformationDiagnosticsPlugin)
 			.add_plugins(PerfUiPlugin);
+
+		//Assets
+		app.add_plugins(TileAssetPlugin);
+		//Physics
+		app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
+			.add_plugins(RapierDebugRenderPlugin::default());
 	}
 }
 
@@ -52,12 +66,25 @@ fn init_game(mut commands: Commands) {
 	commands.insert_resource(PhosMap::default());
 }
 
+#[derive(Resource)]
+struct TileResource(Handle<TileAsset>);
+
 fn load_textures(mut commands: Commands, asset_server: Res<AssetServer>) {
 	let main_tex = asset_server.load("textures/world/stack.png");
 	commands.insert_resource(ChunkAtlas {
 		handle: main_tex.clone(),
 		is_loaded: false,
 	});
+
+	let handle: Handle<TileAsset> = asset_server.load("tiles/Terra/Grass.tile.json");
+
+	commands.insert_resource(TileResource(handle));
+}
+
+fn print_tiles(tile_assets: Res<Assets<TileAsset>>) {
+	for (_, tile) in tile_assets.iter() {
+		println!("Tile: {}", tile.name);
+	}
 }
 
 fn check_texture(
