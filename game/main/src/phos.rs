@@ -7,7 +7,7 @@ use bevy_rapier3d::render::RapierDebugRenderPlugin;
 use camera_system::PhosCameraPlugin;
 use iyes_perf_ui::prelude::*;
 use world_generation::hex_utils::offset_to_world;
-use world_generation::tile_manager::{TileAsset, TileAssetPlugin};
+use world_generation::tile_manager::{self, TileAsset, TileAssetPlugin, TileManager};
 use world_generation::{
 	heightmap::generate_heightmap, mesh_generator::generate_chunk_mesh, prelude::*,
 };
@@ -23,7 +23,7 @@ impl Plugin for PhosGamePlugin {
 
 		//Systems - Startup
 		app.add_systems(Startup, init_game)
-			.add_systems(Startup, (load_textures, create_map).chain());
+			.add_systems(Startup, (load_textures, load_tiles, create_map).chain());
 		//Systems - Update
 		app.add_systems(Update, (check_texture, spawn_map, print_tiles));
 
@@ -64,10 +64,8 @@ fn init_game(mut commands: Commands) {
 	});
 
 	commands.insert_resource(PhosMap::default());
+	commands.insert_resource(TileManager::default());
 }
-
-#[derive(Resource)]
-struct TileResource(Handle<TileAsset>);
 
 fn load_textures(mut commands: Commands, asset_server: Res<AssetServer>) {
 	let main_tex = asset_server.load("textures/world/stack.png");
@@ -76,9 +74,16 @@ fn load_textures(mut commands: Commands, asset_server: Res<AssetServer>) {
 		is_loaded: false,
 	});
 
-	let handle: Handle<TileAsset> = asset_server.load("tiles/Terra/Grass.tile.json");
+	// commands.insert_resource(TileResource(handle));
+}
 
-	commands.insert_resource(TileResource(handle));
+fn load_tiles(
+	mut commands: Commands,
+	mut tile_manager: ResMut<TileManager>,
+	asset_server: Res<AssetServer>,
+) {
+	let handle: Handle<TileAsset> = asset_server.load("tiles/Terra/Grass.tile.json");
+	tile_manager.register_tile(handle);
 }
 
 fn print_tiles(tile_assets: Res<Assets<TileAsset>>) {
