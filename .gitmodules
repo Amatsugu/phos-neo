@@ -1,0 +1,3 @@
+[submodule "game/main/assets"]
+	path = game/main/assets
+	url = git@github.com:Amatsugu/phos-assets.git
