@@ -32,7 +32,9 @@ pub mod prelude {
 	}
 
 	pub struct Chunk {
-		pub points: [f32; Chunk::SIZE * Chunk::SIZE],
+		pub heights: [f32; Chunk::SIZE * Chunk::SIZE],
+		pub moisture: [f32; Chunk::SIZE * Chunk::SIZE],
+		pub tempurature: [f32; Chunk::SIZE * Chunk::SIZE],
 		pub chunk_offset: IVec2,
 	}
 
@@ -59,11 +61,26 @@ pub mod prelude {
 					continue;
 				}
 				let c_idx = n_tile.to_chunk_index(self.width);
-				let chunk = &self.chunks[c_idx as usize];
+				let chunk = &self.chunks[c_idx];
 				let local = n_tile.to_chunk_local_index();
-				results[i] = Some(chunk.points[local as usize]);
+				results[i] = Some(chunk.heights[local]);
 			}
 			return results;
+		}
+
+		pub fn get_height(&self, pos: &HexCoord) -> f32 {
+			let chunk = &self.chunks[pos.to_chunk_index(self.width)];
+			return chunk.heights[pos.to_chunk_local_index()];
+		}
+
+		pub fn get_moisture(&self, pos: &HexCoord) -> f32 {
+			let chunk = &self.chunks[pos.to_chunk_index(self.width)];
+			return chunk.moisture[pos.to_chunk_local_index()];
+		}
+
+		pub fn get_tempurature(&self, pos: &HexCoord) -> f32 {
+			let chunk = &self.chunks[pos.to_chunk_index(self.width)];
+			return chunk.tempurature[pos.to_chunk_local_index()];
 		}
 	}
 

@@ -128,15 +128,15 @@ impl HexCoord {
 		return IVec2::new(self.hex.x + (self.hex.y / 2), self.hex.y);
 	}
 
-	pub fn to_index(&self, width: usize) -> i32 {
-		return (self.hex.x + self.hex.y * width as i32) + (self.hex.y / 2);
+	pub fn to_index(&self, width: usize) -> usize {
+		return ((self.hex.x + self.hex.y * width as i32) + (self.hex.y / 2)) as usize;
 	}
-	pub fn to_chunk_index(&self, width: usize) -> i32 {
+	pub fn to_chunk_index(&self, width: usize) -> usize {
 		let pos = self.to_chunk_pos();
-		return pos.x + pos.y * width as i32;
+		return (pos.x + pos.y * width as i32) as usize;
 	}
 
-	pub fn to_chunk_local_index(&self) -> i32 {
+	pub fn to_chunk_local_index(&self) -> usize {
 		return self.to_chunk().to_index(Chunk::SIZE);
 	}
 

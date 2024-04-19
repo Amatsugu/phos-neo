@@ -6,14 +6,36 @@ pub mod macros {
 			$plugin_name: ident,
 			$loader_name: ident,
 			$asset_type: ident,
-			$extensions: expr
+			$extensions: expr,
+			$($string_name: ident -> $handle_name: ident)*
 		) => {
 			use bevy::prelude::*;
+			use bevy::asset::{AssetLoader, AssetEvent, LoadContext, AsyncReadExt, io::Reader};
+			use bevy::utils::BoxedFuture;
 			pub struct $plugin_name;
 			impl Plugin for $plugin_name {
 				fn build(&self, app: &mut App) {
 					app.init_asset::<$asset_type>()
-						.init_asset_loader::<$loader_name>();
+						.init_asset_loader::<$loader_name>()
+						.add_systems(Update, finalize);
+				}
+			}
+
+			fn finalize(
+				mut asset_events: EventReader<AssetEvent<$asset_type>>,
+				mut assets: ResMut<Assets<$asset_type>>,
+				 asset_server: Res<AssetServer>
+			) {
+				for event in asset_events.read() {
+					match event {
+						AssetEvent::LoadedWithDependencies { id } => {
+							let asset = assets.get_mut(id.clone()).unwrap();
+							$(
+								asset.$handle_name = asset_server.load(&asset.$string_name);
+							)*
+						},
+						_ => (),
+					}
 				}
 			}
 
@@ -29,10 +51,10 @@ pub mod macros {
 
 				fn load<'a>(
 					&'a self,
-					reader: &'a mut bevy::asset::io::Reader,
+					reader: &'a mut Reader,
 					_settings: &'a Self::Settings,
-					_load_context: &'a mut bevy::asset::LoadContext,
-				) -> bevy::utils::BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
+					_load_context: &'a mut LoadContext,
+				) -> BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
 					return Box::pin(async move {
 						let mut data: String = String::new();
 						let read_result = reader.read_to_string(&mut data).await;

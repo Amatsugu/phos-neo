@@ -1,6 +1,6 @@
 use asset_loader::create_asset_loader;
 use bevy::{
-	asset::{Asset, AssetLoader, AsyncReadExt},
+	asset::{Asset, Handle},
 	ecs::system::Resource,
 	reflect::TypePath,
 };
@@ -29,12 +29,12 @@ pub struct TileAsset {
 	#[serde(skip)]
 	pub id: usize,
 	pub name: String,
+	#[serde(skip)]
 	pub texture_id: u32,
-	#[serde(skip)]
 	pub texture: String,
-	pub side_texture_id: u32,
 	#[serde(skip)]
+	pub side_texture_id: u32,
 	pub side_texture: String,
 }
 
-create_asset_loader!(TileAssetPlugin, TileAssetLoader, TileAsset, &["tile.json"]);
+create_asset_loader!(TileAssetPlugin, TileAssetLoader, TileAsset, &["tile.json"],);

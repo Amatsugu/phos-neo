@@ -29,7 +29,7 @@ pub fn generate_chunk_mesh(chunk: &Chunk, map: &Map) -> Mesh {
 
 	for z in 0..Chunk::SIZE {
 		for x in 0..Chunk::SIZE {
-			let height = chunk.points[x + z * Chunk::SIZE];
+			let height = chunk.heights[x + z * Chunk::SIZE];
 			let off_pos = Vec3::new(x as f32, height, z as f32);
 			let tile_pos = offset3d_to_world(off_pos);
 			let coord = HexCoord::from_offset(
