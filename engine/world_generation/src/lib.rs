@@ -2,6 +2,7 @@ pub mod heightmap;
 pub mod hex_utils;
 pub mod mesh_generator;
 pub mod tile_manager;
+pub mod tile_mapper;
 
 pub mod prelude {
 	use crate::hex_utils::HexCoord;

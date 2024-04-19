@@ -35,6 +35,7 @@ impl Plugin for PhosGamePlugin {
 
 		//Assets
 		app.add_plugins(TileAssetPlugin);
+		app.add_plugins(TileMapperAssetPlugin);
 		//Physics
 		app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
 			.add_plugins(RapierDebugRenderPlugin::default());
