@@ -35,7 +35,7 @@ pub fn generate_chunk(chunk_x: f64, chunk_z: f64, cfg: &GenerationConfig, seed: 
 	return Chunk {
 		heights: result,
 		moisture: result.clone(),
-		tempurature: result.clone(),
+		temperature: result.clone(),
 		chunk_offset: IVec2::new(chunk_x as i32, chunk_z as i32),
 	};
 }

@@ -7,7 +7,8 @@ pub mod macros {
 			$loader_name: ident,
 			$asset_type: ident,
 			$extensions: expr,
-			$($string_name: ident -> $handle_name: ident)*
+			$($string_name: ident -> $handle_name: ident)* ;
+			$($string_array_name: ident -> $handle_array_name: ident)* ?
 		) => {
 			use bevy::prelude::*;
 			use bevy::asset::{AssetLoader, AssetEvent, LoadContext, AsyncReadExt, io::Reader};
@@ -30,9 +31,15 @@ pub mod macros {
 					match event {
 						AssetEvent::LoadedWithDependencies { id } => {
 							let asset = assets.get_mut(id.clone()).unwrap();
+
 							$(
 								asset.$handle_name = asset_server.load(&asset.$string_name);
 							)*
+							$(
+								for i in 0..asset.$string_array_name.len(){
+									asset.$handle_array_name.push(asset_server.load(&asset.$string_array_name[i]));
+								}
+							)?
 						},
 						_ => (),
 					}

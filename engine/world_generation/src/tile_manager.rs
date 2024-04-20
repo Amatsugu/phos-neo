@@ -29,12 +29,12 @@ pub struct TileAsset {
 	#[serde(skip)]
 	pub id: usize,
 	pub name: String,
-	#[serde(skip)]
 	pub texture_id: u32,
-	pub texture: String,
 	#[serde(skip)]
+	pub texture: String,
 	pub side_texture_id: u32,
+	#[serde(skip)]
 	pub side_texture: String,
 }
 
-create_asset_loader!(TileAssetPlugin, TileAssetLoader, TileAsset, &["tile.json"],);
+create_asset_loader!(TileAssetPlugin, TileAssetLoader, TileAsset, &["tile.json"],;?);

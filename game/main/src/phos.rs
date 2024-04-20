@@ -6,8 +6,10 @@ use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
 use bevy_rapier3d::render::RapierDebugRenderPlugin;
 use camera_system::PhosCameraPlugin;
 use iyes_perf_ui::prelude::*;
+use world_generation::biome_painter::{BiomePainterAsset, BiomePainterPlugin};
 use world_generation::hex_utils::offset_to_world;
 use world_generation::tile_manager::{self, TileAsset, TileAssetPlugin, TileManager};
+use world_generation::tile_mapper::TileMapperAssetPlugin;
 use world_generation::{
 	heightmap::generate_heightmap, mesh_generator::generate_chunk_mesh, prelude::*,
 };
@@ -36,6 +38,7 @@ impl Plugin for PhosGamePlugin {
 		//Assets
 		app.add_plugins(TileAssetPlugin);
 		app.add_plugins(TileMapperAssetPlugin);
+		app.add_plugins(BiomePainterPlugin);
 		//Physics
 		app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
 			.add_plugins(RapierDebugRenderPlugin::default());
@@ -74,17 +77,13 @@ fn load_textures(mut commands: Commands, asset_server: Res<AssetServer>) {
 		handle: main_tex.clone(),
 		is_loaded: false,
 	});
-
-	// commands.insert_resource(TileResource(handle));
 }
+#[derive(Resource)]
+struct Painter(Handle<BiomePainterAsset>);
 
-fn load_tiles(
-	mut commands: Commands,
-	mut tile_manager: ResMut<TileManager>,
-	asset_server: Res<AssetServer>,
-) {
-	let handle: Handle<TileAsset> = asset_server.load("tiles/Terra/Grass.tile.json");
-	tile_manager.register_tile(handle);
+fn load_tiles(mut commands: Commands, asset_server: Res<AssetServer>) {
+	let handle: Handle<BiomePainterAsset> = asset_server.load("biome_painters/terra.biomes.json");
+	commands.insert_resource(Painter(handle));
 }
 
 fn print_tiles(tile_assets: Res<Assets<TileAsset>>) {
