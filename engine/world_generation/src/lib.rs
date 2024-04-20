@@ -1,3 +1,4 @@
+pub mod biome_painter;
 pub mod heightmap;
 pub mod hex_utils;
 pub mod mesh_generator;
@@ -35,7 +36,7 @@ pub mod prelude {
 	pub struct Chunk {
 		pub heights: [f32; Chunk::SIZE * Chunk::SIZE],
 		pub moisture: [f32; Chunk::SIZE * Chunk::SIZE],
-		pub tempurature: [f32; Chunk::SIZE * Chunk::SIZE],
+		pub temperature: [f32; Chunk::SIZE * Chunk::SIZE],
 		pub chunk_offset: IVec2,
 	}
 
@@ -81,7 +82,7 @@ pub mod prelude {
 
 		pub fn get_tempurature(&self, pos: &HexCoord) -> f32 {
 			let chunk = &self.chunks[pos.to_chunk_index(self.width)];
-			return chunk.tempurature[pos.to_chunk_local_index()];
+			return chunk.temperature[pos.to_chunk_local_index()];
 		}
 	}
 
