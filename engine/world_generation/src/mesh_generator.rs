@@ -1,4 +1,6 @@
 use crate::hex_utils::HexCoord;
+use crate::tile_manager::TileAsset;
+use crate::tile_mapper::TileMapperAsset;
 use crate::{
 	hex_utils::{offset3d_to_world, INNER_RADIUS, OUTER_RADIUS},
 	prelude::*,
@@ -21,7 +23,12 @@ const HEX_CORNERS: [Vec3; 6] = [
 	Vec3::new(-INNER_RADIUS, 0., 0.5 * OUTER_RADIUS),
 ];
 
-pub fn generate_chunk_mesh(chunk: &Chunk, map: &Map) -> Mesh {
+pub fn generate_chunk_mesh(
+	chunk: &Chunk,
+	map: &Map,
+	tile_mapper: &TileMapperAsset,
+	tiles: &Res<Assets<TileAsset>>,
+) -> Mesh {
 	let vertex_count: usize = Chunk::SIZE * Chunk::SIZE * 6;
 	let mut verts = Vec::with_capacity(vertex_count);
 	let mut uvs = Vec::with_capacity(vertex_count);
@@ -36,6 +43,9 @@ pub fn generate_chunk_mesh(chunk: &Chunk, map: &Map) -> Mesh {
 				IVec2::new(x as i32, z as i32) + (chunk.chunk_offset * Chunk::SIZE as i32),
 			);
 			let n = map.get_neighbors(&coord);
+			let tile_handle = tile_mapper.sample_tile(height);
+			let tile = tiles.get(tile_handle).unwrap();
+
 			create_tile(
 				tile_pos,
 				&n,
@@ -43,7 +53,8 @@ pub fn generate_chunk_mesh(chunk: &Chunk, map: &Map) -> Mesh {
 				&mut uvs,
 				&mut indices,
 				// &mut tex,
-				(height % 7.) as u32,
+				tile.texture_id,
+				tile.side_texture_id,
 			);
 		}
 	}
@@ -67,9 +78,11 @@ fn create_tile(
 	uvs: &mut Vec<Vec2>,
 	indices: &mut Vec<u32>,
 	texture_index: u32,
+	side_texture_index: u32,
 ) {
 	let uv_offset = Vec2::splat(0.5);
 	let tex_off = Vec2::new(texture_index as f32, 0.);
+	let side_tex_off = Vec2::new(side_texture_index as f32, 0.);
 
 	let idx = verts.len() as u32;
 	uvs.push(uv_offset + tex_off);
@@ -89,7 +102,7 @@ fn create_tile(
 		match cur_n {
 			Some(n_height) => {
 				if n_height < pos.y {
-					create_tile_wall(pos, i, n_height, verts, uvs, indices, tex_off);
+					create_tile_wall(pos, i, n_height, verts, uvs, indices, side_tex_off);
 				}
 			}
 			_ => {}

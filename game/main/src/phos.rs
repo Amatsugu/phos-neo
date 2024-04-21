@@ -9,7 +9,7 @@ use iyes_perf_ui::prelude::*;
 use world_generation::biome_painter::{BiomePainterAsset, BiomePainterPlugin};
 use world_generation::hex_utils::offset_to_world;
 use world_generation::tile_manager::{self, TileAsset, TileAssetPlugin, TileManager};
-use world_generation::tile_mapper::TileMapperAssetPlugin;
+use world_generation::tile_mapper::{TileMapperAsset, TileMapperAssetPlugin};
 use world_generation::{
 	heightmap::generate_heightmap, mesh_generator::generate_chunk_mesh, prelude::*,
 };
@@ -27,7 +27,7 @@ impl Plugin for PhosGamePlugin {
 		app.add_systems(Startup, init_game)
 			.add_systems(Startup, (load_textures, load_tiles, create_map).chain());
 		//Systems - Update
-		app.add_systems(Update, (check_texture, spawn_map, print_tiles));
+		app.add_systems(Update, (finalize_texture, spawn_map, print_tiles));
 
 		//Perf UI
 		app.add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
@@ -92,11 +92,12 @@ fn print_tiles(tile_assets: Res<Assets<TileAsset>>) {
 	}
 }
 
-fn check_texture(
+fn finalize_texture(
 	asset_server: Res<AssetServer>,
 	mut atlas: ResMut<ChunkAtlas>,
 	mut map: ResMut<PhosMap>,
 	mut images: ResMut<Assets<Image>>,
+	painter: Res<Painter>,
 ) {
 	if atlas.is_loaded {
 		return;
@@ -105,9 +106,12 @@ fn check_texture(
 	if asset_server.load_state(atlas.handle.clone()) != LoadState::Loaded {
 		return;
 	}
+	if asset_server.load_state(painter.0.clone()) != LoadState::Loaded {
+		return;
+	}
 	let image = images.get_mut(&atlas.handle).unwrap();
 
-	let array_layers = 7;
+	let array_layers = 14;
 	image.reinterpret_stacked_2d_as_array(array_layers);
 
 	atlas.is_loaded = true;
@@ -186,9 +190,23 @@ fn spawn_map(
 	mut meshes: ResMut<Assets<Mesh>>,
 	atlas: Res<ChunkAtlas>,
 	mut map: ResMut<PhosMap>,
+	tile_assets: Res<Assets<TileAsset>>,
+	tile_mapper: Res<Assets<TileMapperAsset>>,
 ) {
 	if !map.ready || !map.regenerate {
+		return; 
+	}
+	let mapper_opt = tile_mapper.iter().next();
+	if mapper_opt.is_none() {
 		return;
+	}
+	let mapper = mapper_opt.unwrap().1;
+
+	for tile_handle in &mapper.tiles {
+		let t = tile_assets.get(tile_handle);
+		if t.is_none() {
+			return;
+		}
 	}
 	map.regenerate = false;
 	let chunk_material = materials.add(ExtendedMaterial {
@@ -202,7 +220,7 @@ fn spawn_map(
 	});
 
 	for chunk in &heightmap.chunks {
-		let mesh = generate_chunk_mesh(&chunk, &heightmap);
+		let mesh = generate_chunk_mesh(&chunk, &heightmap, mapper, &tile_assets);
 		let pos = offset_to_world(chunk.chunk_offset * Chunk::SIZE as i32, 0.);
 		commands.spawn((
 			MaterialMeshBundle {
