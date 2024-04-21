@@ -20,6 +20,8 @@ pub fn generate_heightmap(cfg: &GenerationConfig, seed: u32) -> Map {
 
 pub fn generate_chunk(chunk_x: f64, chunk_z: f64, cfg: &GenerationConfig, seed: u32) -> Chunk {
 	let mut result: [f32; Chunk::SIZE * Chunk::SIZE] = [0.; Chunk::SIZE * Chunk::SIZE];
+	let mut moisture = [0.; Chunk::SIZE * Chunk::SIZE];
+	let mut temp = [0.; Chunk::SIZE * Chunk::SIZE];
 	let noise = SuperSimplex::new(seed);
 	for z in 0..Chunk::SIZE {
 		for x in 0..Chunk::SIZE {
@@ -30,17 +32,33 @@ pub fn generate_chunk(chunk_x: f64, chunk_z: f64, cfg: &GenerationConfig, seed: 
 				&noise,
 			);
 			result[x + z * Chunk::SIZE] = sample;
+			moisture[x + z * Chunk::SIZE] = sample_simple(
+				x as f64 + chunk_x * Chunk::SIZE as f64,
+				z as f64 + chunk_z * Chunk::SIZE as f64,
+				&cfg.layers[0],
+				&noise,
+			) as f32;
+			temp[x + z * Chunk::SIZE] = sample_tempurature(
+				x as f32 + chunk_x as f32 * Chunk::SIZE as f32,
+				z as f32 + chunk_z as f32 * Chunk::SIZE as f32,
+				sample,
+				100.
+			);
 		}
 	}
 	return Chunk {
 		heights: result,
-		moisture: result.clone(),
-		temperature: result.clone(),
+		moisture: moisture,
+		temperature: temp,
 		chunk_offset: IVec2::new(chunk_x as i32, chunk_z as i32),
 	};
 }
 
-fn sample_point(x: f64, z: f64, cfg: &GenerationConfig, noise: &SuperSimplex) -> f32 {
+fn sample_tempurature(x: f32, z: f32, height: f32, equator: f32) -> f32 {
+	return height.remap(0., 100., 0., 1.).clamp(0., 1.);
+}
+
+fn sample_point(x: f64, z: f64, cfg: &GenerationConfig, noise: &impl NoiseFn<f64, 2>) -> f32 {
 	let x_s = x / cfg.noise_scale;
 	let z_s = z / cfg.noise_scale;
 
@@ -83,7 +101,7 @@ fn mask(mask: f64, value: f64, sea_level: f64) -> f64 {
 	return value * m;
 }
 
-fn sample_simple(x: f64, z: f64, cfg: &GeneratorLayer, noise: &SuperSimplex) -> f64 {
+fn sample_simple(x: f64, z: f64, cfg: &GeneratorLayer, noise: &impl NoiseFn<f64, 2>) -> f64 {
 	let mut freq: f64 = cfg.base_roughness;
 	let mut amp: f64 = 1.;
 	let mut value = 0.;
@@ -97,7 +115,7 @@ fn sample_simple(x: f64, z: f64, cfg: &GeneratorLayer, noise: &SuperSimplex) -> 
 	value -= cfg.min_value;
 	return value * cfg.strength;
 }
-fn sample_rigid(x: f64, z: f64, cfg: &GeneratorLayer, noise: &SuperSimplex) -> f64 {
+fn sample_rigid(x: f64, z: f64, cfg: &GeneratorLayer, noise: &impl NoiseFn<f64, 2>) -> f64 {
 	let mut freq: f64 = cfg.base_roughness;
 	let mut amp: f64 = 1.;
 	let mut value = 0.;

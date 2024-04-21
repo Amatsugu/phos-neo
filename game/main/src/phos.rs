@@ -194,7 +194,7 @@ fn spawn_map(
 	tile_mapper: Res<Assets<TileMapperAsset>>,
 ) {
 	if !map.ready || !map.regenerate {
-		return; 
+		return;
 	}
 	let mapper_opt = tile_mapper.iter().next();
 	if mapper_opt.is_none() {
