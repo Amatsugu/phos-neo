@@ -20,6 +20,15 @@ pub mod prelude {
 		pub layers: Vec<GeneratorLayer>,
 	}
 
+	impl GenerationConfig {
+		pub fn get_total_width(&self) -> usize {
+			return self.size.x as usize * Chunk::SIZE;
+		}
+		pub fn get_total_height(&self) -> usize {
+			return self.size.y as usize * Chunk::SIZE;
+		}
+	}
+
 	pub struct GeneratorLayer {
 		pub strength: f64,
 		pub min_value: f64,

@@ -39,10 +39,10 @@ pub fn generate_chunk(chunk_x: f64, chunk_z: f64, cfg: &GenerationConfig, seed: 
 				&noise,
 			) as f32;
 			temp[x + z * Chunk::SIZE] = sample_tempurature(
-				x as f32 + chunk_x as f32 * Chunk::SIZE as f32,
 				z as f32 + chunk_z as f32 * Chunk::SIZE as f32,
 				sample,
-				100.
+				&cfg,
+				100.,
 			);
 		}
 	}
@@ -54,8 +54,13 @@ pub fn generate_chunk(chunk_x: f64, chunk_z: f64, cfg: &GenerationConfig, seed: 
 	};
 }
 
-fn sample_tempurature(x: f32, z: f32, height: f32, equator: f32) -> f32 {
-	return height.remap(0., 100., 0., 1.).clamp(0., 1.);
+fn sample_tempurature(z: f32, height: f32, cfg: &GenerationConfig, equator: f32) -> f32 {
+	let d = (equator - z).abs();
+	let max_d = equator.max(cfg.get_total_height() as f32 - equator);
+	let t_mod = d.remap(0., max_d, 0., 1.);
+
+	// let max_d = d.max()
+	return height.remap(0., 100., 0., 1.).clamp(0., 1.) * t_mod;
 }
 
 fn sample_point(x: f64, z: f64, cfg: &GenerationConfig, noise: &impl NoiseFn<f64, 2>) -> f32 {

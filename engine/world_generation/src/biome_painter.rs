@@ -16,8 +16,8 @@ pub struct BiomePainterAsset {
 
 impl BiomePainterAsset {
 	pub fn sample_biome(&self, moisture: f32, temperature: f32) -> Handle<TileMapperAsset> {
-		let x = (moisture.clamp(0., 1.) * 4.).ceil() as usize;
-		let y = (temperature.clamp(0., 1.) * 4.).ceil() as usize;
+		let x = (moisture.clamp(0., 1.) * 3.).ceil() as usize;
+		let y = (temperature.clamp(0., 1.) * 3.).ceil() as usize;
 		return self.biomes[x + y * 4].clone();
 	}
 }
@@ -26,6 +26,7 @@ create_asset_loader!(
 	BiomePainterPlugin,
 	BiomePainterLoader,
 	BiomePainterAsset,
+	BiomePainterLoadState,
 	&["bimoes.json"],
 	;
 	biomes_path -> biomes

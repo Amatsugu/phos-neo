@@ -6,6 +6,7 @@ pub mod macros {
 			$plugin_name: ident,
 			$loader_name: ident,
 			$asset_type: ident,
+			$asset_loadstate_name: ident,
 			$extensions: expr,
 			$($string_name: ident -> $handle_name: ident)* ;
 			$($string_array_name: ident -> $handle_array_name: ident)* ?
@@ -18,6 +19,7 @@ pub mod macros {
 				fn build(&self, app: &mut App) {
 					app.init_asset::<$asset_type>()
 						.init_asset_loader::<$loader_name>()
+						.insert_resource($asset_loadstate_name::default())
 						.add_systems(Update, finalize);
 				}
 			}
@@ -25,10 +27,12 @@ pub mod macros {
 			fn finalize(
 				mut asset_events: EventReader<AssetEvent<$asset_type>>,
 				mut assets: ResMut<Assets<$asset_type>>,
+				mut load_state: ResMut<$asset_loadstate_name>,
 				 asset_server: Res<AssetServer>
 			) {
 				for event in asset_events.read() {
 					match event {
+						AssetEvent::Added { id } => load_state.added += 1,
 						AssetEvent::LoadedWithDependencies { id } => {
 							let asset = assets.get_mut(id.clone()).unwrap();
 
@@ -40,9 +44,25 @@ pub mod macros {
 									asset.$handle_array_name.push(asset_server.load(&asset.$string_array_name[i]));
 								}
 							)?
+							load_state.loaded += 1;
 						},
 						_ => (),
 					}
+				}
+			}
+
+			#[derive(Resource, Debug, Default)]
+			pub struct $asset_loadstate_name{
+				pub loaded: u32,
+				pub added: u32,
+			}
+
+			impl $asset_loadstate_name{
+				pub fn is_all_loaded(&self) -> bool{
+					if self.added == 0{
+						return false;
+					}
+					return self.loaded >= self.added;
 				}
 			}
 

@@ -25,7 +25,8 @@ impl Plugin for PhosCameraPlugin {
 	}
 }
 
-fn setup(mut commands: Commands) {
+fn setup(mut commands: Commands, mut msaa: ResMut<Msaa>) {
+	*msaa = Msaa::Off;
 	commands.spawn((
 		Camera3dBundle {
 			transform: Transform::from_xyz(0., 30., 0.)
@@ -42,7 +43,12 @@ fn update_camera(
 	mut cam_query: Query<(&PhosCamera, &mut Transform)>,
 	keyboard_input: Res<ButtonInput<KeyCode>>,
 	time: Res<Time>,
+	windows: Query<&Window>,
 ) {
+	let window = windows.single();
+	if window.cursor.grab_mode != CursorGrabMode::Locked {
+		return;
+	}
 	let (cam, mut transform) = cam_query.single_mut();
 
 	let mut move_vec = Vec3::ZERO;

@@ -1,15 +1,18 @@
 use crate::prelude::*;
 use bevy::asset::LoadState;
+use bevy::core_pipeline::experimental::taa::TemporalAntiAliasPlugin;
 use bevy::pbr::ExtendedMaterial;
 use bevy::{pbr::CascadeShadowConfig, prelude::*};
 use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
 use bevy_rapier3d::render::RapierDebugRenderPlugin;
 use camera_system::PhosCameraPlugin;
 use iyes_perf_ui::prelude::*;
-use world_generation::biome_painter::{BiomePainterAsset, BiomePainterPlugin};
+use world_generation::biome_painter::{
+	self, BiomePainterAsset, BiomePainterLoadState, BiomePainterPlugin,
+};
 use world_generation::hex_utils::offset_to_world;
-use world_generation::tile_manager::{self, TileAsset, TileAssetPlugin, TileManager};
-use world_generation::tile_mapper::{TileMapperAsset, TileMapperAssetPlugin};
+use world_generation::tile_manager::{TileAsset, TileAssetLoadState, TileAssetPlugin, TileManager};
+use world_generation::tile_mapper::{TileMapperAsset, TileMapperAssetPlugin, TileMapperLoadState};
 use world_generation::{
 	heightmap::generate_heightmap, mesh_generator::generate_chunk_mesh, prelude::*,
 };
@@ -21,13 +24,14 @@ impl Plugin for PhosGamePlugin {
 		app.add_plugins(PhosCameraPlugin)
 			.add_plugins(MaterialPlugin::<
 				ExtendedMaterial<StandardMaterial, ChunkMaterial>,
-			>::default());
+			>::default())
+			.add_plugins(TemporalAntiAliasPlugin);
 
 		//Systems - Startup
 		app.add_systems(Startup, init_game)
 			.add_systems(Startup, (load_textures, load_tiles, create_map).chain());
 		//Systems - Update
-		app.add_systems(Update, (finalize_texture, spawn_map, print_tiles));
+		app.add_systems(Update, (finalize_texture, spawn_map));
 
 		//Perf UI
 		app.add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
@@ -86,20 +90,21 @@ fn load_tiles(mut commands: Commands, asset_server: Res<AssetServer>) {
 	commands.insert_resource(Painter(handle));
 }
 
-fn print_tiles(tile_assets: Res<Assets<TileAsset>>) {
-	for (_, tile) in tile_assets.iter() {
-		println!("Tile: {}", tile.name);
-	}
-}
-
 fn finalize_texture(
 	asset_server: Res<AssetServer>,
 	mut atlas: ResMut<ChunkAtlas>,
 	mut map: ResMut<PhosMap>,
 	mut images: ResMut<Assets<Image>>,
 	painter: Res<Painter>,
+	painter_load: Res<BiomePainterLoadState>,
+	tile_load: Res<TileAssetLoadState>,
+	mapper_load: Res<TileMapperLoadState>,
 ) {
 	if atlas.is_loaded {
+		return;
+	}
+
+	if !painter_load.is_all_loaded() || !tile_load.is_all_loaded() || !mapper_load.is_all_loaded() {
 		return;
 	}
 
@@ -191,36 +196,30 @@ fn spawn_map(
 	atlas: Res<ChunkAtlas>,
 	mut map: ResMut<PhosMap>,
 	tile_assets: Res<Assets<TileAsset>>,
-	tile_mapper: Res<Assets<TileMapperAsset>>,
+	tile_mappers: Res<Assets<TileMapperAsset>>,
+	biome_painters: Res<Assets<BiomePainterAsset>>,
+	painter: Res<Painter>,
 ) {
 	if !map.ready || !map.regenerate {
 		return;
 	}
-	let mapper_opt = tile_mapper.iter().next();
-	if mapper_opt.is_none() {
-		return;
-	}
-	let mapper = mapper_opt.unwrap().1;
-
-	for tile_handle in &mapper.tiles {
-		let t = tile_assets.get(tile_handle);
-		if t.is_none() {
-			return;
-		}
-	}
+	let b_painter = biome_painters.get(painter.0.clone());
 	map.regenerate = false;
 	let chunk_material = materials.add(ExtendedMaterial {
-		base: StandardMaterial {
-			base_color: Color::WHITE,
-			..default()
-		},
+		base: StandardMaterial::default(),
 		extension: ChunkMaterial {
 			array_texture: atlas.handle.clone(),
 		},
 	});
 
 	for chunk in &heightmap.chunks {
-		let mesh = generate_chunk_mesh(&chunk, &heightmap, mapper, &tile_assets);
+		let mesh = generate_chunk_mesh(
+			&chunk,
+			&heightmap,
+			b_painter.unwrap(),
+			&tile_assets,
+			&tile_mappers,
+		);
 		let pos = offset_to_world(chunk.chunk_offset * Chunk::SIZE as i32, 0.);
 		commands.spawn((
 			MaterialMeshBundle {

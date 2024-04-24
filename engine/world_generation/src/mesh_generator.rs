@@ -1,3 +1,4 @@
+use crate::biome_painter::BiomePainterAsset;
 use crate::hex_utils::HexCoord;
 use crate::tile_manager::TileAsset;
 use crate::tile_mapper::TileMapperAsset;
@@ -26,8 +27,9 @@ const HEX_CORNERS: [Vec3; 6] = [
 pub fn generate_chunk_mesh(
 	chunk: &Chunk,
 	map: &Map,
-	tile_mapper: &TileMapperAsset,
+	painter: &BiomePainterAsset,
 	tiles: &Res<Assets<TileAsset>>,
+	mappers: &Res<Assets<TileMapperAsset>>,
 ) -> Mesh {
 	let vertex_count: usize = Chunk::SIZE * Chunk::SIZE * 6;
 	let mut verts = Vec::with_capacity(vertex_count);
@@ -37,13 +39,16 @@ pub fn generate_chunk_mesh(
 	for z in 0..Chunk::SIZE {
 		for x in 0..Chunk::SIZE {
 			let height = chunk.heights[x + z * Chunk::SIZE];
+			let moisture = chunk.moisture[x + z * Chunk::SIZE];
+			let temperature = chunk.temperature[x + z * Chunk::SIZE];
 			let off_pos = Vec3::new(x as f32, height, z as f32);
 			let tile_pos = offset3d_to_world(off_pos);
 			let coord = HexCoord::from_offset(
 				IVec2::new(x as i32, z as i32) + (chunk.chunk_offset * Chunk::SIZE as i32),
 			);
 			let n = map.get_neighbors(&coord);
-			let tile_handle = tile_mapper.sample_tile(height);
+			let biome = mappers.get(painter.sample_biome(moisture, temperature));
+			let tile_handle = biome.unwrap().sample_tile(height);
 			let tile = tiles.get(tile_handle).unwrap();
 
 			create_tile(

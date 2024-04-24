@@ -37,4 +37,4 @@ pub struct TileAsset {
 	pub side_texture: String,
 }
 
-create_asset_loader!(TileAssetPlugin, TileAssetLoader, TileAsset, &["tile.json"],;?);
+create_asset_loader!(TileAssetPlugin, TileAssetLoader, TileAsset, TileAssetLoadState, &["tile.json"],;?);

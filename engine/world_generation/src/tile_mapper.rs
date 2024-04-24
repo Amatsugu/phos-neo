@@ -34,6 +34,7 @@ create_asset_loader!(
 	TileMapperAssetPlugin,
 	TileMapperAssetLoader,
 	TileMapperAsset,
+	TileMapperLoadState,
 	&["mapper.json"],;
 	tiles_path -> tiles
 	?
