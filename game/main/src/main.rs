@@ -5,30 +5,33 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 mod phos;
 mod prelude;
+mod shaders;
 
 use phos::PhosGamePlugin;
 
 fn main() {
 	App::new()
 		.add_plugins((
-			DefaultPlugins.set(WindowPlugin {
-				primary_window: Some(Window {
-					title: "Phos".into(),
-					name: Some("phos".into()),
-					resolution: (1920.0, 1080.0).into(),
-					resizable: true,
-					present_mode: PresentMode::AutoNoVsync,
+			DefaultPlugins
+				.set(WindowPlugin {
+					primary_window: Some(Window {
+						title: "Phos".into(),
+						name: Some("phos".into()),
+						resolution: (1920.0, 1080.0).into(),
+						resizable: true,
+						present_mode: PresentMode::AutoNoVsync,
+						..default()
+					}),
 					..default()
+				})
+				.set(ImagePlugin {
+					default_sampler: ImageSamplerDescriptor {
+						address_mode_u: ImageAddressMode::Repeat,
+						address_mode_v: ImageAddressMode::Repeat,
+						mag_filter: ImageFilterMode::Nearest,
+						..default()
+					},
 				}),
-				..default()
-			}).set(ImagePlugin {
-				default_sampler: ImageSamplerDescriptor {
-					address_mode_u: ImageAddressMode::Repeat,
-					address_mode_v: ImageAddressMode::Repeat,
-					mag_filter: ImageFilterMode::Nearest,
-					..default()
-				}
-			}),
 			WorldInspectorPlugin::new(),
 			PhosGamePlugin,
 		))

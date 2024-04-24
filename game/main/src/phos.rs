@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use crate::shaders::chunk::ChunkMaterial;
 use bevy::asset::LoadState;
 use bevy::core_pipeline::experimental::taa::TemporalAntiAliasPlugin;
 use bevy::pbr::ExtendedMaterial;
