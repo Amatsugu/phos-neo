@@ -5,7 +5,7 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 mod phos;
 mod prelude;
-
+mod shader_extensions;
 use phos::PhosGamePlugin;
 
 fn main() {

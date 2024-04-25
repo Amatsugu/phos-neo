@@ -25,8 +25,7 @@ impl Plugin for PhosCameraPlugin {
 	}
 }
 
-fn setup(mut commands: Commands, mut msaa: ResMut<Msaa>) {
-	*msaa = Msaa::Off;
+fn setup(mut commands: Commands) {
 	commands.spawn((
 		Camera3dBundle {
 			transform: Transform::from_xyz(0., 30., 0.)

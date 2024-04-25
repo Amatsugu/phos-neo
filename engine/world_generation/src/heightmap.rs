@@ -32,12 +32,10 @@ pub fn generate_chunk(chunk_x: f64, chunk_z: f64, cfg: &GenerationConfig, seed: 
 				&noise,
 			);
 			result[x + z * Chunk::SIZE] = sample;
-			moisture[x + z * Chunk::SIZE] = sample_simple(
-				x as f64 + chunk_x * Chunk::SIZE as f64,
-				z as f64 + chunk_z * Chunk::SIZE as f64,
-				&cfg.layers[0],
-				&noise,
-			) as f32;
+			moisture[x + z * Chunk::SIZE] = noise.get([
+				(x as f64 + chunk_x * Chunk::SIZE as f64) / &cfg.noise_scale,
+				(z as f64 + chunk_z * Chunk::SIZE as f64) / &cfg.noise_scale,
+			]) as f32;
 			temp[x + z * Chunk::SIZE] = sample_tempurature(
 				z as f32 + chunk_z as f32 * Chunk::SIZE as f32,
 				sample,
@@ -57,10 +55,10 @@ pub fn generate_chunk(chunk_x: f64, chunk_z: f64, cfg: &GenerationConfig, seed: 
 fn sample_tempurature(z: f32, height: f32, cfg: &GenerationConfig, equator: f32) -> f32 {
 	let d = (equator - z).abs();
 	let max_d = equator.max(cfg.get_total_height() as f32 - equator);
-	let t_mod = d.remap(0., max_d, 0., 1.);
+	let t_mod = d.remap(0., max_d, 0., 1.).clamp(0., 1.);
 
 	// let max_d = d.max()
-	return height.remap(0., 100., 0., 1.).clamp(0., 1.) * t_mod;
+	return (height.remap(0., 50., 0., 1.).clamp(0., 1.) + t_mod) / 2.;
 }
 
 fn sample_point(x: f64, z: f64, cfg: &GenerationConfig, noise: &impl NoiseFn<f64, 2>) -> f32 {
