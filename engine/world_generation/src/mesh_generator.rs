@@ -76,6 +76,7 @@ pub fn generate_chunk_mesh(
 	return mesh;
 }
 
+const TEX_MULTI: Vec2 = Vec2::new(1000., 1.);
 fn create_tile(
 	pos: Vec3,
 	neighbors: &[Option<f32>; 6],
@@ -90,13 +91,13 @@ fn create_tile(
 	let side_tex_off = Vec2::new(side_texture_index as f32, 0.);
 
 	let idx = verts.len() as u32;
-	uvs.push(uv_offset + tex_off);
+	uvs.push((uv_offset / TEX_MULTI) + tex_off);
 	verts.push(pos);
 	for i in 0..6 {
 		let p = pos + HEX_CORNERS[i];
 		verts.push(p);
 		let uv = (HEX_CORNERS[i].xz() / 2.) + uv_offset;
-		uvs.push(uv + tex_off);
+		uvs.push((uv / TEX_MULTI) + tex_off);
 		indices.push(idx);
 		indices.push(idx + 1 + i as u32);
 		indices.push(idx + 1 + ((i as u32 + 1) % 6));
@@ -145,7 +146,7 @@ fn create_tile_wall(
 	indices.push(idx + 3);
 
 	uvs.push(Vec2::ZERO + tex_off);
-	uvs.push(Vec2::new(1., 0.) + tex_off);
-	uvs.push(Vec2::new(0., pos.y - height) + tex_off);
-	uvs.push(Vec2::new(1., pos.y - height) + tex_off);
+	uvs.push((Vec2::new(1., 0.) / TEX_MULTI) + tex_off);
+	uvs.push((Vec2::new(0., pos.y - height) / TEX_MULTI) + tex_off);
+	uvs.push((Vec2::new(1., pos.y - height) / TEX_MULTI) + tex_off);
 }
