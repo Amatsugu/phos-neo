@@ -105,7 +105,6 @@ pub fn generate_chunk_mesh(
 	return mesh;
 }
 
-const TEX_MULTI: Vec2 = Vec2::new(1000., 1.);
 fn create_tile(
 	pos: Vec3,
 	neighbors: &[Option<f32>; 6],
