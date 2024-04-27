@@ -32,6 +32,31 @@ const HEX_NORMALS: [Vec3; 6] = [
 	Vec3::new(-INNER_RADIUS, 0., 0.5 * OUTER_RADIUS),
 ];
 
+const HEX_NORMALS: [Vec3; 6] = [
+	Vec3::new(
+		INNER_RADIUS / 2.,
+		0.,
+		(OUTER_RADIUS + 0.5 * OUTER_RADIUS) / 2.,
+	),
+	Vec3::Z,
+	Vec3::new(
+		INNER_RADIUS / -2.,
+		0.,
+		(OUTER_RADIUS + 0.5 * OUTER_RADIUS) / 2.,
+	),
+	Vec3::new(
+		INNER_RADIUS / -2.,
+		0.,
+		(OUTER_RADIUS + 0.5 * OUTER_RADIUS) / -2.,
+	),
+	Vec3::NEG_Z,
+	Vec3::new(
+		INNER_RADIUS / 2.,
+		0.,
+		(OUTER_RADIUS + 0.5 * OUTER_RADIUS) / -2.,
+	),
+];
+
 pub fn generate_chunk_mesh(
 	chunk: &Chunk,
 	map: &Map,
@@ -43,6 +68,7 @@ pub fn generate_chunk_mesh(
 	let mut verts = Vec::with_capacity(vertex_count);
 	let mut uvs = Vec::with_capacity(vertex_count);
 	let mut indices = Vec::with_capacity(vertex_count);
+	let mut normals = Vec::with_capacity(vertex_count);
 	let mut texture_indicies = Vec::with_capacity(vertex_count);
 
 	for z in 0..Chunk::SIZE {
@@ -66,6 +92,7 @@ pub fn generate_chunk_mesh(
 				&mut verts,
 				&mut uvs,
 				&mut indices,
+				&mut normals,
 				&mut texture_indicies,
 				// &mut tex,
 				tile.texture_id,
@@ -81,18 +108,19 @@ pub fn generate_chunk_mesh(
 	.with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, verts)
 	.with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uvs)
 	.with_inserted_attribute(ATTRIBUTE_TEXTURE_INDEX, texture_indicies)
-	.with_inserted_indices(Indices::U32(indices))
-	.with_duplicated_vertices()
-	.with_computed_flat_normals();
+	.with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, normals)
+	.with_inserted_indices(Indices::U32(indices));
 	return mesh;
 }
 
+const TEX_MULTI: Vec2 = Vec2::new(1000., 1.);
 fn create_tile(
 	pos: Vec3,
 	neighbors: &[Option<f32>; 6],
 	verts: &mut Vec<Vec3>,
 	uvs: &mut Vec<Vec2>,
 	indices: &mut Vec<u32>,
+	normals: &mut Vec<Vec3>,
 	texture_indices: &mut Vec<u32>,
 	texture_index: u32,
 	side_texture_index: u32,
@@ -100,17 +128,20 @@ fn create_tile(
 	let uv_offset = Vec2::splat(0.5);
 
 	let idx = verts.len() as u32;
-	uvs.push(uv_offset);
 	texture_indices.push(texture_index);
+	uvs.push((uv_offset / TEX_MULTI) + tex_off);
 	verts.push(pos);
+	normals.push(Vec3::Y);
+
 	for i in 0..6 {
 		let p = pos + HEX_CORNERS[i];
 		verts.push(p);
 		let uv = (HEX_CORNERS[i].xz() / 2.) + uv_offset;
-		uvs.push(uv);
+		uvs.push((uv / TEX_MULTI) + tex_off);
 		indices.push(idx);
 		indices.push(idx + 1 + i as u32);
 		indices.push(idx + 1 + ((i as u32 + 1) % 6));
+		normals.push(Vec3::Y);
 		texture_indices.push(texture_index);
 	}
 
@@ -126,6 +157,7 @@ fn create_tile(
 						verts,
 						uvs,
 						indices,
+						normals,
 						texture_indices,
 						side_texture_index,
 					);
@@ -143,8 +175,10 @@ fn create_tile_wall(
 	verts: &mut Vec<Vec3>,
 	uvs: &mut Vec<Vec2>,
 	indices: &mut Vec<u32>,
+	normals: &mut Vec<Vec3>,
 	texture_indices: &mut Vec<u32>,
 	texture_index: u32,
+	tex_off: Vec2,
 ) {
 	let p1 = HEX_CORNERS[(dir) % 6] + pos;
 	let p2 = HEX_CORNERS[(dir + 1) % 6] + pos;
@@ -162,6 +196,12 @@ fn create_tile_wall(
 	texture_indices.push(texture_index);
 	texture_indices.push(texture_index);
 	texture_indices.push(texture_index);
+
+	let n = HEX_NORMALS[dir].normalize();
+	normals.push(n);
+	normals.push(n);
+	normals.push(n);
+	normals.push(n);
 
 	indices.push(idx);
 	indices.push(idx + 2);

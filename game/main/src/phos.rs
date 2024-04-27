@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use crate::shaders::chunk::ChunkMaterial;
+use crate::shader_extensions::chunk_material::ChunkMaterial;
 use bevy::asset::LoadState;
 use bevy::core_pipeline::experimental::taa::TemporalAntiAliasPlugin;
 use bevy::pbr::ExtendedMaterial;
@@ -9,7 +9,7 @@ use bevy_rapier3d::render::RapierDebugRenderPlugin;
 use camera_system::PhosCameraPlugin;
 use iyes_perf_ui::prelude::*;
 use world_generation::biome_painter::{
-	self, BiomePainterAsset, BiomePainterLoadState, BiomePainterPlugin,
+	BiomePainterAsset, BiomePainterLoadState, BiomePainterPlugin,
 };
 use world_generation::hex_utils::offset_to_world;
 use world_generation::tile_manager::{TileAsset, TileAssetLoadState, TileAssetPlugin, TileManager};

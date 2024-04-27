@@ -7,7 +7,7 @@
 		{
 			"type": "cppvsdbg",
 			"stopAtEntry": false,
-			"console": "externalTerminal",
+			// "console": "externalTerminal",
 			"request": "launch",
 			"name": "Debug",
 			"program": "${workspaceRoot}/target/debug/phos.exe",
