@@ -23,14 +23,6 @@ const HEX_CORNERS: [Vec3; 6] = [
 	Vec3::new(-INNER_RADIUS, 0., -0.5 * OUTER_RADIUS),
 	Vec3::new(-INNER_RADIUS, 0., 0.5 * OUTER_RADIUS),
 ];
-const HEX_NORMALS: [Vec3; 6] = [
-	Vec3::new(0., 0., OUTER_RADIUS),
-	Vec3::new(INNER_RADIUS, 0., 0.5 * OUTER_RADIUS),
-	Vec3::new(INNER_RADIUS, 0., -0.5 * OUTER_RADIUS),
-	Vec3::new(0., 0., -OUTER_RADIUS),
-	Vec3::new(-INNER_RADIUS, 0., -0.5 * OUTER_RADIUS),
-	Vec3::new(-INNER_RADIUS, 0., 0.5 * OUTER_RADIUS),
-];
 
 const HEX_NORMALS: [Vec3; 6] = [
 	Vec3::new(
@@ -129,7 +121,7 @@ fn create_tile(
 
 	let idx = verts.len() as u32;
 	texture_indices.push(texture_index);
-	uvs.push((uv_offset / TEX_MULTI) + tex_off);
+	uvs.push(uv_offset);
 	verts.push(pos);
 	normals.push(Vec3::Y);
 
@@ -137,7 +129,7 @@ fn create_tile(
 		let p = pos + HEX_CORNERS[i];
 		verts.push(p);
 		let uv = (HEX_CORNERS[i].xz() / 2.) + uv_offset;
-		uvs.push((uv / TEX_MULTI) + tex_off);
+		uvs.push(uv);
 		indices.push(idx);
 		indices.push(idx + 1 + i as u32);
 		indices.push(idx + 1 + ((i as u32 + 1) % 6));
@@ -178,7 +170,6 @@ fn create_tile_wall(
 	normals: &mut Vec<Vec3>,
 	texture_indices: &mut Vec<u32>,
 	texture_index: u32,
-	tex_off: Vec2,
 ) {
 	let p1 = HEX_CORNERS[(dir) % 6] + pos;
 	let p2 = HEX_CORNERS[(dir + 1) % 6] + pos;
