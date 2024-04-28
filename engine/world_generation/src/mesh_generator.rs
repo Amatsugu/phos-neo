@@ -186,3 +186,15 @@ fn create_tile_wall(
 	uvs.push((Vec2::new(0., pos.y - height) / TEX_MULTI) + tex_off);
 	uvs.push((Vec2::new(1., pos.y - height) / TEX_MULTI) + tex_off);
 }
+
+fn pack_vertex_data(offset: IVec2, vert: usize, tex: u32) -> u32 {
+	//4 bits vert
+	//6 + 6 bits offset
+	//12 bits texture
+	let mut data = offset.x as u32;
+	data += (offset.y as u32) << 6;
+	data += (vert as u32) << (6 + 6);
+	data += tex << (6 + 6 + 4);
+
+	return data;
+}
