@@ -94,6 +94,8 @@ pub mod prelude {
 			return chunk.temperature[pos.to_chunk_local_index()];
 		}
 	}
+	pub const ATTRIBUTE_PACKED_VERTEX_DATA: MeshVertexAttribute =
+		MeshVertexAttribute::new("PackedVertexData", 988540817, VertexFormat::Uint32);
 
 	pub const ATTRIBUTE_TEXTURE_INDEX: MeshVertexAttribute =
 		MeshVertexAttribute::new("TextureIndex", 988540917, VertexFormat::Uint32);
