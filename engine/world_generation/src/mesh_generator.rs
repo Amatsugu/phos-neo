@@ -145,6 +145,7 @@ pub fn generate_packed_chunk_mesh(
 		RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
 	)
 	.with_inserted_attribute(ATTRIBUTE_PACKED_VERTEX_DATA, packed_data)
+	.with_inserted_attribute(ATTRIBUTE_VERTEX_HEIGHT, heights)
 	.with_inserted_indices(Indices::U32(indices));
 	return mesh;
 }
@@ -291,7 +292,7 @@ fn create_tile_wall(
 	verts.push(p3);
 	verts.push(p4);
 
-	let n = HEX_NORMALS[dir].normalize();
+	let n = HEX_NORMALS[dir];
 	normals.push(n);
 	normals.push(n);
 	normals.push(n);
@@ -312,8 +313,8 @@ fn create_tile_wall(
 }
 
 fn pack_vertex_data(offset: UVec2, vert: usize, tex: u32) -> u32 {
-	//4 bits vert
 	//6 + 6 bits offset
+	//4 bits vert
 	//12 bits texture
 	let mut data = offset.x;
 	data += (offset.y) << 6;

@@ -96,6 +96,8 @@ pub mod prelude {
 	}
 	pub const ATTRIBUTE_PACKED_VERTEX_DATA: MeshVertexAttribute =
 		MeshVertexAttribute::new("PackedVertexData", 988540817, VertexFormat::Uint32);
+	pub const ATTRIBUTE_VERTEX_HEIGHT: MeshVertexAttribute =
+		MeshVertexAttribute::new("VertexHeight", 988540717, VertexFormat::Float32);
 
 	pub const ATTRIBUTE_TEXTURE_INDEX: MeshVertexAttribute =
 		MeshVertexAttribute::new("TextureIndex", 988540917, VertexFormat::Uint32);

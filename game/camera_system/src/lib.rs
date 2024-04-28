@@ -95,8 +95,8 @@ fn update_camera_mouse(
 			CursorGrabMode::None => (),
 			_ => {
 				// Using smallest of height or width ensures equal vertical and horizontal sensitivity
-				pitch -= (ev.delta.y * time.delta_seconds() * 5.).to_radians();
-				yaw -= (ev.delta.x * time.delta_seconds() * 5.).to_radians();
+				pitch -= ev.delta.y.to_radians() * time.delta_seconds() * 5.;
+				yaw -= ev.delta.x.to_radians() * time.delta_seconds() * 5.;
 			}
 		}
 

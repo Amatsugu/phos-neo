@@ -1,11 +1,12 @@
 use crate::prelude::*;
 use crate::shader_extensions::chunk_material::ChunkMaterial;
 use bevy::asset::LoadState;
-use bevy::core_pipeline::experimental::taa::TemporalAntiAliasPlugin;
 use bevy::pbr::ExtendedMaterial;
+use bevy::render::view::visibility;
 use bevy::{pbr::CascadeShadowConfig, prelude::*};
 use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
 use bevy_rapier3d::render::RapierDebugRenderPlugin;
+use camera_system::prelude::PhosCamera;
 use camera_system::PhosCameraPlugin;
 use iyes_perf_ui::prelude::*;
 use world_generation::biome_painter::{
@@ -25,12 +26,14 @@ impl Plugin for PhosGamePlugin {
 		app.add_plugins(PhosCameraPlugin)
 			.add_plugins(MaterialPlugin::<
 				ExtendedMaterial<StandardMaterial, ChunkMaterial>,
-			>::default())
-			.add_plugins(TemporalAntiAliasPlugin);
+			>::default());
 
 		//Systems - Startup
 		app.add_systems(Startup, init_game)
 			.add_systems(Startup, (load_textures, load_tiles, create_map).chain());
+
+		//Systems - PreUpdate
+		app.add_systems(PreUpdate, render_distance_system);
 		//Systems - Update
 		app.add_systems(Update, (finalize_texture, spawn_map));
 
@@ -231,5 +234,20 @@ fn spawn_map(
 			},
 			PhosChunk,
 		));
+	}
+}
+
+fn render_distance_system(
+	mut chunks: Query<(&Transform, &mut Visibility), With<PhosChunk>>,
+	camera: Query<&Transform, With<PhosCamera>>,
+) {
+	let cam = camera.single();
+	for (transform, mut visibility) in chunks.iter_mut() {
+		let dist = (transform.translation - cam.translation).length_squared();
+		if dist > 1000000. {
+			*visibility = Visibility::Hidden;
+		} else {
+			*visibility = Visibility::Visible;
+		}
 	}
 }
