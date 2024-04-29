@@ -2,13 +2,12 @@ use crate::prelude::*;
 use crate::shader_extensions::chunk_material::ChunkMaterial;
 use bevy::asset::LoadState;
 use bevy::pbr::ExtendedMaterial;
-use bevy::render::view::visibility;
 use bevy::{pbr::CascadeShadowConfig, prelude::*};
 use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
 use bevy_rapier3d::render::RapierDebugRenderPlugin;
-use camera_system::prelude::PhosCamera;
 use camera_system::PhosCameraPlugin;
 use iyes_perf_ui::prelude::*;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use world_generation::biome_painter::{
 	BiomePainterAsset, BiomePainterLoadState, BiomePainterPlugin,
 };
@@ -32,8 +31,6 @@ impl Plugin for PhosGamePlugin {
 		app.add_systems(Startup, init_game)
 			.add_systems(Startup, (load_textures, load_tiles, create_map).chain());
 
-		//Systems - PreUpdate
-		app.add_systems(PreUpdate, render_distance_system);
 		//Systems - Update
 		app.add_systems(Update, (finalize_texture, spawn_map));
 
@@ -216,15 +213,22 @@ fn spawn_map(
 		},
 	});
 
-	for chunk in &heightmap.chunks {
-		let mesh = generate_chunk_mesh(
-			&chunk,
-			&heightmap,
-			b_painter.unwrap(),
-			&tile_assets,
-			&tile_mappers,
-		);
-		let pos = offset_to_world(chunk.chunk_offset * Chunk::SIZE as i32, 0.);
+	let cur_painter = b_painter.unwrap();
+
+	let chunk_meshes: Vec<_> = heightmap
+		.chunks
+		.par_iter()
+		.map(|chunk: &Chunk| {
+			let mesh =
+				generate_chunk_mesh(chunk, &heightmap, cur_painter, &tile_assets, &tile_mappers);
+			return (
+				mesh,
+				offset_to_world(chunk.chunk_offset * Chunk::SIZE as i32, 0.),
+			);
+		})
+		.collect();
+
+	for (mesh, pos) in chunk_meshes {
 		commands.spawn((
 			MaterialMeshBundle {
 				mesh: meshes.add(mesh),
@@ -235,19 +239,39 @@ fn spawn_map(
 			PhosChunk,
 		));
 	}
+
+	// for chunk in &heightmap.chunks {
+	// 	let mesh = generate_chunk_mesh(
+	// 		&chunk,
+	// 		&heightmap,
+	// 		b_painter.unwrap(),
+	// 		&tile_assets,
+	// 		&tile_mappers,
+	// 	);
+	// 	let pos = offset_to_world(chunk.chunk_offset * Chunk::SIZE as i32, 0.);
+	// 	commands.spawn((
+	// 		MaterialMeshBundle {
+	// 			mesh: meshes.add(mesh),
+	// 			material: chunk_material.clone(),
+	// 			transform: Transform::from_translation(pos),
+	// 			..default()
+	// 		},
+	// 		PhosChunk::from_translation(pos),
+	// 	));
+	// }
 }
 
-fn render_distance_system(
-	mut chunks: Query<(&Transform, &mut Visibility), With<PhosChunk>>,
-	camera: Query<&Transform, With<PhosCamera>>,
-) {
-	let cam = camera.single();
-	for (transform, mut visibility) in chunks.iter_mut() {
-		let dist = (transform.translation - cam.translation).length_squared();
-		if dist > 1000000. {
-			*visibility = Visibility::Hidden;
-		} else {
-			*visibility = Visibility::Visible;
-		}
-	}
-}
+// fn render_distance_system(
+// 	mut chunks: Query<(&PhosChunk, &mut Visibility)>,
+// 	camera: Query<&Transform, With<PhosCamera>>,
+// ) {
+// 	let cam = camera.single();
+// 	for (transform, mut visibility) in chunks.iter_mut() {
+// 		let dist = (transform.center - cam.translation).length();
+// 		if dist > 500. {
+// 			*visibility = Visibility::Hidden;
+// 		} else {
+// 			*visibility = Visibility::Visible;
+// 		}
+// 	}
+// }

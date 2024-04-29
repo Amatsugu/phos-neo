@@ -1,16 +1,20 @@
 use bevy::math::IVec2;
 use bevy::prelude::{FloatExt, Vec2};
 use noise::{NoiseFn, SuperSimplex};
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 use crate::prelude::*;
 
 pub fn generate_heightmap(cfg: &GenerationConfig, seed: u32) -> Map {
-	let mut chunks: Vec<Chunk> = Vec::with_capacity(cfg.size.length_squared() as usize);
-	for z in 0..cfg.size.y {
-		for x in 0..cfg.size.x {
-			chunks.push(generate_chunk(x as f64, z as f64, cfg, seed));
-		}
-	}
+	// let mut chunks: Vec<Chunk> = Vec::with_capacity(cfg.size.length_squared() as usize);
+	let chunks = (0..cfg.size.y)
+		.into_par_iter()
+		.flat_map(|z| {
+			(0..cfg.size.x)
+				.into_par_iter()
+				.map(move |x| generate_chunk(x as f64, z as f64, cfg, seed))
+		})
+		.collect();
 	return Map {
 		chunks,
 		height: cfg.size.y as usize,
