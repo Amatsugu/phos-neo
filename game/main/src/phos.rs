@@ -9,6 +9,7 @@ use bevy::{
 use bevy_rapier3d::dynamics::{RigidBody, Velocity};
 use bevy_rapier3d::geometry::{Collider, Restitution};
 use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
+use bevy_rapier3d::render::RapierDebugRenderPlugin;
 use camera_system::prelude::PhosCamera;
 use camera_system::PhosCameraPlugin;
 use iyes_perf_ui::prelude::*;
@@ -38,7 +39,15 @@ impl Plugin for PhosGamePlugin {
 			.add_systems(Startup, (load_textures, load_tiles, create_map).chain());
 
 		//Systems - Update
-		app.add_systems(Update, (finalize_texture, spawn_map, spawn_sphere));
+		app.add_systems(
+			Update,
+			(
+				finalize_texture,
+				spawn_map,
+				spawn_sphere,
+				render_distance_system,
+			),
+		);
 
 		//Perf UI
 		app.add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
@@ -52,7 +61,7 @@ impl Plugin for PhosGamePlugin {
 		app.add_plugins(BiomePainterPlugin);
 		//Physics
 		app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
-		// .add_plugins(RapierDebugRenderPlugin::default());
+		// app.add_plugins(RapierDebugRenderPlugin::default());
 
 		app.insert_resource(WireframeConfig {
 			global: false,
@@ -200,6 +209,7 @@ fn create_map(mut commands: Commands) {
 			sea_level: 4.,
 			border_size: 64.,
 			size: UVec2::splat(1024 / Chunk::SIZE as u32),
+			// size: UVec2::splat(1),
 		},
 		4,
 	);
@@ -276,28 +286,30 @@ fn spawn_sphere(
 		let cam_transform = cam.single();
 		commands.spawn((
 			MaterialMeshBundle {
-				mesh: meshes.add(Sphere::new(0.5)),
+				mesh: meshes.add(Sphere::new(0.3)),
 				material: mat.0.clone(),
 				transform: Transform::from_translation(cam_transform.translation),
 				..default()
 			},
-			Collider::ball(0.5),
+			Collider::ball(0.3),
 			RigidBody::Dynamic,
-			Velocity::linear(cam_transform.forward() * 100.),
+			Velocity::linear(cam_transform.forward() * 50.),
 		));
 	}
 }
-// fn render_distance_system(
-// 	mut chunks: Query<(&PhosChunk, &mut Visibility)>,
-// 	camera: Query<&Transform, With<PhosCamera>>,
-// ) {
-// 	let cam = camera.single();
-// 	for (transform, mut visibility) in chunks.iter_mut() {
-// 		let dist = (transform.center - cam.translation).length();
-// 		if dist > 500. {
-// 			*visibility = Visibility::Hidden;
-// 		} else {
-// 			*visibility = Visibility::Visible;
-// 		}
-// 	}
-// }
+fn render_distance_system(
+	mut chunks: Query<(&Transform, &mut Visibility), With<PhosChunk>>,
+	camera: Query<&Transform, With<PhosCamera>>,
+) {
+	let cam = camera.single();
+	for (transform, mut visibility) in chunks.iter_mut() {
+		let dist = (transform.translation - cam.translation
+			+ Vec3::new((Chunk::SIZE / 2) as f32, 0., (Chunk::SIZE / 2) as f32))
+		.length();
+		if dist > 500. {
+			*visibility = Visibility::Hidden;
+		} else {
+			*visibility = Visibility::Visible;
+		}
+	}
+}

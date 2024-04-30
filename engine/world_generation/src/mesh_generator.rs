@@ -43,7 +43,6 @@ fn create_tile_collider(
 	}
 	for i in 0..3 {
 		let off = i * 2;
-
 		indices.push([off + idx, ((off + 1) % 6) + idx, ((off + 2) % 6) + idx]);
 	}
 
@@ -80,8 +79,9 @@ fn create_tile_wall_collider(
 	verts.push(pos + HEX_CORNERS[dir]);
 	verts.push(pos + HEX_CORNERS[(dir + 1) % 6]);
 
-	indices.push([idx, idx + 1, idx2]);
-	indices.push([idx, idx2 + 1, idx2]);
+	let off = dir as u32;
+	indices.push([idx + off, idx + ((off + 1) % 6), idx2 + 1]);
+	indices.push([idx + off, idx2 + 1, idx2]);
 }
 
 pub fn generate_chunk_mesh(
