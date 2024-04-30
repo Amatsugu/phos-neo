@@ -1,3 +1,4 @@
+use bevy::pbr::wireframe::WireframePlugin;
 use bevy::prelude::*;
 use bevy::render::texture::{ImageAddressMode, ImageFilterMode, ImageSamplerDescriptor};
 use bevy::window::PresentMode;
@@ -32,6 +33,7 @@ fn main() {
 					},
 				}),
 			WorldInspectorPlugin::new(),
+			WireframePlugin,
 			PhosGamePlugin,
 		))
 		.run();

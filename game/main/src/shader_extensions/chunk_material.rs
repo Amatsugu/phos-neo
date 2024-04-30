@@ -1,10 +1,8 @@
 use bevy::asset::{Asset, Handle};
 use bevy::pbr::MaterialExtension;
 use bevy::reflect::TypePath;
-use bevy::render::mesh::Mesh;
 use bevy::render::render_resource::{AsBindGroup, ShaderRef};
 use bevy::render::texture::Image;
-use world_generation::prelude::{ATTRIBUTE_PACKED_VERTEX_DATA, ATTRIBUTE_VERTEX_HEIGHT};
 
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct ChunkMaterial {

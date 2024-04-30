@@ -1,10 +1,15 @@
 use crate::prelude::*;
 use crate::shader_extensions::chunk_material::ChunkMaterial;
 use bevy::asset::LoadState;
-use bevy::pbr::ExtendedMaterial;
-use bevy::{pbr::CascadeShadowConfig, prelude::*};
+use bevy::pbr::{ExtendedMaterial, PbrPlugin};
+use bevy::{
+	pbr::{wireframe::WireframeConfig, CascadeShadowConfig},
+	prelude::*,
+};
+use bevy_rapier3d::dynamics::{RigidBody, Velocity};
+use bevy_rapier3d::geometry::{Collider, Restitution};
 use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
-use bevy_rapier3d::render::RapierDebugRenderPlugin;
+use camera_system::prelude::PhosCamera;
 use camera_system::PhosCameraPlugin;
 use iyes_perf_ui::prelude::*;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
@@ -12,6 +17,7 @@ use world_generation::biome_painter::{
 	BiomePainterAsset, BiomePainterLoadState, BiomePainterPlugin,
 };
 use world_generation::hex_utils::offset_to_world;
+use world_generation::mesh_generator::generate_chunk_collider;
 use world_generation::tile_manager::{TileAsset, TileAssetLoadState, TileAssetPlugin, TileManager};
 use world_generation::tile_mapper::{TileMapperAsset, TileMapperAssetPlugin, TileMapperLoadState};
 use world_generation::{
@@ -32,7 +38,7 @@ impl Plugin for PhosGamePlugin {
 			.add_systems(Startup, (load_textures, load_tiles, create_map).chain());
 
 		//Systems - Update
-		app.add_systems(Update, (finalize_texture, spawn_map));
+		app.add_systems(Update, (finalize_texture, spawn_map, spawn_sphere));
 
 		//Perf UI
 		app.add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
@@ -45,12 +51,17 @@ impl Plugin for PhosGamePlugin {
 		app.add_plugins(TileMapperAssetPlugin);
 		app.add_plugins(BiomePainterPlugin);
 		//Physics
-		app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
-			.add_plugins(RapierDebugRenderPlugin::default());
+		app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
+		// .add_plugins(RapierDebugRenderPlugin::default());
+
+		app.insert_resource(WireframeConfig {
+			global: false,
+			default_color: Color::hex("FF0064").unwrap(),
+		});
 	}
 }
 
-fn init_game(mut commands: Commands) {
+fn init_game(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>) {
 	commands.spawn((
 		PerfUiRoot::default(),
 		PerfUiEntryFPS::default(),
@@ -65,7 +76,7 @@ fn init_game(mut commands: Commands) {
 			..default()
 		},
 		cascade_shadow_config: CascadeShadowConfig {
-			bounds: vec![500., 1000., 2000., 5000.],
+			bounds: vec![500., 1000., 1500., 2000.],
 			..default()
 		},
 		transform: Transform::from_xyz(500., 260.0, 500.).looking_at(Vec3::ZERO, Vec3::Y),
@@ -74,6 +85,13 @@ fn init_game(mut commands: Commands) {
 
 	commands.insert_resource(PhosMap::default());
 	commands.insert_resource(TileManager::default());
+
+	let sphere_mat = StandardMaterial {
+		base_color: Color::CYAN,
+		..default()
+	};
+	let handle = materials.add(sphere_mat);
+	commands.insert_resource(SphereMat(handle));
 }
 
 fn load_textures(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -221,14 +239,16 @@ fn spawn_map(
 		.map(|chunk: &Chunk| {
 			let mesh =
 				generate_chunk_mesh(chunk, &heightmap, cur_painter, &tile_assets, &tile_mappers);
+			let collision = generate_chunk_collider(chunk, &heightmap);
 			return (
 				mesh,
+				collision,
 				offset_to_world(chunk.chunk_offset * Chunk::SIZE as i32, 0.),
 			);
 		})
 		.collect();
 
-	for (mesh, pos) in chunk_meshes {
+	for (mesh, (col_verts, col_indicies), pos) in chunk_meshes {
 		commands.spawn((
 			MaterialMeshBundle {
 				mesh: meshes.add(mesh),
@@ -237,30 +257,36 @@ fn spawn_map(
 				..default()
 			},
 			PhosChunk,
+			Collider::trimesh(col_verts, col_indicies),
 		));
 	}
-
-	// for chunk in &heightmap.chunks {
-	// 	let mesh = generate_chunk_mesh(
-	// 		&chunk,
-	// 		&heightmap,
-	// 		b_painter.unwrap(),
-	// 		&tile_assets,
-	// 		&tile_mappers,
-	// 	);
-	// 	let pos = offset_to_world(chunk.chunk_offset * Chunk::SIZE as i32, 0.);
-	// 	commands.spawn((
-	// 		MaterialMeshBundle {
-	// 			mesh: meshes.add(mesh),
-	// 			material: chunk_material.clone(),
-	// 			transform: Transform::from_translation(pos),
-	// 			..default()
-	// 		},
-	// 		PhosChunk::from_translation(pos),
-	// 	));
-	// }
 }
 
+#[derive(Resource)]
+struct SphereMat(Handle<StandardMaterial>);
+
+fn spawn_sphere(
+	mut commands: Commands,
+	cam: Query<&Transform, With<PhosCamera>>,
+	keyboard_input: Res<ButtonInput<KeyCode>>,
+	mut meshes: ResMut<Assets<Mesh>>,
+	mat: Res<SphereMat>,
+) {
+	if keyboard_input.just_pressed(KeyCode::KeyF) {
+		let cam_transform = cam.single();
+		commands.spawn((
+			MaterialMeshBundle {
+				mesh: meshes.add(Sphere::new(0.5)),
+				material: mat.0.clone(),
+				transform: Transform::from_translation(cam_transform.translation),
+				..default()
+			},
+			Collider::ball(0.5),
+			RigidBody::Dynamic,
+			Velocity::linear(cam_transform.forward() * 100.),
+		));
+	}
+}
 // fn render_distance_system(
 // 	mut chunks: Query<(&PhosChunk, &mut Visibility)>,
 // 	camera: Query<&Transform, With<PhosCamera>>,

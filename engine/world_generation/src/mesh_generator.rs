@@ -2,10 +2,7 @@ use crate::biome_painter::BiomePainterAsset;
 use crate::hex_utils::HexCoord;
 use crate::tile_manager::TileAsset;
 use crate::tile_mapper::TileMapperAsset;
-use crate::{
-	hex_utils::{offset3d_to_world, INNER_RADIUS, OUTER_RADIUS},
-	prelude::*,
-};
+use crate::{hex_utils::offset3d_to_world, prelude::*};
 use bevy::{
 	prelude::*,
 	render::{
@@ -13,41 +10,79 @@ use bevy::{
 		render_asset::RenderAssetUsages,
 	},
 };
-use std::vec::Vec;
 
-const HEX_CORNERS: [Vec3; 6] = [
-	Vec3::new(0., 0., OUTER_RADIUS),
-	Vec3::new(INNER_RADIUS, 0., 0.5 * OUTER_RADIUS),
-	Vec3::new(INNER_RADIUS, 0., -0.5 * OUTER_RADIUS),
-	Vec3::new(0., 0., -OUTER_RADIUS),
-	Vec3::new(-INNER_RADIUS, 0., -0.5 * OUTER_RADIUS),
-	Vec3::new(-INNER_RADIUS, 0., 0.5 * OUTER_RADIUS),
-];
+pub fn generate_chunk_collider(chunk: &Chunk, map: &Map) -> (Vec<Vec3>, Vec<[u32; 3]>) {
+	let vertex_count: usize = Chunk::SIZE * Chunk::SIZE * 6;
+	let mut verts = Vec::with_capacity(vertex_count);
+	let mut indices = Vec::with_capacity(vertex_count);
+	for z in 0..Chunk::SIZE {
+		for x in 0..Chunk::SIZE {
+			let height = chunk.heights[x + z * Chunk::SIZE];
+			let coord = HexCoord::from_offset(
+				IVec2::new(x as i32, z as i32) + (chunk.chunk_offset * Chunk::SIZE as i32),
+			);
+			let neighbors = map.get_neighbors(&coord);
+			let off_pos = Vec3::new(x as f32, height, z as f32);
+			let tile_pos = offset3d_to_world(off_pos);
+			create_tile_collider(tile_pos, &mut verts, &mut indices, &neighbors);
+		}
+	}
+	return (verts, indices);
+}
 
-const HEX_NORMALS: [Vec3; 6] = [
-	Vec3::new(
-		INNER_RADIUS / 2.,
-		0.,
-		(OUTER_RADIUS + 0.5 * OUTER_RADIUS) / 2.,
-	),
-	Vec3::Z,
-	Vec3::new(
-		INNER_RADIUS / -2.,
-		0.,
-		(OUTER_RADIUS + 0.5 * OUTER_RADIUS) / 2.,
-	),
-	Vec3::new(
-		INNER_RADIUS / -2.,
-		0.,
-		(OUTER_RADIUS + 0.5 * OUTER_RADIUS) / -2.,
-	),
-	Vec3::NEG_Z,
-	Vec3::new(
-		INNER_RADIUS / 2.,
-		0.,
-		(OUTER_RADIUS + 0.5 * OUTER_RADIUS) / -2.,
-	),
-];
+fn create_tile_collider(
+	pos: Vec3,
+	verts: &mut Vec<Vec3>,
+	indices: &mut Vec<[u32; 3]>,
+	neighbors: &[Option<f32>; 6],
+) {
+	let idx = verts.len() as u32;
+	for i in 0..6 {
+		let p = pos + HEX_CORNERS[i];
+		verts.push(p);
+	}
+	for i in 0..3 {
+		let off = i * 2;
+
+		indices.push([off + idx, ((off + 1) % 6) + idx, ((off + 2) % 6) + idx]);
+	}
+
+	indices.push([idx, idx + 2, idx + 4]);
+
+	for i in 0..neighbors.len() {
+		let cur_n = neighbors[i];
+		match cur_n {
+			Some(n_height) => {
+				if n_height < pos.y {
+					create_tile_wall_collider(
+						idx,
+						Vec3::new(pos.x, n_height, pos.z),
+						i,
+						verts,
+						indices,
+					);
+				}
+			}
+			_ => {}
+		}
+	}
+}
+
+fn create_tile_wall_collider(
+	idx: u32,
+	pos: Vec3,
+	dir: usize,
+	verts: &mut Vec<Vec3>,
+	indices: &mut Vec<[u32; 3]>,
+) {
+	let idx2 = verts.len() as u32;
+
+	verts.push(pos + HEX_CORNERS[dir]);
+	verts.push(pos + HEX_CORNERS[(dir + 1) % 6]);
+
+	indices.push([idx, idx + 1, idx2]);
+	indices.push([idx, idx2 + 1, idx2]);
+}
 
 pub fn generate_chunk_mesh(
 	chunk: &Chunk,
@@ -102,132 +137,6 @@ pub fn generate_chunk_mesh(
 	return mesh;
 }
 
-pub fn generate_packed_chunk_mesh(
-	chunk: &Chunk,
-	map: &Map,
-	painter: &BiomePainterAsset,
-	tiles: &Res<Assets<TileAsset>>,
-	mappers: &Res<Assets<TileMapperAsset>>,
-) -> Mesh {
-	let vertex_count: usize = Chunk::SIZE * Chunk::SIZE * 6;
-	let mut packed_data = Vec::with_capacity(vertex_count);
-	let mut indices = Vec::with_capacity(vertex_count);
-	let mut heights = Vec::with_capacity(vertex_count);
-
-	for z in 0..Chunk::SIZE {
-		for x in 0..Chunk::SIZE {
-			let height = chunk.heights[x + z * Chunk::SIZE];
-			let moisture = chunk.moisture[x + z * Chunk::SIZE];
-			let temperature = chunk.temperature[x + z * Chunk::SIZE];
-			let coord = HexCoord::from_offset(
-				IVec2::new(x as i32, z as i32) + (chunk.chunk_offset * Chunk::SIZE as i32),
-			);
-			let n = map.get_neighbors(&coord);
-			let biome = mappers.get(painter.sample_biome(moisture, temperature));
-			let tile_handle = biome.unwrap().sample_tile(height);
-			let tile = tiles.get(tile_handle).unwrap();
-
-			create_packed_tile(
-				UVec2::new(x as u32, z as u32),
-				height,
-				&n,
-				&mut packed_data,
-				&mut indices,
-				&mut heights,
-				tile.texture_id,
-				tile.side_texture_id,
-			);
-		}
-	}
-
-	let mesh = Mesh::new(
-		PrimitiveTopology::TriangleList,
-		RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
-	)
-	.with_inserted_attribute(ATTRIBUTE_PACKED_VERTEX_DATA, packed_data)
-	.with_inserted_attribute(ATTRIBUTE_VERTEX_HEIGHT, heights)
-	.with_inserted_indices(Indices::U32(indices));
-	return mesh;
-}
-
-const TEX_MULTI: Vec2 = Vec2::new(1000., 1.);
-
-fn create_packed_tile(
-	offset: UVec2,
-	height: f32,
-	neighbors: &[Option<f32>; 6],
-	packed_data: &mut Vec<u32>,
-	indices: &mut Vec<u32>,
-	heights: &mut Vec<f32>,
-	texture_index: u32,
-	side_texture_index: u32,
-) {
-	let idx = packed_data.len() as u32;
-
-	packed_data.push(pack_vertex_data(offset, 0, texture_index));
-	heights.push(height);
-	for i in 0..6 {
-		packed_data.push(pack_vertex_data(offset, i + 1, texture_index));
-		indices.push(idx);
-		indices.push(idx + 1 + i as u32);
-		indices.push(idx + 1 + ((i as u32 + 1) % 6));
-		heights.push(height);
-	}
-
-	for i in 0..neighbors.len() {
-		let cur_n = neighbors[i];
-		match cur_n {
-			Some(n_height) => {
-				if n_height < height {
-					create_packed_tile_wall(
-						offset,
-						height,
-						n_height,
-						i,
-						packed_data,
-						indices,
-						heights,
-						side_texture_index,
-					);
-				}
-			}
-			_ => {}
-		}
-	}
-}
-
-fn create_packed_tile_wall(
-	offset: UVec2,
-	height_top: f32,
-	height_bottom: f32,
-	side: usize,
-	packed_data: &mut Vec<u32>,
-	indices: &mut Vec<u32>,
-	heights: &mut Vec<f32>,
-	side_texture_index: u32,
-) {
-	let idx = packed_data.len() as u32;
-
-	let side_2 = ((side + 1) % 6) + 1;
-	packed_data.push(pack_vertex_data(offset, side + 1, side_texture_index));
-	packed_data.push(pack_vertex_data(offset, side_2, side_texture_index));
-	packed_data.push(pack_vertex_data(offset, side + 1, side_texture_index));
-	packed_data.push(pack_vertex_data(offset, side_2, side_texture_index));
-
-	heights.push(height_top);
-	heights.push(height_top);
-	heights.push(height_bottom);
-	heights.push(height_bottom);
-
-	indices.push(idx);
-	indices.push(idx + 2);
-	indices.push(idx + 1);
-
-	indices.push(idx + 1);
-	indices.push(idx + 2);
-	indices.push(idx + 3);
-}
-
 fn create_tile(
 	pos: Vec3,
 	neighbors: &[Option<f32>; 6],
@@ -243,19 +152,22 @@ fn create_tile(
 	let side_tex_off = Vec2::new(side_texture_index as f32, 0.);
 
 	let idx = verts.len() as u32;
-	uvs.push((uv_offset / TEX_MULTI) + tex_off);
-	verts.push(pos);
-	normals.push(Vec3::Y);
 	for i in 0..6 {
 		let p = pos + HEX_CORNERS[i];
 		verts.push(p);
 		let uv = (HEX_CORNERS[i].xz() / 2.) + uv_offset;
 		uvs.push((uv / TEX_MULTI) + tex_off);
-		indices.push(idx);
-		indices.push(idx + 1 + i as u32);
-		indices.push(idx + 1 + ((i as u32 + 1) % 6));
 		normals.push(Vec3::Y);
 	}
+	for i in 0..3 {
+		let off = i * 2;
+		indices.push(off + idx);
+		indices.push(((off + 1) % 6) + idx);
+		indices.push(((off + 2) % 6) + idx);
+	}
+	indices.push(idx);
+	indices.push(idx + 2);
+	indices.push(idx + 4);
 
 	for i in 0..neighbors.len() {
 		let cur_n = neighbors[i];
@@ -310,16 +222,4 @@ fn create_tile_wall(
 	uvs.push((Vec2::new(1., 0.) / TEX_MULTI) + tex_off);
 	uvs.push((Vec2::new(0., pos.y - height) / TEX_MULTI) + tex_off);
 	uvs.push((Vec2::new(1., pos.y - height) / TEX_MULTI) + tex_off);
-}
-
-fn pack_vertex_data(offset: UVec2, vert: usize, tex: u32) -> u32 {
-	//6 + 6 bits offset
-	//4 bits vert
-	//12 bits texture
-	let mut data = offset.x;
-	data += (offset.y) << 6;
-	data += (vert as u32) << (6 + 6);
-	data += tex << (6 + 6 + 4);
-
-	return data;
 }

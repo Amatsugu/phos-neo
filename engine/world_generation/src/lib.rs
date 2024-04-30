@@ -2,15 +2,51 @@ pub mod biome_painter;
 pub mod heightmap;
 pub mod hex_utils;
 pub mod mesh_generator;
+pub mod packed_mesh_generator;
 pub mod tile_manager;
 pub mod tile_mapper;
 
 pub mod prelude {
-	use crate::hex_utils::HexCoord;
-	use bevy::math::{IVec2, UVec2};
+	use crate::hex_utils::{HexCoord, INNER_RADIUS, OUTER_RADIUS};
+	use bevy::math::{IVec2, UVec2, Vec2, Vec3};
 	use bevy::prelude::Resource;
 	use bevy::render::mesh::MeshVertexAttribute;
 	use bevy::render::render_resource::VertexFormat;
+	pub const TEX_MULTI: Vec2 = Vec2::new(1000., 1.);
+
+	pub const HEX_CORNERS: [Vec3; 6] = [
+		Vec3::new(0., 0., OUTER_RADIUS),
+		Vec3::new(INNER_RADIUS, 0., 0.5 * OUTER_RADIUS),
+		Vec3::new(INNER_RADIUS, 0., -0.5 * OUTER_RADIUS),
+		Vec3::new(0., 0., -OUTER_RADIUS),
+		Vec3::new(-INNER_RADIUS, 0., -0.5 * OUTER_RADIUS),
+		Vec3::new(-INNER_RADIUS, 0., 0.5 * OUTER_RADIUS),
+	];
+
+	pub const HEX_NORMALS: [Vec3; 6] = [
+		Vec3::new(
+			INNER_RADIUS / 2.,
+			0.,
+			(OUTER_RADIUS + 0.5 * OUTER_RADIUS) / 2.,
+		),
+		Vec3::Z,
+		Vec3::new(
+			INNER_RADIUS / -2.,
+			0.,
+			(OUTER_RADIUS + 0.5 * OUTER_RADIUS) / 2.,
+		),
+		Vec3::new(
+			INNER_RADIUS / -2.,
+			0.,
+			(OUTER_RADIUS + 0.5 * OUTER_RADIUS) / -2.,
+		),
+		Vec3::NEG_Z,
+		Vec3::new(
+			INNER_RADIUS / 2.,
+			0.,
+			(OUTER_RADIUS + 0.5 * OUTER_RADIUS) / -2.,
+		),
+	];
 
 	pub struct GenerationConfig {
 		pub noise_scale: f64,
