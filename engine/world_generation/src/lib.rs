@@ -1,4 +1,5 @@
 pub mod biome_painter;
+pub mod chunk_colliders;
 pub mod heightmap;
 pub mod hex_utils;
 pub mod mesh_generator;

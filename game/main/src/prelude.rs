@@ -1,5 +1,4 @@
 use bevy::asset::Handle;
-
 use bevy::prelude::{Component, Image, Resource};
 
 #[derive(Resource)]

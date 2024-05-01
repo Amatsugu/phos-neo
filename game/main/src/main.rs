@@ -4,6 +4,7 @@ use bevy::render::texture::{ImageAddressMode, ImageFilterMode, ImageSamplerDescr
 use bevy::window::PresentMode;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
+mod map_init;
 mod phos;
 mod prelude;
 mod shader_extensions;
