@@ -1,5 +1,5 @@
 use bevy::{asset::LoadState, pbr::ExtendedMaterial, prelude::*};
-use bevy_rapier3d::geometry::Collider;
+use bevy_rapier3d::geometry::{Collider, TriMeshFlags};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use world_generation::{
 	biome_painter::*, chunk_colliders::generate_chunk_collider, heightmap::generate_heightmap,
@@ -192,7 +192,11 @@ fn spawn_map(
 				..default()
 			},
 			PhosChunk,
-			Collider::trimesh(col_verts, col_indicies),
+			Collider::trimesh_with_flags(
+				col_verts,
+				col_indicies,
+				TriMeshFlags::MERGE_DUPLICATE_VERTICES,
+			),
 		));
 	}
 }
