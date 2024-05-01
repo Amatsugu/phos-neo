@@ -3,7 +3,6 @@ use bevy::prelude::*;
 use crate::{hex_utils::*, prelude::*};
 
 const CHUNK_TOTAL: usize = Chunk::SIZE * Chunk::SIZE;
-  
 
 pub fn generate_chunk_collider(chunk: &Chunk, map: &Map) -> (Vec<Vec3>, Vec<[u32; 3]>) {
 	let vertex_count: usize = CHUNK_TOTAL * 6;
@@ -35,12 +34,18 @@ fn create_tile_collider(
 		let p = pos + HEX_CORNERS[i];
 		verts.push(p);
 	}
-	for i in 0..3 {
-		let off = i * 2;
-		indices.push([off + idx, ((off + 1) % 6) + idx, ((off + 2) % 6) + idx]);
-	}
+	// for i in 0..3 {
+	// 	let off = i * 2;
+	// 	indices.push([off + idx, ((off + 1) % 6) + idx, ((off + 2) % 6) + idx]);
+	// }
 
-	indices.push([idx, idx + 2, idx + 4]);
+	// indices.push([idx, idx + 2, idx + 4]);
+
+	//Top Surfave
+	indices.push([idx, idx + 1, idx + 5]);
+	indices.push([idx + 1, idx + 2, idx + 5]);
+	indices.push([idx + 2, idx + 4, idx + 5]);
+	indices.push([idx + 2, idx + 3, idx + 4]);
 
 	for i in 0..neighbors.len() {
 		let cur_n = neighbors[i];
@@ -49,7 +54,7 @@ fn create_tile_collider(
 				if n_height < pos.y {
 					create_tile_wall_collider(
 						idx,
-						Vec3::new(pos.x, n_height, pos.z),
+						Vec3::new(pos.x, n_height.min(pos.y - 0.5), pos.z),
 						i,
 						verts,
 						indices,

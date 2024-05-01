@@ -6,9 +6,10 @@ use bevy::{
 	pbr::{wireframe::WireframeConfig, CascadeShadowConfig},
 	prelude::*,
 };
-use bevy_rapier3d::dynamics::{RigidBody, Velocity};
+use bevy_rapier3d::dynamics::{Ccd, RigidBody, Velocity};
 use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
+use bevy_rapier3d::render::RapierDebugRenderPlugin;
 use camera_system::prelude::PhosCamera;
 use camera_system::PhosCameraPlugin;
 use iyes_perf_ui::prelude::*;
@@ -21,11 +22,11 @@ pub struct PhosGamePlugin;
 
 impl Plugin for PhosGamePlugin {
 	fn build(&self, app: &mut App) {
-		app.add_plugins(PhosCameraPlugin)
-			.add_plugins(MapInitPlugin)
-			.add_plugins(MaterialPlugin::<
-				ExtendedMaterial<StandardMaterial, ChunkMaterial>,
-			>::default());
+		app.add_plugins((
+			PhosCameraPlugin,
+			MapInitPlugin,
+			MaterialPlugin::<ExtendedMaterial<StandardMaterial, ChunkMaterial>>::default(),
+		));
 
 		//Systems - Startup
 		app.add_systems(Startup, init_game);
@@ -105,6 +106,7 @@ fn spawn_sphere(
 			},
 			Collider::ball(0.3),
 			RigidBody::Dynamic,
+			Ccd::enabled(),
 			Velocity::linear(cam_transform.forward() * 50.),
 		));
 	}

@@ -1,5 +1,6 @@
 use crate::prelude::PhosCamera;
 use bevy::input::mouse::MouseMotion;
+use bevy::pbr::ScreenSpaceAmbientOcclusionBundle;
 use bevy::prelude::*;
 use bevy::window::CursorGrabMode;
 
@@ -26,17 +27,19 @@ impl Plugin for PhosCameraPlugin {
 }
 
 fn setup(mut commands: Commands) {
-	commands.spawn((
-		Camera3dBundle {
-			transform: Transform::from_xyz(0., 30., 0.)
-				.looking_at(Vec3::new(1000., 0., 1000.), Vec3::Y),
-			..default()
-		},
-		PhosCamera {
-			speed: 100.,
-			..default()
-		},
-	));
+	commands
+		.spawn((
+			Camera3dBundle {
+				transform: Transform::from_xyz(0., 30., 0.)
+					.looking_at(Vec3::new(1000., 0., 1000.), Vec3::Y),
+				..default()
+			},
+			PhosCamera {
+				speed: 100.,
+				..default()
+			},
+		))
+		.insert(ScreenSpaceAmbientOcclusionBundle::default());
 }
 fn update_camera(
 	mut cam_query: Query<(&PhosCamera, &mut Transform)>,

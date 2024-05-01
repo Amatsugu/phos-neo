@@ -3287,6 +3287,7 @@ dependencies = [
  "num-derive",
  "num-traits",
  "parry3d",
+ "rayon",
  "rustc-hash",
  "simba",
  "vec_map",
