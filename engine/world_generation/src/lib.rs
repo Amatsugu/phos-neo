@@ -11,8 +11,10 @@ pub mod prelude {
 	use crate::hex_utils::{HexCoord, INNER_RADIUS, OUTER_RADIUS};
 	use bevy::math::{IVec2, UVec2, Vec2, Vec3};
 	use bevy::prelude::Resource;
+	use bevy::prelude::*;
 	use bevy::render::mesh::MeshVertexAttribute;
 	use bevy::render::render_resource::VertexFormat;
+	use bevy_inspector_egui::InspectorOptions;
 	pub const TEX_MULTI: Vec2 = Vec2::new(1000., 1.);
 
 	pub const HEX_CORNERS: [Vec3; 6] = [
@@ -25,30 +27,16 @@ pub mod prelude {
 	];
 
 	pub const HEX_NORMALS: [Vec3; 6] = [
-		Vec3::new(
-			INNER_RADIUS / 2.,
-			0.,
-			(OUTER_RADIUS + 0.5 * OUTER_RADIUS) / 2.,
-		),
+		Vec3::new(INNER_RADIUS / 2., 0., (OUTER_RADIUS + 0.5 * OUTER_RADIUS) / 2.),
 		Vec3::Z,
-		Vec3::new(
-			INNER_RADIUS / -2.,
-			0.,
-			(OUTER_RADIUS + 0.5 * OUTER_RADIUS) / 2.,
-		),
-		Vec3::new(
-			INNER_RADIUS / -2.,
-			0.,
-			(OUTER_RADIUS + 0.5 * OUTER_RADIUS) / -2.,
-		),
+		Vec3::new(INNER_RADIUS / -2., 0., (OUTER_RADIUS + 0.5 * OUTER_RADIUS) / 2.),
+		Vec3::new(INNER_RADIUS / -2., 0., (OUTER_RADIUS + 0.5 * OUTER_RADIUS) / -2.),
 		Vec3::NEG_Z,
-		Vec3::new(
-			INNER_RADIUS / 2.,
-			0.,
-			(OUTER_RADIUS + 0.5 * OUTER_RADIUS) / -2.,
-		),
+		Vec3::new(INNER_RADIUS / 2., 0., (OUTER_RADIUS + 0.5 * OUTER_RADIUS) / -2.),
 	];
 
+	#[derive(Resource, Reflect, Default)]
+	#[reflect(Resource)]
 	pub struct GenerationConfig {
 		pub noise_scale: f64,
 		pub sea_level: f64,
@@ -66,6 +54,7 @@ pub mod prelude {
 		}
 	}
 
+	#[derive(Reflect, InspectorOptions)]
 	pub struct GeneratorLayer {
 		pub strength: f64,
 		pub min_value: f64,

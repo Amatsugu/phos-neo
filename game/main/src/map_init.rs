@@ -1,31 +1,41 @@
 use bevy::{asset::LoadState, pbr::ExtendedMaterial, prelude::*};
+use bevy_inspector_egui::quick::ResourceInspectorPlugin;
 use bevy_rapier3d::geometry::{Collider, TriMeshFlags};
+use camera_system::prelude::PhosCamera;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use world_generation::{
-	biome_painter::*, chunk_colliders::generate_chunk_collider, heightmap::generate_heightmap,
-	hex_utils::offset_to_world, mesh_generator::generate_chunk_mesh, prelude::*, tile_manager::*,
+	biome_painter::*,
+	chunk_colliders::generate_chunk_collider,
+	heightmap::generate_heightmap,
+	hex_utils::{offset_to_world, tile_to_world_distance},
+	mesh_generator::generate_chunk_mesh,
+	prelude::*,
+	tile_manager::*,
 	tile_mapper::*,
 };
 
 use crate::{
 	prelude::{ChunkAtlas, PhosChunk, PhosMap},
 	shader_extensions::chunk_material::ChunkMaterial,
+	utlis::render_distance_system::RenderDistanceVisibility,
 };
 
 pub struct MapInitPlugin;
 
 impl Plugin for MapInitPlugin {
 	fn build(&self, app: &mut App) {
-		app.add_systems(Startup, init_map)
-			.add_systems(Startup, (load_textures, load_tiles, create_map).chain());
+		app.add_plugins((
+			ResourceInspectorPlugin::<PhosMap>::default(),
+			ResourceInspectorPlugin::<GenerationConfig>::default(),
+		));
 
-		app.add_systems(Update, (finalize_texture, spawn_map));
+		app.add_systems(Startup, (load_textures, load_tiles, create_map));
+
+		app.add_systems(Update, finalize_texture);
+		app.add_systems(PostUpdate, (despawn_map, spawn_map).chain());
+		app.insert_resource(TileManager::default());
+		app.insert_resource(PhosMap::default());
 	}
-}
-
-fn init_map(mut commands: Commands) {
-	commands.insert_resource(PhosMap::default());
-	commands.insert_resource(TileManager::default());
 }
 
 fn load_textures(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -77,69 +87,88 @@ fn finalize_texture(
 	map.regenerate = true;
 }
 
-fn create_map(mut commands: Commands) {
-	let heightmap = generate_heightmap(
-		&GenerationConfig {
-			layers: vec![
-				GeneratorLayer {
-					base_roughness: 2.14,
-					roughness: 0.87,
-					strength: 2.93,
-					min_value: -0.2,
-					persistence: 0.77,
-					is_rigid: false,
-					weight: 0.,
-					weight_multi: 0.,
-					layers: 4,
-					first_layer_mask: false,
-				},
-				GeneratorLayer {
-					base_roughness: 2.85,
-					roughness: 2.,
-					strength: -0.23,
-					min_value: -0.,
-					persistence: 1.,
-					is_rigid: false,
-					weight: 0.,
-					weight_multi: 0.,
-					layers: 4,
-					first_layer_mask: false,
-				},
-				GeneratorLayer {
-					base_roughness: 2.6,
-					roughness: 4.,
-					strength: 10.44,
-					min_value: 0.,
-					persistence: 1.57,
-					is_rigid: true,
-					weight: 1.,
-					weight_multi: 0.35,
-					layers: 4,
-					first_layer_mask: true,
-				},
-				GeneratorLayer {
-					base_roughness: 3.87,
-					roughness: 5.8,
-					strength: -1.,
-					min_value: 0.,
-					persistence: 0.,
-					is_rigid: true,
-					weight: 1.,
-					weight_multi: 4.57,
-					layers: 3,
-					first_layer_mask: true,
-				},
-			],
-			noise_scale: 350.,
-			sea_level: 4.,
-			border_size: 64.,
-			size: UVec2::splat(1024 / Chunk::SIZE as u32),
-			// size: UVec2::splat(1),
-		},
-		4,
-	);
+fn create_map(mut commands: Commands, mut cam: Query<&mut Transform, With<PhosCamera>>) {
+	let config = GenerationConfig {
+		layers: vec![
+			GeneratorLayer {
+				base_roughness: 2.14,
+				roughness: 0.87,
+				strength: 2.93,
+				min_value: -0.2,
+				persistence: 0.77,
+				is_rigid: false,
+				weight: 0.,
+				weight_multi: 0.,
+				layers: 4,
+				first_layer_mask: false,
+			},
+			GeneratorLayer {
+				base_roughness: 2.85,
+				roughness: 2.,
+				strength: -0.23,
+				min_value: -0.,
+				persistence: 1.,
+				is_rigid: false,
+				weight: 0.,
+				weight_multi: 0.,
+				layers: 4,
+				first_layer_mask: false,
+			},
+			GeneratorLayer {
+				base_roughness: 2.6,
+				roughness: 4.,
+				strength: 4.3,
+				min_value: 0.,
+				persistence: 1.57,
+				is_rigid: true,
+				weight: 1.,
+				weight_multi: 0.35,
+				layers: 4,
+				first_layer_mask: true,
+			},
+			GeneratorLayer {
+				base_roughness: 3.87,
+				roughness: 5.8,
+				strength: -1.,
+				min_value: 0.,
+				persistence: 0.,
+				is_rigid: true,
+				weight: 1.,
+				weight_multi: 4.57,
+				layers: 3,
+				first_layer_mask: true,
+			},
+			GeneratorLayer {
+				base_roughness: 3.87,
+				roughness: 5.8,
+				strength: -1.5,
+				min_value: 0.,
+				persistence: 0.3,
+				is_rigid: true,
+				weight: 1.,
+				weight_multi: 4.57,
+				layers: 3,
+				first_layer_mask: true,
+			},
+		],
+		noise_scale: 450.,
+		sea_level: 8.5,
+		border_size: 64.,
+		size: UVec2::splat(1024 / Chunk::SIZE as u32),
+		// size: UVec2::splat(1),
+	};
+	let heightmap = generate_heightmap(&config, 4);
 
 	commands.insert_resource(heightmap);
+
+	// let mut cam_t = cam.single_mut();
+	// cam_t.translation = Vec3::new(
+	// 	tile_to_world_distance(config.size.x as i32 / 2),
+	// 	cam_t.translation.y,
+	// 	tile_to_world_distance(config.size.y as i32 / 2),
+	// );
+
+	commands.insert_resource(config);
 }
 
 fn spawn_map(
@@ -172,8 +201,7 @@ fn spawn_map(
 		.chunks
 		.par_iter()
 		.map(|chunk: &Chunk| {
-			let mesh =
-				generate_chunk_mesh(chunk, &heightmap, cur_painter, &tile_assets, &tile_mappers);
+			let mesh = generate_chunk_mesh(chunk, &heightmap, cur_painter, &tile_assets, &tile_mappers);
 			let collision = generate_chunk_collider(chunk, &heightmap);
 			return (
 				mesh,
@@ -192,11 +220,29 @@ fn spawn_map(
 				..default()
 			},
 			PhosChunk,
-			Collider::trimesh_with_flags(
-				col_verts,
-				col_indicies,
-				TriMeshFlags::MERGE_DUPLICATE_VERTICES,
-			),
+			RenderDistanceVisibility::default().with_offset(Vec3::new(
+				tile_to_world_distance(Chunk::SIZE as i32 / 2),
+				0.,
+				tile_to_world_distance(Chunk::SIZE as i32 / 2),
+			)),
+			Collider::trimesh_with_flags(col_verts, col_indicies, TriMeshFlags::MERGE_DUPLICATE_VERTICES),
 		));
 	}
+}
+
+fn despawn_map(
+	mut commands: Commands,
+	mut heightmap: ResMut<Map>,
+	cfg: Res<GenerationConfig>,
+	map: Res<PhosMap>,
+	chunks: Query<Entity, With<PhosChunk>>,
+) {
+	if !map.regenerate {
+		return;
+	}
+	for chunk in chunks.iter() {
+		commands.entity(chunk).despawn();
+	}
+
+	*heightmap = generate_heightmap(&cfg, 4);
 }

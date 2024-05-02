@@ -8,6 +8,7 @@ mod map_init;
 mod phos;
 mod prelude;
 mod shader_extensions;
+mod utlis;
 use phos::PhosGamePlugin;
 
 fn main() {

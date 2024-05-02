@@ -1,37 +1,28 @@
 use crate::prelude::PhosCamera;
+use bevy::core_pipeline::experimental::taa::{TemporalAntiAliasBundle, TemporalAntiAliasPlugin};
 use bevy::input::mouse::MouseMotion;
 use bevy::pbr::ScreenSpaceAmbientOcclusionBundle;
 use bevy::prelude::*;
 use bevy::window::CursorGrabMode;
 
-pub mod prelude {
-	use bevy::prelude::Component;
-
-	#[derive(Component, Default)]
-	pub struct PhosCamera {
-		pub min_height: f32,
-		pub max_height: f32,
-		pub speed: f32,
-	}
-}
+pub mod prelude;
 
 pub struct PhosCameraPlugin;
 
 impl Plugin for PhosCameraPlugin {
 	fn build(&self, app: &mut App) {
-		app.add_systems(Startup, setup).add_systems(
-			Update,
-			(grab_mouse, (update_camera, update_camera_mouse).chain()),
-		);
+		app.add_systems(Startup, setup)
+			.add_systems(Update, (grab_mouse, (update_camera, update_camera_mouse).chain()));
+
+		app.add_plugins(TemporalAntiAliasPlugin);
 	}
 }
 
-fn setup(mut commands: Commands) {
+fn setup(mut commands: Commands, mut msaa: ResMut<Msaa>) {
 	commands
 		.spawn((
 			Camera3dBundle {
-				transform: Transform::from_xyz(0., 30., 0.)
-					.looking_at(Vec3::new(1000., 0., 1000.), Vec3::Y),
+				transform: Transform::from_xyz(0., 30., 0.).looking_at(Vec3::new(1000., 0., 1000.), Vec3::Y),
 				..default()
 			},
 			PhosCamera {
@@ -39,7 +30,10 @@ fn setup(mut commands: Commands) {
 				..default()
 			},
 		))
-		.insert(ScreenSpaceAmbientOcclusionBundle::default());
+		.insert(ScreenSpaceAmbientOcclusionBundle::default())
+		.insert(TemporalAntiAliasBundle::default());
+
+	*msaa = Msaa::Off;
 }
 fn update_camera(
 	mut cam_query: Query<(&PhosCamera, &mut Transform)>,
@@ -106,16 +100,11 @@ fn update_camera_mouse(
 		pitch = pitch.clamp(-1.54, 1.54);
 
 		// Order is important to prevent unintended roll
-		transform.rotation =
-			Quat::from_axis_angle(Vec3::Y, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
+		transform.rotation = Quat::from_axis_angle(Vec3::Y, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
 	}
 }
 
-fn grab_mouse(
-	mut windows: Query<&mut Window>,
-	mouse: Res<ButtonInput<MouseButton>>,
-	key: Res<ButtonInput<KeyCode>>,
-) {
+fn grab_mouse(mut windows: Query<&mut Window>, mouse: Res<ButtonInput<MouseButton>>, key: Res<ButtonInput<KeyCode>>) {
 	let mut window = windows.single_mut();
 
 	if mouse.just_pressed(MouseButton::Middle) {
@@ -127,4 +116,9 @@ fn grab_mouse(
 		window.cursor.visible = true;
 		window.cursor.grab_mode = CursorGrabMode::None;
 	}
+}
+
+
+fn rts_camera_system(){
+
 }

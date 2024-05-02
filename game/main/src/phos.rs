@@ -1,6 +1,7 @@
 use crate::map_init::MapInitPlugin;
 use crate::prelude::*;
 use crate::shader_extensions::chunk_material::ChunkMaterial;
+use crate::utlis::render_distance_system::RenderDistancePlugin;
 use bevy::pbr::ExtendedMaterial;
 use bevy::{
 	pbr::{wireframe::WireframeConfig, CascadeShadowConfig},
@@ -9,12 +10,10 @@ use bevy::{
 use bevy_rapier3d::dynamics::{Ccd, RigidBody, Velocity};
 use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
-use bevy_rapier3d::render::RapierDebugRenderPlugin;
 use camera_system::prelude::PhosCamera;
 use camera_system::PhosCameraPlugin;
 use iyes_perf_ui::prelude::*;
 use world_generation::biome_painter::BiomePainterPlugin;
-use world_generation::prelude::*;
 use world_generation::tile_manager::TileAssetPlugin;
 use world_generation::tile_mapper::TileMapperAssetPlugin;
 
@@ -26,13 +25,14 @@ impl Plugin for PhosGamePlugin {
 			PhosCameraPlugin,
 			MapInitPlugin,
 			MaterialPlugin::<ExtendedMaterial<StandardMaterial, ChunkMaterial>>::default(),
+			RenderDistancePlugin,
 		));
 
 		//Systems - Startup
 		app.add_systems(Startup, init_game);
 
 		//Systems - Update
-		app.add_systems(Update, (spawn_sphere, render_distance_system));
+		app.add_systems(Update, spawn_sphere);
 
 		//Perf UI
 		app.add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
@@ -109,21 +109,5 @@ fn spawn_sphere(
 			Ccd::enabled(),
 			Velocity::linear(cam_transform.forward() * 50.),
 		));
-	}
-}
-fn render_distance_system(
-	mut chunks: Query<(&Transform, &mut Visibility), With<PhosChunk>>,
-	camera: Query<&Transform, With<PhosCamera>>,
-) {
-	let cam = camera.single();
-	for (transform, mut visibility) in chunks.iter_mut() {
-		let dist = (transform.translation - cam.translation
-			+ Vec3::new((Chunk::SIZE / 2) as f32, 0., (Chunk::SIZE / 2) as f32))
-		.length();
-		if dist > 500. {
-			*visibility = Visibility::Hidden;
-		} else {
-			*visibility = Visibility::Visible;
-		}
 	}
 }

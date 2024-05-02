@@ -54,7 +54,7 @@ fn create_tile_collider(
 				if n_height < pos.y {
 					create_tile_wall_collider(
 						idx,
-						Vec3::new(pos.x, n_height.min(pos.y - 0.5), pos.z),
+						Vec3::new(pos.x, n_height.min(pos.y - OUTER_RADIUS / 2.), pos.z),
 						i,
 						verts,
 						indices,

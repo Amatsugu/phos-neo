@@ -1,5 +1,7 @@
 use bevy::asset::Handle;
+use bevy::prelude::*;
 use bevy::prelude::{Component, Image, Resource};
+use bevy::reflect::Reflect;
 
 #[derive(Resource)]
 pub struct ChunkAtlas {
@@ -7,7 +9,8 @@ pub struct ChunkAtlas {
 	pub is_loaded: bool,
 }
 
-#[derive(Resource, Default)]
+#[derive(Resource, Default, Reflect)]
+#[reflect(Resource)]
 pub struct PhosMap {
 	pub ready: bool,
 	pub regenerate: bool,

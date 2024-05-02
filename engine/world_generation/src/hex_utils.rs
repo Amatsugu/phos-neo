@@ -141,9 +141,7 @@ impl HexCoord {
 	}
 
 	pub fn distance(&self, other: &HexCoord) -> i32 {
-		return (self.hex.x - other.hex.x).abs()
-			+ (self.hex.y - other.hex.y).abs()
-			+ (self.hex.z - other.hex.z).abs();
+		return (self.hex.x - other.hex.x).abs() + (self.hex.y - other.hex.y).abs() + (self.hex.z - other.hex.z).abs();
 	}
 
 	pub fn rotate_around(&self, center: &HexCoord, angle: i32) -> HexCoord {
