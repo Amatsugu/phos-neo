@@ -118,7 +118,25 @@ fn grab_mouse(mut windows: Query<&mut Window>, mouse: Res<ButtonInput<MouseButto
 	}
 }
 
+fn rts_camera_system(
+	mut cam_query: Query<(&mut Transform, &PhosCamera)>,
+	key: Res<ButtonInput<KeyCode>>,
+	time: Res<Time>,
+) {
+	let (mut cam, cam_cfg) = cam_query.single_mut();
+	let mut cam_move = Vec3::ZERO;
 
-fn rts_camera_system(){
+	if key.pressed(KeyCode::KeyA) {
+		cam_move.x = -1.;
+	} else if key.pressed(KeyCode::KeyD) {
+		cam_move.x = 1.;
+	}
 
+	if key.pressed(KeyCode::KeyW) {
+		cam_move.z = 1.;
+	} else if key.pressed(KeyCode::KeyS) {
+		cam_move.z = -1.;
+	}
+
+	cam.translation += cam_move.normalize() * cam_cfg.speed * time.delta_seconds();
 }
