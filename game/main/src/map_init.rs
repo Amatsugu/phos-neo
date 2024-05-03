@@ -1,7 +1,7 @@
 use bevy::{asset::LoadState, pbr::ExtendedMaterial, prelude::*};
 use bevy_inspector_egui::quick::ResourceInspectorPlugin;
 use bevy_rapier3d::geometry::{Collider, TriMeshFlags};
-use camera_system::prelude::PhosCamera;
+use camera_system::prelude::{CameraBounds, PhosCamera};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use world_generation::{
 	biome_painter::*,
@@ -29,7 +29,8 @@ impl Plugin for MapInitPlugin {
 			ResourceInspectorPlugin::<GenerationConfig>::default(),
 		));
 
-		app.add_systems(Startup, (load_textures, load_tiles, create_map));
+		app.add_systems(Startup, (load_textures, load_tiles));
+		app.add_systems(PostStartup, create_map);
 
 		app.add_systems(Update, finalize_texture);
 		app.add_systems(PostUpdate, (despawn_map, spawn_map).chain());
@@ -87,13 +88,13 @@ fn finalize_texture(
 	map.regenerate = true;
 }
 
-fn create_map(mut commands: Commands, mut cam: Query<&mut Transform, With<PhosCamera>>) {
+fn create_map(mut commands: Commands, mut cam: Query<(&mut Transform, Entity), With<PhosCamera>>) {
 	let config = GenerationConfig {
 		layers: vec![
 			GeneratorLayer {
 				base_roughness: 2.14,
 				roughness: 0.87,
-				strength: 2.93,
+				strength: 8.3,
 				min_value: -0.2,
 				persistence: 0.77,
 				is_rigid: false,
@@ -117,7 +118,7 @@ fn create_map(mut commands: Commands, mut cam: Query<&mut Transform, With<PhosCa
 			GeneratorLayer {
 				base_roughness: 2.6,
 				roughness: 4.,
-				strength: 4.3,
+				strength: 3.1,
 				min_value: 0.,
 				persistence: 1.57,
 				is_rigid: true,
@@ -148,7 +149,7 @@ fn create_map(mut commands: Commands, mut cam: Query<&mut Transform, With<PhosCa
 				weight: 1.,
 				weight_multi: 4.57,
 				layers: 3,
-				first_layer_mask: true,
+				first_layer_mask: false,
 			},
 		],
 		noise_scale: 450.,
@@ -161,12 +162,14 @@ fn create_map(mut commands: Commands, mut cam: Query<&mut Transform, With<PhosCa
 
 	commands.insert_resource(heightmap);
 
-	// let mut cam_t = cam.single_mut();
-	// cam_t.translation = Vec3::new(
-	// 	tile_to_world_distance(config.size.x as i32 / 2),
-	// 	cam_t.translation.y,
-	// 	tile_to_world_distance(config.size.y as i32 / 2),
-	// );
+	let (mut cam_t, cam_entity) = cam.single_mut();
+	cam_t.translation = Vec3::new(
+		tile_to_world_distance((config.size.x as i32 * Chunk::SIZE as i32) / 2),
+		cam_t.translation.y,
+		tile_to_world_distance((config.size.y as i32 * Chunk::SIZE as i32) / 2),
+	);
+
+	commands.entity(cam_entity).insert(CameraBounds::from_size(config.size));
 
 	commands.insert_resource(config);
 }
@@ -174,7 +177,8 @@ fn create_map(mut commands: Commands, mut cam: Query<&mut Transform, With<PhosCa
 fn spawn_map(
 	heightmap: Res<Map>,
 	mut commands: Commands,
-	mut materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, ChunkMaterial>>>,
+	mut chunk_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, ChunkMaterial>>>,
+	mut standard_materials: ResMut<Assets<StandardMaterial>>,
 	mut meshes: ResMut<Assets<Mesh>>,
 	atlas: Res<ChunkAtlas>,
 	mut map: ResMut<PhosMap>,
@@ -188,7 +192,7 @@ fn spawn_map(
 	}
 	let b_painter = biome_painters.get(painter.0.clone());
 	map.regenerate = false;
-	let chunk_material = materials.add(ExtendedMaterial {
+	let chunk_material = chunk_materials.add(ExtendedMaterial {
 		base: StandardMaterial::default(),
 		extension: ChunkMaterial {
 			array_texture: atlas.handle.clone(),
@@ -228,6 +232,17 @@ fn spawn_map(
 			Collider::trimesh_with_flags(col_verts, col_indicies, TriMeshFlags::MERGE_DUPLICATE_VERTICES),
 		));
 	}
+
+	commands.spawn((PbrBundle {
+		transform: Transform::from_translation(heightmap.get_center()),
+		mesh: meshes.add(Plane3d::default().mesh().size(heightmap.get_world_width(), heightmap.get_world_height())),
+		material: standard_materials.add(StandardMaterial {
+			base_color: Color::AQUAMARINE.with_a(0.5),
+			alpha_mode: AlphaMode::Blend,
+			..default()
+		}),
+		..default()
+	},));
 }
 
 fn despawn_map(

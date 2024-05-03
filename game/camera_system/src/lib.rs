@@ -1,9 +1,10 @@
 use crate::prelude::PhosCamera;
 use bevy::core_pipeline::experimental::taa::{TemporalAntiAliasBundle, TemporalAntiAliasPlugin};
-use bevy::input::mouse::MouseMotion;
+use bevy::input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel};
 use bevy::pbr::ScreenSpaceAmbientOcclusionBundle;
 use bevy::prelude::*;
 use bevy::window::CursorGrabMode;
+use prelude::{CameraBounds, PhosCameraTargets};
 
 pub mod prelude;
 
@@ -11,8 +12,12 @@ pub struct PhosCameraPlugin;
 
 impl Plugin for PhosCameraPlugin {
 	fn build(&self, app: &mut App) {
-		app.add_systems(Startup, setup)
-			.add_systems(Update, (grab_mouse, (update_camera, update_camera_mouse).chain()));
+		app.add_systems(PreStartup, setup);
+
+		app.add_systems(Update, (rts_camera_system, apply_camera_height).chain());
+		app.add_systems(PostUpdate, limit_camera_bounds);
+		//Free Cam
+		//app.add_systems(Update, (grab_mouse, (update_camera, update_camera_mouse).chain()));
 
 		app.add_plugins(TemporalAntiAliasPlugin);
 	}
@@ -22,13 +27,16 @@ fn setup(mut commands: Commands, mut msaa: ResMut<Msaa>) {
 	commands
 		.spawn((
 			Camera3dBundle {
-				transform: Transform::from_xyz(0., 30., 0.).looking_at(Vec3::new(1000., 0., 1000.), Vec3::Y),
+				transform: Transform::from_xyz(0., 30., 0.)
+					.with_rotation(Quat::from_axis_angle(Vec3::Y, (-90 as f32).to_radians())),
 				..default()
 			},
 			PhosCamera {
 				speed: 100.,
+				zoom_speed: 20.,
 				..default()
 			},
+			PhosCameraTargets::default(),
 		))
 		.insert(ScreenSpaceAmbientOcclusionBundle::default())
 		.insert(TemporalAntiAliasBundle::default());
@@ -119,17 +127,18 @@ fn grab_mouse(mut windows: Query<&mut Window>, mouse: Res<ButtonInput<MouseButto
 }
 
 fn rts_camera_system(
-	mut cam_query: Query<(&mut Transform, &PhosCamera)>,
+	mut cam_query: Query<(&mut Transform, &PhosCamera, &mut PhosCameraTargets)>,
 	key: Res<ButtonInput<KeyCode>>,
 	time: Res<Time>,
+	mut wheel: EventReader<MouseWheel>,
 ) {
-	let (mut cam, cam_cfg) = cam_query.single_mut();
+	let (mut cam, cam_cfg, mut cam_targets) = cam_query.single_mut();
 	let mut cam_move = Vec3::ZERO;
 
 	if key.pressed(KeyCode::KeyA) {
-		cam_move.x = -1.;
-	} else if key.pressed(KeyCode::KeyD) {
 		cam_move.x = 1.;
+	} else if key.pressed(KeyCode::KeyD) {
+		cam_move.x = -1.;
 	}
 
 	if key.pressed(KeyCode::KeyW) {
@@ -138,5 +147,30 @@ fn rts_camera_system(
 		cam_move.z = -1.;
 	}
 
-	cam.translation += cam_move.normalize() * cam_cfg.speed * time.delta_seconds();
+	let fwd = cam.forward();
+	let fwd_quat = Quat::from_rotation_arc(Vec3::Z, fwd.into());
+	cam_move = fwd_quat.mul_vec3(cam_move.normalize_or_zero()) * cam_cfg.speed * time.delta_seconds();
+
+	for e in wheel.read() {
+		match e.unit {
+			MouseScrollUnit::Line => cam_targets.height -= e.y * 20.,
+			MouseScrollUnit::Pixel => cam_targets.height -= e.y,
+		}
+	}
+
+	cam_targets.height = cam_targets.height.clamp(cam_cfg.min_height, cam_cfg.max_height);
+
+	cam.translation += cam_move;
+}
+
+fn apply_camera_height(mut cam_query: Query<(&mut Transform, &PhosCamera, &mut PhosCameraTargets)>, time: Res<Time>) {
+	let (mut cam_t, cam_cfg, targets) = cam_query.single_mut();
+
+	let movement = (cam_t.translation.y - targets.height) * time.delta_seconds();
+
+	cam_t.translation.y -= movement;
+}
+
+fn limit_camera_bounds(mut cam_query: Query<(&mut Transform, &CameraBounds)>) {
+	
 }

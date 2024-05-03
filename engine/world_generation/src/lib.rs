@@ -8,7 +8,7 @@ pub mod tile_manager;
 pub mod tile_mapper;
 
 pub mod prelude {
-	use crate::hex_utils::{HexCoord, INNER_RADIUS, OUTER_RADIUS};
+	use crate::hex_utils::{tile_to_world_distance, HexCoord, INNER_RADIUS, OUTER_RADIUS};
 	use bevy::math::{IVec2, UVec2, Vec2, Vec3};
 	use bevy::prelude::Resource;
 	use bevy::prelude::*;
@@ -84,6 +84,7 @@ pub mod prelude {
 		pub chunks: Vec<Chunk>,
 		pub height: usize,
 		pub width: usize,
+		pub sea_level: f32,
 	}
 
 	impl Map {
@@ -105,7 +106,7 @@ pub mod prelude {
 			return results;
 		}
 
-		pub fn get_height(&self, pos: &HexCoord) -> f32 {
+		pub fn sample_height(&self, pos: &HexCoord) -> f32 {
 			let chunk = &self.chunks[pos.to_chunk_index(self.width)];
 			return chunk.heights[pos.to_chunk_local_index()];
 		}
@@ -118,6 +119,23 @@ pub mod prelude {
 		pub fn get_tempurature(&self, pos: &HexCoord) -> f32 {
 			let chunk = &self.chunks[pos.to_chunk_index(self.width)];
 			return chunk.temperature[pos.to_chunk_local_index()];
+		}
+
+		pub fn get_center(&self) -> Vec3 {
+			let w = self.width * Chunk::SIZE;
+			let h = self.height * Chunk::SIZE;
+			return Vec3::new(
+				tile_to_world_distance(w as i32 / 2),
+				self.sea_level,
+				tile_to_world_distance(h as i32 / 2),
+			);
+		}
+
+		pub fn get_world_width(&self) -> f32 {
+			return tile_to_world_distance((self.width * Chunk::SIZE) as i32);
+		}
+		pub fn get_world_height(&self) -> f32 {
+			return tile_to_world_distance((self.height * Chunk::SIZE) as i32);
 		}
 	}
 	pub const ATTRIBUTE_PACKED_VERTEX_DATA: MeshVertexAttribute =

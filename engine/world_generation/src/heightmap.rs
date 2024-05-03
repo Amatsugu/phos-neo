@@ -19,6 +19,7 @@ pub fn generate_heightmap(cfg: &GenerationConfig, seed: u32) -> Map {
 		chunks,
 		height: cfg.size.y as usize,
 		width: cfg.size.x as usize,
+		sea_level: cfg.sea_level as f32,
 	};
 }
 
@@ -40,12 +41,8 @@ pub fn generate_chunk(chunk_x: f64, chunk_z: f64, cfg: &GenerationConfig, seed: 
 				(x as f64 + chunk_x * Chunk::SIZE as f64) / &cfg.noise_scale,
 				(z as f64 + chunk_z * Chunk::SIZE as f64) / &cfg.noise_scale,
 			]) as f32;
-			temp[x + z * Chunk::SIZE] = sample_tempurature(
-				z as f32 + chunk_z as f32 * Chunk::SIZE as f32,
-				sample,
-				&cfg,
-				100.,
-			);
+			temp[x + z * Chunk::SIZE] =
+				sample_tempurature(z as f32 + chunk_z as f32 * Chunk::SIZE as f32, sample, &cfg, 100.);
 		}
 	}
 	return Chunk {
@@ -95,10 +92,7 @@ fn sample_point(x: f64, z: f64, cfg: &GenerationConfig, noise: &impl NoiseFn<f64
 	let d1 = p.x.min(p.y);
 	let od = outer - p;
 	let d2 = od.x.min(od.y);
-	let d = d1
-		.min(d2)
-		.min(cfg.border_size)
-		.remap(0., cfg.border_size, 0., 1.);
+	let d = d1.min(d2).min(cfg.border_size).remap(0., cfg.border_size, 0., 1.);
 
 	return (elevation as f32) * d;
 }
