@@ -86,6 +86,20 @@ impl HexCoord {
 		};
 	}
 
+	pub fn from_world_pos(world_pos: Vec3) -> Self {
+		let offset = world_pos.z / (OUTER_RADIUS * 3.);
+		let mut x = world_pos.x / (INNER_RADIUS * 2.);
+		let mut z = -x;
+		z -= offset;
+		x -= offset;
+
+		let i_x = x.round() as i32;
+		let i_z = (-x - z).round() as i32;
+		let offset_pos = IVec2::new(i_x + i_z / 2, i_z);
+
+		return Self::from_offset(offset_pos);
+	}
+
 	pub fn is_in_bounds(&self, map_height: usize, map_width: usize) -> bool {
 		let off = self.to_offset();
 		if off.x < 0 || off.y < 0 {

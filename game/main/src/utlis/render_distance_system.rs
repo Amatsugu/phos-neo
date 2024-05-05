@@ -1,5 +1,6 @@
 use bevy::prelude::*;
-use camera_system::prelude::PhosCamera;
+
+use crate::camera_system::components::PhosCamera;
 
 pub struct RenderDistancePlugin;
 

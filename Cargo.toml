@@ -3,8 +3,7 @@ resolver = "2"
 members = [
     "game/main",
     "engine/world_generation",
-	"game/camera_system"
-	, "engine/asset_loader"]
+	"engine/asset_loader"]
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]

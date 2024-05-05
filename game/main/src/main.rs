@@ -3,13 +3,14 @@ use bevy::prelude::*;
 use bevy::render::texture::{ImageAddressMode, ImageFilterMode, ImageSamplerDescriptor};
 use bevy::window::PresentMode;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use phos::PhosGamePlugin;
 
+mod camera_system;
 mod map_init;
 mod phos;
 mod prelude;
 mod shader_extensions;
 mod utlis;
-use phos::PhosGamePlugin;
 
 fn main() {
 	App::new()

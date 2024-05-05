@@ -1,3 +1,5 @@
+use crate::camera_system::camera_plugin::PhosCameraPlugin;
+use crate::camera_system::components::PhosCamera;
 use crate::map_init::MapInitPlugin;
 use crate::prelude::*;
 use crate::shader_extensions::chunk_material::ChunkMaterial;
@@ -10,8 +12,6 @@ use bevy::{
 use bevy_rapier3d::dynamics::{Ccd, RigidBody, Velocity};
 use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
-use camera_system::prelude::PhosCamera;
-use camera_system::PhosCameraPlugin;
 use iyes_perf_ui::prelude::*;
 use world_generation::biome_painter::BiomePainterPlugin;
 use world_generation::tile_manager::TileAssetPlugin;

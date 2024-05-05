@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
+#[reflect(Component)]
 pub struct PhosCamera {
 	pub min_height: f32,
 	pub max_height: f32,
@@ -16,9 +17,9 @@ impl Default for PhosCamera {
 			min_height: 10.,
 			max_height: 100.,
 			speed: 20.,
-			zoom_speed: 20.,
-			min_angle: 10.,
-			max_angle: 80.,
+			zoom_speed: 0.3,
+			min_angle: (20. as f32).to_radians(),
+			max_angle: 1.,
 		}
 	}
 }
@@ -26,6 +27,9 @@ impl Default for PhosCamera {
 #[derive(Component, Default)]
 pub struct PhosCameraTargets {
 	pub height: f32,
+	pub last_height: f32,
+	pub anim_time: f32,
+	pub rotate_time: f32,
 }
 
 #[derive(Component, Default)]

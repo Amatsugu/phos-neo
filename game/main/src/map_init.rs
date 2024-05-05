@@ -1,7 +1,6 @@
 use bevy::{asset::LoadState, pbr::ExtendedMaterial, prelude::*};
 use bevy_inspector_egui::quick::ResourceInspectorPlugin;
 use bevy_rapier3d::geometry::{Collider, TriMeshFlags};
-use camera_system::prelude::{CameraBounds, PhosCamera};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use world_generation::{
 	biome_painter::*,
@@ -15,6 +14,7 @@ use world_generation::{
 };
 
 use crate::{
+	camera_system::components::*,
 	prelude::{ChunkAtlas, PhosChunk, PhosMap},
 	shader_extensions::chunk_material::ChunkMaterial,
 	utlis::render_distance_system::RenderDistanceVisibility,
@@ -235,7 +235,11 @@ fn spawn_map(
 
 	commands.spawn((PbrBundle {
 		transform: Transform::from_translation(heightmap.get_center()),
-		mesh: meshes.add(Plane3d::default().mesh().size(heightmap.get_world_width(), heightmap.get_world_height())),
+		mesh: meshes.add(
+			Plane3d::default()
+				.mesh()
+				.size(heightmap.get_world_width(), heightmap.get_world_height()),
+		),
 		material: standard_materials.add(StandardMaterial {
 			base_color: Color::AQUAMARINE.with_a(0.5),
 			alpha_mode: AlphaMode::Blend,
