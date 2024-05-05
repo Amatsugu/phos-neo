@@ -1,4 +1,8 @@
 use bevy::prelude::*;
+use world_generation::{
+	hex_utils::{tile_to_world_distance, SHORT_DIAGONAL},
+	prelude::Chunk,
+};
 
 #[derive(Component, Reflect)]
 #[reflect(Component)]
@@ -15,8 +19,8 @@ impl Default for PhosCamera {
 	fn default() -> Self {
 		Self {
 			min_height: 10.,
-			max_height: 100.,
-			speed: 20.,
+			max_height: 120.,
+			speed: 30.,
 			zoom_speed: 0.3,
 			min_angle: (20. as f32).to_radians(),
 			max_angle: 1.,
@@ -24,12 +28,25 @@ impl Default for PhosCamera {
 	}
 }
 
-#[derive(Component, Default)]
+#[derive(Component)]
 pub struct PhosCameraTargets {
 	pub height: f32,
+	pub forward: Vec3,
 	pub last_height: f32,
 	pub anim_time: f32,
 	pub rotate_time: f32,
+}
+
+impl Default for PhosCameraTargets {
+	fn default() -> Self {
+		Self {
+			height: Default::default(),
+			forward: Vec3::Z,
+			last_height: Default::default(),
+			anim_time: Default::default(),
+			rotate_time: Default::default(),
+		}
+	}
 }
 
 #[derive(Component, Default)]
@@ -40,9 +57,13 @@ pub struct CameraBounds {
 
 impl CameraBounds {
 	pub fn from_size(size: UVec2) -> Self {
+		let padding = Chunk::WORLD_SIZE;
 		return Self {
-			min: Vec2::ZERO,
-			max: size.as_vec2(),
+			min: Vec2::ZERO - padding,
+			max: Vec2::new(
+				(size.x as usize * Chunk::SIZE) as f32 * SHORT_DIAGONAL,
+				(size.y * Chunk::SIZE as u32) as f32 * 1.5,
+			) + padding,
 		};
 	}
 }

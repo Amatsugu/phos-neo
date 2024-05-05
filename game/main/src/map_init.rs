@@ -6,7 +6,7 @@ use world_generation::{
 	biome_painter::*,
 	chunk_colliders::generate_chunk_collider,
 	heightmap::generate_heightmap,
-	hex_utils::{offset_to_world, tile_to_world_distance},
+	hex_utils::{offset_to_world, SHORT_DIAGONAL},
 	mesh_generator::generate_chunk_mesh,
 	prelude::*,
 	tile_manager::*,
@@ -39,11 +39,23 @@ impl Plugin for MapInitPlugin {
 	}
 }
 
-fn load_textures(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn load_textures(
+	mut commands: Commands,
+	asset_server: Res<AssetServer>,
+	mut standard_materials: ResMut<Assets<StandardMaterial>>,
+) {
 	let main_tex = asset_server.load("textures/world/stack.png");
+
+	let water_material = standard_materials.add(StandardMaterial {
+		base_color: Color::AQUAMARINE.with_a(0.5),
+		alpha_mode: AlphaMode::Blend,
+		..default()
+	});
 	commands.insert_resource(ChunkAtlas {
 		handle: main_tex.clone(),
 		is_loaded: false,
+		chunk_material_handle: Handle::default(),
+		water_material: water_material,
 	});
 }
 #[derive(Resource)]
@@ -62,6 +74,7 @@ fn finalize_texture(
 	painter: Res<Painter>,
 	painter_load: Res<BiomePainterLoadState>,
 	tile_load: Res<TileAssetLoadState>,
+	mut chunk_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, ChunkMaterial>>>,
 	mapper_load: Res<TileMapperLoadState>,
 ) {
 	if atlas.is_loaded {
@@ -84,6 +97,13 @@ fn finalize_texture(
 	image.reinterpret_stacked_2d_as_array(array_layers);
 
 	atlas.is_loaded = true;
+	let chunk_material = chunk_materials.add(ExtendedMaterial {
+		base: StandardMaterial::default(),
+		extension: ChunkMaterial {
+			array_texture: atlas.handle.clone(),
+		},
+	});
+	atlas.chunk_material_handle = chunk_material;
 	map.ready = true;
 	map.regenerate = true;
 }
@@ -160,25 +180,18 @@ fn create_map(mut commands: Commands, mut cam: Query<(&mut Transform, Entity), W
 	};
 	let heightmap = generate_heightmap(&config, 4);
 
-	commands.insert_resource(heightmap);
-
 	let (mut cam_t, cam_entity) = cam.single_mut();
-	cam_t.translation = Vec3::new(
-		tile_to_world_distance((config.size.x as i32 * Chunk::SIZE as i32) / 2),
-		cam_t.translation.y,
-		tile_to_world_distance((config.size.y as i32 * Chunk::SIZE as i32) / 2),
-	);
+	cam_t.translation = heightmap.get_center();
 
 	commands.entity(cam_entity).insert(CameraBounds::from_size(config.size));
 
+	commands.insert_resource(heightmap);
 	commands.insert_resource(config);
 }
 
 fn spawn_map(
 	heightmap: Res<Map>,
 	mut commands: Commands,
-	mut chunk_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, ChunkMaterial>>>,
-	mut standard_materials: ResMut<Assets<StandardMaterial>>,
 	mut meshes: ResMut<Assets<Mesh>>,
 	atlas: Res<ChunkAtlas>,
 	mut map: ResMut<PhosMap>,
@@ -192,12 +205,6 @@ fn spawn_map(
 	}
 	let b_painter = biome_painters.get(painter.0.clone());
 	map.regenerate = false;
-	let chunk_material = chunk_materials.add(ExtendedMaterial {
-		base: StandardMaterial::default(),
-		extension: ChunkMaterial {
-			array_texture: atlas.handle.clone(),
-		},
-	});
 
 	let cur_painter = b_painter.unwrap();
 
@@ -219,15 +226,15 @@ fn spawn_map(
 		commands.spawn((
 			MaterialMeshBundle {
 				mesh: meshes.add(mesh),
-				material: chunk_material.clone(),
+				material: atlas.chunk_material_handle.clone(),
 				transform: Transform::from_translation(pos),
 				..default()
 			},
 			PhosChunk,
 			RenderDistanceVisibility::default().with_offset(Vec3::new(
-				tile_to_world_distance(Chunk::SIZE as i32 / 2),
+				(Chunk::SIZE / 2) as f32 * SHORT_DIAGONAL,
 				0.,
-				tile_to_world_distance(Chunk::SIZE as i32 / 2),
+				(Chunk::SIZE / 2) as f32 * 1.5,
 			)),
 			Collider::trimesh_with_flags(col_verts, col_indicies, TriMeshFlags::MERGE_DUPLICATE_VERTICES),
 		));
@@ -240,11 +247,7 @@ fn spawn_map(
 				.mesh()
 				.size(heightmap.get_world_width(), heightmap.get_world_height()),
 		),
-		material: standard_materials.add(StandardMaterial {
-			base_color: Color::AQUAMARINE.with_a(0.5),
-			alpha_mode: AlphaMode::Blend,
-			..default()
-		}),
+		material: atlas.water_material.clone(),
 		..default()
 	},));
 }

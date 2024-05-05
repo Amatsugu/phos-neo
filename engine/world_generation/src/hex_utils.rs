@@ -2,7 +2,10 @@ use crate::prelude::Chunk;
 use bevy::prelude::*;
 
 pub const OUTER_RADIUS: f32 = 1.;
-pub const INNER_RADIUS: f32 = OUTER_RADIUS * 0.866025404;
+pub const INNER_RADIUS: f32 = OUTER_RADIUS * (SQRT_3 / 2.);
+pub const SHORT_DIAGONAL: f32 = 1. * SQRT_3;
+pub const LONG_DIAGONAL: f32 = 2. * OUTER_RADIUS;
+const SQRT_3: f32 = 1.7320508076;
 
 pub fn offset3d_to_world(offset: Vec3) -> Vec3 {
 	let x = (offset.x + (offset.z * 0.5) - (offset.z / 2.).floor()) * (INNER_RADIUS * 2.);
@@ -41,11 +44,11 @@ pub fn world_to_offset_pos(world_pos: Vec3) -> IVec2 {
 	return IVec2::new(ox, oz);
 }
 
-pub fn tile_to_world_distance(dist: i32) -> f32 {
+pub fn tile_to_world_distance(dist: u32) -> f32 {
 	return dist as f32 * (2. * INNER_RADIUS);
 }
 
-pub fn get_tile_count(radius: i32) -> i32 {
+pub fn get_tile_count(radius: u32) -> u32 {
 	return 1 + 3 * (radius + 1) * radius;
 }
 

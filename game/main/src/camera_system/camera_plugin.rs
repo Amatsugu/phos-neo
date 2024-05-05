@@ -36,7 +36,6 @@ fn setup(mut commands: Commands, mut msaa: ResMut<Msaa>) {
 			PhosCamera::default(),
 			PhosCameraTargets::default(),
 		))
-		.insert(ScreenSpaceAmbientOcclusionBundle::default())
 		.insert(TemporalAntiAliasBundle::default());
 
 	*msaa = Msaa::Off;
@@ -147,12 +146,13 @@ fn rts_camera_system(
 		cam_move.z = -1.;
 	}
 
-	if key.pressed(KeyCode::ShiftLeft) {
-		cam_move = cam_move.normalize_or_zero() * cam_cfg.speed * time.delta_seconds() * 2.;
+	let move_speed = if key.pressed(KeyCode::ShiftLeft) {
+		cam_cfg.speed * 2.
 	} else {
-		cam_move = cam_move.normalize_or_zero() * cam_cfg.speed * time.delta_seconds();
-	}
+		cam_cfg.speed
+	};
 
+	cam_move = cam_move.normalize_or_zero() * move_speed * time.delta_seconds();
 	cam_pos -= cam_move;
 
 	let mut scroll = 0.0;
@@ -163,20 +163,11 @@ fn rts_camera_system(
 		}
 	}
 
+	let ground_height = sample_ground(cam.translation, &heightmap);
+
 	cam_targets.height -= scroll;
 	if cam_targets.height > cam_cfg.max_height {
 		cam_targets.height = cam_cfg.max_height;
-	}
-
-	let tile_under = HexCoord::from_world_pos(cam.translation);
-	let neighbors = heightmap.get_neighbors(&tile_under);
-	let mut ground_height = heightmap.sample_height(&tile_under);
-	for n in neighbors {
-		if let Some(h) = n {
-			if h > ground_height {
-				ground_height = h;
-			}
-		}
 	}
 
 	let min_height = ground_height + cam_cfg.min_height;
@@ -218,4 +209,35 @@ fn rts_camera_system(
 	cam.translation = cam_pos;
 }
 
-fn limit_camera_bounds(mut cam_query: Query<(&mut Transform, &CameraBounds)>) {}
+fn sample_ground(pos: Vec3, heightmap: &Map) -> f32 {
+	let tile_under = HexCoord::from_world_pos(pos);
+	let neighbors = heightmap.get_neighbors(&tile_under);
+	let mut ground_height = if heightmap.is_in_bounds(&tile_under) {
+		heightmap.sample_height(&tile_under)
+	} else {
+		heightmap.sea_level
+	};
+
+	for n in neighbors {
+		if let Some(h) = n {
+			if h > ground_height {
+				ground_height = h;
+			}
+		}
+	}
+	if ground_height < heightmap.sea_level {
+		ground_height = heightmap.sea_level;
+	}
+	return ground_height;
+}
+
+fn limit_camera_bounds(mut cam_query: Query<(&mut Transform, &CameraBounds)>) {
+	let (mut tranform, bounds) = cam_query.single_mut();
+
+	let mut pos = tranform.translation;
+
+	pos.x = pos.x.clamp(bounds.min.x, bounds.max.x);
+	pos.z = pos.z.clamp(bounds.min.y, bounds.max.y);
+
+	tranform.translation = pos;
+}

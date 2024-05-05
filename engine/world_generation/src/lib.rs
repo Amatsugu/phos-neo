@@ -8,7 +8,7 @@ pub mod tile_manager;
 pub mod tile_mapper;
 
 pub mod prelude {
-	use crate::hex_utils::{tile_to_world_distance, HexCoord, INNER_RADIUS, OUTER_RADIUS};
+	use crate::hex_utils::{tile_to_world_distance, HexCoord, INNER_RADIUS, OUTER_RADIUS, SHORT_DIAGONAL};
 	use bevy::math::{IVec2, UVec2, Vec2, Vec3};
 	use bevy::prelude::Resource;
 	use bevy::prelude::*;
@@ -77,6 +77,9 @@ pub mod prelude {
 
 	impl Chunk {
 		pub const SIZE: usize = 64;
+		pub const WORLD_WIDTH: f32 = Chunk::SIZE as f32 * SHORT_DIAGONAL;
+		pub const WORLD_HEIGHT: f32 = Chunk::SIZE as f32 * 1.5;
+		pub const WORLD_SIZE: Vec2 = Vec2::new(Chunk::WORLD_WIDTH, Chunk::WORLD_HEIGHT);
 	}
 
 	#[derive(Resource)]
@@ -111,6 +114,10 @@ pub mod prelude {
 			return chunk.heights[pos.to_chunk_local_index()];
 		}
 
+		pub fn is_in_bounds(&self, pos: &HexCoord) -> bool {
+			return pos.is_in_bounds(self.height * Chunk::SIZE, self.width * Chunk::SIZE);
+		}
+
 		pub fn get_moisture(&self, pos: &HexCoord) -> f32 {
 			let chunk = &self.chunks[pos.to_chunk_index(self.width)];
 			return chunk.moisture[pos.to_chunk_local_index()];
@@ -122,20 +129,20 @@ pub mod prelude {
 		}
 
 		pub fn get_center(&self) -> Vec3 {
-			let w = self.width * Chunk::SIZE;
-			let h = self.height * Chunk::SIZE;
-			return Vec3::new(
-				tile_to_world_distance(w as i32 / 2),
-				self.sea_level,
-				tile_to_world_distance(h as i32 / 2),
-			);
+			let w = self.get_world_width();
+			let h = self.get_world_height();
+			return Vec3::new(w / 2., self.sea_level, h / 2.);
 		}
 
 		pub fn get_world_width(&self) -> f32 {
-			return tile_to_world_distance((self.width * Chunk::SIZE) as i32);
+			return (self.width * Chunk::SIZE) as f32 * SHORT_DIAGONAL;
 		}
 		pub fn get_world_height(&self) -> f32 {
-			return tile_to_world_distance((self.height * Chunk::SIZE) as i32);
+			return (self.height * Chunk::SIZE) as f32 * 1.5;
+		}
+
+		pub fn get_world_size(&self) -> Vec2 {
+			return Vec2::new(self.get_world_width(), self.get_world_height());
 		}
 	}
 	pub const ATTRIBUTE_PACKED_VERTEX_DATA: MeshVertexAttribute =
