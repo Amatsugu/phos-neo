@@ -22,4 +22,25 @@ pub struct PhosMap {
 }
 
 #[derive(Component)]
-pub struct PhosChunk;
+pub struct PhosChunk {
+	pub index: usize,
+}
+
+impl PhosChunk {
+	pub fn new(index: usize) -> Self {
+		return Self { index };
+	}
+}
+
+#[derive(Resource, Default)]
+pub struct PhosChunkRegistry {
+	pub chunks: Vec<Entity>,
+}
+
+impl PhosChunkRegistry {
+	pub fn new(size: usize) -> Self {
+		return Self {
+			chunks: Vec::with_capacity(size),
+		};
+	}
+}

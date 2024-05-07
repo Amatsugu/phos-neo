@@ -1,7 +1,7 @@
 use crate::camera_system::camera_plugin::PhosCameraPlugin;
 use crate::camera_system::components::PhosCamera;
-use crate::map_init::MapInitPlugin;
-use crate::prelude::*;
+use crate::map_rendering::chunk_rebuild::ChunkRebuildPlugin;
+use crate::map_rendering::map_init::MapInitPlugin;
 use crate::shader_extensions::chunk_material::ChunkMaterial;
 use crate::utlis::render_distance_system::RenderDistancePlugin;
 use bevy::pbr::ExtendedMaterial;
@@ -26,6 +26,7 @@ impl Plugin for PhosGamePlugin {
 			MapInitPlugin,
 			MaterialPlugin::<ExtendedMaterial<StandardMaterial, ChunkMaterial>>::default(),
 			RenderDistancePlugin,
+			ChunkRebuildPlugin,
 		));
 
 		//Systems - Startup

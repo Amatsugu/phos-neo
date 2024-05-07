@@ -1,4 +1,4 @@
-use bevy::{asset::LoadState, pbr::ExtendedMaterial, prelude::*};
+use bevy::{asset::LoadState, log::tracing_subscriber::registry, pbr::ExtendedMaterial, prelude::*};
 use bevy_inspector_egui::quick::ResourceInspectorPlugin;
 use bevy_rapier3d::geometry::{Collider, TriMeshFlags};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
@@ -6,7 +6,7 @@ use world_generation::{
 	biome_painter::*,
 	chunk_colliders::generate_chunk_collider,
 	heightmap::generate_heightmap,
-	hex_utils::{offset_to_world, SHORT_DIAGONAL},
+	hex_utils::{self, offset_to_world, SHORT_DIAGONAL},
 	mesh_generator::generate_chunk_mesh,
 	prelude::*,
 	tile_manager::*,
@@ -15,10 +15,12 @@ use world_generation::{
 
 use crate::{
 	camera_system::components::*,
-	prelude::{ChunkAtlas, PhosChunk, PhosMap},
+	prelude::{ChunkAtlas, PhosChunk, PhosChunkRegistry, PhosMap},
 	shader_extensions::chunk_material::ChunkMaterial,
 	utlis::render_distance_system::RenderDistanceVisibility,
 };
+
+use super::prelude::CurrentBiomePainter;
 
 pub struct MapInitPlugin;
 
@@ -58,12 +60,10 @@ fn load_textures(
 		water_material: water_material,
 	});
 }
-#[derive(Resource)]
-struct Painter(Handle<BiomePainterAsset>);
 
 fn load_tiles(mut commands: Commands, asset_server: Res<AssetServer>) {
 	let handle: Handle<BiomePainterAsset> = asset_server.load("biome_painters/terra.biomes.json");
-	commands.insert_resource(Painter(handle));
+	commands.insert_resource(CurrentBiomePainter { handle });
 }
 
 fn finalize_texture(
@@ -71,7 +71,7 @@ fn finalize_texture(
 	mut atlas: ResMut<ChunkAtlas>,
 	mut map: ResMut<PhosMap>,
 	mut images: ResMut<Assets<Image>>,
-	painter: Res<Painter>,
+	painter: Res<CurrentBiomePainter>,
 	painter_load: Res<BiomePainterLoadState>,
 	tile_load: Res<TileAssetLoadState>,
 	mut chunk_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, ChunkMaterial>>>,
@@ -88,7 +88,7 @@ fn finalize_texture(
 	if asset_server.load_state(atlas.handle.clone()) != LoadState::Loaded {
 		return;
 	}
-	if asset_server.load_state(painter.0.clone()) != LoadState::Loaded {
+	if asset_server.load_state(painter.handle.clone()) != LoadState::Loaded {
 		return;
 	}
 	let image = images.get_mut(&atlas.handle).unwrap();
@@ -198,12 +198,12 @@ fn spawn_map(
 	tile_assets: Res<Assets<TileAsset>>,
 	tile_mappers: Res<Assets<TileMapperAsset>>,
 	biome_painters: Res<Assets<BiomePainterAsset>>,
-	painter: Res<Painter>,
+	painter: Res<CurrentBiomePainter>,
 ) {
 	if !map.ready || !map.regenerate {
 		return;
 	}
-	let b_painter = biome_painters.get(painter.0.clone());
+	let b_painter = biome_painters.get(painter.handle.clone());
 	map.regenerate = false;
 
 	let cur_painter = b_painter.unwrap();
@@ -218,19 +218,22 @@ fn spawn_map(
 				mesh,
 				collision,
 				offset_to_world(chunk.chunk_offset * Chunk::SIZE as i32, 0.),
+				hex_utils::offset_to_index(chunk.chunk_offset, heightmap.width),
 			);
 		})
 		.collect();
 
-	for (mesh, (col_verts, col_indicies), pos) in chunk_meshes {
-		commands.spawn((
+	let mut registry = PhosChunkRegistry::new(chunk_meshes.len());
+
+	for (mesh, (col_verts, col_indicies), pos, index) in chunk_meshes {
+		let chunk = commands.spawn((
 			MaterialMeshBundle {
 				mesh: meshes.add(mesh),
 				material: atlas.chunk_material_handle.clone(),
 				transform: Transform::from_translation(pos),
 				..default()
 			},
-			PhosChunk,
+			PhosChunk::new(index),
 			RenderDistanceVisibility::default().with_offset(Vec3::new(
 				(Chunk::SIZE / 2) as f32 * SHORT_DIAGONAL,
 				0.,
@@ -238,6 +241,7 @@ fn spawn_map(
 			)),
 			Collider::trimesh_with_flags(col_verts, col_indicies, TriMeshFlags::MERGE_DUPLICATE_VERTICES),
 		));
+		registry.chunks.push(chunk.id());
 	}
 
 	commands.spawn((PbrBundle {
@@ -250,6 +254,8 @@ fn spawn_map(
 		material: atlas.water_material.clone(),
 		..default()
 	},));
+
+	commands.insert_resource(registry);
 }
 
 fn despawn_map(

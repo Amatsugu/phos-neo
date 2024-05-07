@@ -28,6 +28,10 @@ pub fn offset_to_hex(offset: IVec2) -> IVec3 {
 	return v;
 }
 
+pub fn offset_to_index(offset: IVec2, width: usize) -> usize {
+	return offset.x as usize + offset.y as usize * width;
+}
+
 pub fn snap_to_hex_grid(world_pos: Vec3) -> Vec3 {
 	return offset_to_world(world_to_offset_pos(world_pos), world_pos.y);
 }

@@ -11,9 +11,8 @@ pub fn generate_chunk_collider(chunk: &Chunk, map: &Map) -> (Vec<Vec3>, Vec<[u32
 	for z in 0..Chunk::SIZE {
 		for x in 0..Chunk::SIZE {
 			let height = chunk.heights[x + z * Chunk::SIZE];
-			let coord = HexCoord::from_offset(
-				IVec2::new(x as i32, z as i32) + (chunk.chunk_offset * Chunk::SIZE as i32),
-			);
+			let coord =
+				HexCoord::from_offset(IVec2::new(x as i32, z as i32) + (chunk.chunk_offset * Chunk::SIZE as i32));
 			let neighbors = map.get_neighbors(&coord);
 			let off_pos = Vec3::new(x as f32, height, z as f32);
 			let tile_pos = offset3d_to_world(off_pos);
@@ -23,12 +22,7 @@ pub fn generate_chunk_collider(chunk: &Chunk, map: &Map) -> (Vec<Vec3>, Vec<[u32
 	return (verts, indices);
 }
 
-fn create_tile_collider(
-	pos: Vec3,
-	verts: &mut Vec<Vec3>,
-	indices: &mut Vec<[u32; 3]>,
-	neighbors: &[Option<f32>; 6],
-) {
+fn create_tile_collider(pos: Vec3, verts: &mut Vec<Vec3>, indices: &mut Vec<[u32; 3]>, neighbors: &[Option<f32>; 6]) {
 	let idx = verts.len() as u32;
 	for i in 0..6 {
 		let p = pos + HEX_CORNERS[i];
@@ -66,13 +60,7 @@ fn create_tile_collider(
 	}
 }
 
-fn create_tile_wall_collider(
-	idx: u32,
-	pos: Vec3,
-	dir: usize,
-	verts: &mut Vec<Vec3>,
-	indices: &mut Vec<[u32; 3]>,
-) {
+fn create_tile_wall_collider(idx: u32, pos: Vec3, dir: usize, verts: &mut Vec<Vec3>, indices: &mut Vec<[u32; 3]>) {
 	let idx2 = verts.len() as u32;
 
 	verts.push(pos + HEX_CORNERS[dir]);

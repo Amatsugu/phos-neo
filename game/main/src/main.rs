@@ -6,7 +6,7 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use phos::PhosGamePlugin;
 
 mod camera_system;
-mod map_init;
+mod map_rendering;
 mod phos;
 mod prelude;
 mod shader_extensions;
