@@ -120,6 +120,12 @@ impl HexCoord {
 		return true;
 	}
 
+	pub fn is_on_chunk_edge(&self) -> bool {
+		let offset = self.to_offset().rem_euclid(IVec2::splat(Chunk::SIZE as i32));
+		let e = (Chunk::SIZE - 1) as i32;
+		return offset.x == 0 || offset.y == 0 || offset.x == e || offset.y == e;
+	}
+
 	pub fn to_chunk_pos(&self) -> IVec2 {
 		let off = self.to_offset();
 

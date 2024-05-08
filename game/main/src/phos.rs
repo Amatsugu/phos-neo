@@ -26,7 +26,6 @@ impl Plugin for PhosGamePlugin {
 			MapInitPlugin,
 			MaterialPlugin::<ExtendedMaterial<StandardMaterial, ChunkMaterial>>::default(),
 			RenderDistancePlugin,
-			ChunkRebuildPlugin,
 		));
 
 		//Systems - Startup

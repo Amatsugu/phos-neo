@@ -3,6 +3,8 @@ use crate::hex_utils::HexCoord;
 use crate::tile_manager::TileAsset;
 use crate::tile_mapper::TileMapperAsset;
 use crate::{hex_utils::offset3d_to_world, prelude::*};
+#[cfg(feature = "tracing")]
+use bevy::log::*;
 use bevy::{
 	prelude::*,
 	render::{
@@ -18,6 +20,9 @@ pub fn generate_chunk_mesh(
 	tiles: &Res<Assets<TileAsset>>,
 	mappers: &Res<Assets<TileMapperAsset>>,
 ) -> Mesh {
+	#[cfg(feature = "tracing")]
+	let span = info_span!("generate_chunk_mesh").entered();
+
 	let vertex_count: usize = Chunk::SIZE * Chunk::SIZE * 6;
 	let mut verts = Vec::with_capacity(vertex_count);
 	let mut uvs = Vec::with_capacity(vertex_count);

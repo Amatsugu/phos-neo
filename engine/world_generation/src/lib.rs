@@ -144,6 +144,10 @@ pub mod prelude {
 		pub fn get_world_size(&self) -> Vec2 {
 			return Vec2::new(self.get_world_width(), self.get_world_height());
 		}
+
+		pub fn set_height(&mut self, pos: &HexCoord, height: f32) {
+			self.chunks[pos.to_chunk_index(self.width)].heights[pos.to_chunk_local_index()] = height;
+		}
 	}
 	pub const ATTRIBUTE_PACKED_VERTEX_DATA: MeshVertexAttribute =
 		MeshVertexAttribute::new("PackedVertexData", 988540817, VertexFormat::Uint32);

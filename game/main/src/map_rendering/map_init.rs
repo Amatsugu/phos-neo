@@ -1,6 +1,8 @@
-use bevy::{asset::LoadState, log::tracing_subscriber::registry, pbr::ExtendedMaterial, prelude::*};
+#[cfg(feature = "tracing")]
+use bevy::log::*;
+use bevy::{asset::LoadState, pbr::ExtendedMaterial, prelude::*};
 use bevy_inspector_egui::quick::ResourceInspectorPlugin;
-use bevy_rapier3d::geometry::{Collider, TriMeshFlags};
+use bevy_rapier3d::geometry::Collider;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use world_generation::{
 	biome_painter::*,
@@ -20,7 +22,9 @@ use crate::{
 	utlis::render_distance_system::RenderDistanceVisibility,
 };
 
-use super::prelude::CurrentBiomePainter;
+use super::{
+	chunk_rebuild::ChunkRebuildPlugin, prelude::CurrentBiomePainter, terraforming_test::TerraFormingTestPlugin,
+};
 
 pub struct MapInitPlugin;
 
@@ -29,6 +33,8 @@ impl Plugin for MapInitPlugin {
 		app.add_plugins((
 			ResourceInspectorPlugin::<PhosMap>::default(),
 			ResourceInspectorPlugin::<GenerationConfig>::default(),
+			ChunkRebuildPlugin,
+			TerraFormingTestPlugin,
 		));
 
 		app.add_systems(Startup, (load_textures, load_tiles));
@@ -212,11 +218,19 @@ fn spawn_map(
 		.chunks
 		.par_iter()
 		.map(|chunk: &Chunk| {
+			#[cfg(feature = "tracing")]
+			let _gen_mesh = info_span!("Generate Chunk").entered();
 			let mesh = generate_chunk_mesh(chunk, &heightmap, cur_painter, &tile_assets, &tile_mappers);
-			let collision = generate_chunk_collider(chunk, &heightmap);
+			let (col_verts, col_indicies) = generate_chunk_collider(chunk, &heightmap);
+			let collider: Collider;
+			{
+				#[cfg(feature = "tracing")]
+				let _collider_span = info_span!("Create Collider Trimesh").entered();
+				collider = Collider::trimesh(col_verts, col_indicies);
+			}
 			return (
 				mesh,
-				collision,
+				collider,
 				offset_to_world(chunk.chunk_offset * Chunk::SIZE as i32, 0.),
 				hex_utils::offset_to_index(chunk.chunk_offset, heightmap.width),
 			);
@@ -225,23 +239,29 @@ fn spawn_map(
 
 	let mut registry = PhosChunkRegistry::new(chunk_meshes.len());
 
-	for (mesh, (col_verts, col_indicies), pos, index) in chunk_meshes {
-		let chunk = commands.spawn((
-			MaterialMeshBundle {
-				mesh: meshes.add(mesh),
-				material: atlas.chunk_material_handle.clone(),
-				transform: Transform::from_translation(pos),
-				..default()
-			},
-			PhosChunk::new(index),
-			RenderDistanceVisibility::default().with_offset(Vec3::new(
-				(Chunk::SIZE / 2) as f32 * SHORT_DIAGONAL,
-				0.,
-				(Chunk::SIZE / 2) as f32 * 1.5,
-			)),
-			Collider::trimesh_with_flags(col_verts, col_indicies, TriMeshFlags::MERGE_DUPLICATE_VERTICES),
-		));
-		registry.chunks.push(chunk.id());
+	{
+		#[cfg(feature = "tracing")]
+		let _spawn_span = info_span!("Spawn Chunks").entered();
+		let visibility_offset = Vec3::new(
+			(Chunk::SIZE / 2) as f32 * SHORT_DIAGONAL,
+			0.,
+			(Chunk::SIZE / 2) as f32 * 1.5,
+		);
+		for (mesh, collider, pos, index) in chunk_meshes {
+			// let mesh_handle = meshes.a
+			let chunk = commands.spawn((
+				MaterialMeshBundle {
+					mesh: meshes.add(mesh),
+					material: atlas.chunk_material_handle.clone(),
+					transform: Transform::from_translation(pos),
+					..default()
+				},
+				PhosChunk::new(index),
+				RenderDistanceVisibility::default().with_offset(visibility_offset),
+				collider,
+			));
+			registry.chunks.push(chunk.id());
+		}
 	}
 
 	commands.spawn((PbrBundle {

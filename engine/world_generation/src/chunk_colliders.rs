@@ -1,10 +1,13 @@
-use bevy::prelude::*;
-
 use crate::{hex_utils::*, prelude::*};
+#[cfg(feature = "tracing")]
+use bevy::log::*;
+use bevy::prelude::*;
 
 const CHUNK_TOTAL: usize = Chunk::SIZE * Chunk::SIZE;
 
 pub fn generate_chunk_collider(chunk: &Chunk, map: &Map) -> (Vec<Vec3>, Vec<[u32; 3]>) {
+	#[cfg(feature = "tracing")]
+	let span = info_span!("generate_chunk_collider").entered();
 	let vertex_count: usize = CHUNK_TOTAL * 6;
 	let mut verts = Vec::with_capacity(vertex_count);
 	let mut indices = Vec::with_capacity(vertex_count);
@@ -28,12 +31,6 @@ fn create_tile_collider(pos: Vec3, verts: &mut Vec<Vec3>, indices: &mut Vec<[u32
 		let p = pos + HEX_CORNERS[i];
 		verts.push(p);
 	}
-	// for i in 0..3 {
-	// 	let off = i * 2;
-	// 	indices.push([off + idx, ((off + 1) % 6) + idx, ((off + 2) % 6) + idx]);
-	// }
-
-	// indices.push([idx, idx + 2, idx + 4]);
 
 	//Top Surfave
 	indices.push([idx, idx + 1, idx + 5]);

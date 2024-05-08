@@ -22,7 +22,8 @@ pub struct ChunkRebuildPlugin;
 impl Plugin for ChunkRebuildPlugin {
 	fn build(&self, app: &mut App) {
 		app.insert_resource(ChunkRebuildQueue::default());
-		app.add_systems(PostUpdate, chunk_rebuilder);
+		app.init_resource::<PhosChunkRegistry>();
+		app.add_systems(PreUpdate, chunk_rebuilder);
 	}
 }
 
@@ -58,17 +59,18 @@ fn chunk_rebuilder(
 		.map(|idx| {
 			let chunk = &heightmap.chunks[*idx];
 			let mesh = generate_chunk_mesh(chunk, &heightmap, cur_painter, &tile_assets, &tile_mappers);
-			let collision = generate_chunk_collider(chunk, &heightmap);
+			let (col_verts, col_indicies) = generate_chunk_collider(chunk, &heightmap);
+			let collider = Collider::trimesh_with_flags(col_verts, col_indicies, TriMeshFlags::MERGE_DUPLICATE_VERTICES);
 			return (
 				mesh,
-				collision,
+				collider,
 				offset_to_world(chunk.chunk_offset * Chunk::SIZE as i32, 0.),
 				hex_utils::offset_to_index(chunk.chunk_offset, heightmap.width),
 			);
 		})
 		.collect();
 
-	for (mesh, (col_verts, col_indicies), pos, index) in chunk_meshes {
+	for (mesh, collider, pos, index) in chunk_meshes {
 		let chunk = commands.spawn((
 			MaterialMeshBundle {
 				mesh: meshes.add(mesh),
@@ -82,7 +84,7 @@ fn chunk_rebuilder(
 				0.,
 				(Chunk::SIZE / 2) as f32 * 1.5,
 			)),
-			Collider::trimesh_with_flags(col_verts, col_indicies, TriMeshFlags::MERGE_DUPLICATE_VERTICES),
+			collider,
 		));
 		chunks.chunks[index] = chunk.id();
 	}
