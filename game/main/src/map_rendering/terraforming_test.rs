@@ -17,13 +17,20 @@ impl Plugin for TerraFormingTestPlugin {
 fn deform(
 	cam_query: Query<(&GlobalTransform, &Camera), With<PhosCamera>>,
 	window: Query<&Window, With<PrimaryWindow>>,
-	keyboard: Res<ButtonInput<MouseButton>>,
+	mouse: Res<ButtonInput<MouseButton>>,
 	rapier_context: Res<RapierContext>,
 	mut heightmap: ResMut<Map>,
 	mut rebuild: ResMut<ChunkRebuildQueue>,
 	time: Res<Time>,
 ) {
-	if !keyboard.just_pressed(MouseButton::Left) {
+	let mut multi = 0.;
+	if mouse.pressed(MouseButton::Left) {
+		multi = 1.;
+	} else if mouse.pressed(MouseButton::Right) {
+		multi = -1.;
+	}
+
+	if multi == 0. {
 		return;
 	}
 
@@ -49,7 +56,7 @@ fn deform(
 		let contact_point = cam_ray.get_point(dist);
 		let contact_coord = HexCoord::from_world_pos(contact_point);
 		let cur_height = heightmap.sample_height(&contact_coord);
-		heightmap.set_height(&contact_coord, cur_height + 1.);
+		heightmap.set_height(&contact_coord, cur_height + 1. * time.delta_seconds() * multi);
 		let cur_chunk = contact_coord.to_chunk_index(heightmap.width);
 
 		if contact_coord.is_on_chunk_edge() {

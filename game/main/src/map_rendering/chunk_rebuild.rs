@@ -44,6 +44,11 @@ fn chunk_rebuilder(
 	biome_painters: Res<Assets<BiomePainterAsset>>,
 	painter: Res<CurrentBiomePainter>,
 ) {
+	if queue.queue.len() == 0 {
+		return;
+	}
+	queue.queue.dedup();
+
 	for chunk_index in &queue.queue {
 		let chunk = chunks.chunks[*chunk_index];
 		commands.entity(chunk).despawn();
@@ -60,7 +65,8 @@ fn chunk_rebuilder(
 			let chunk = &heightmap.chunks[*idx];
 			let mesh = generate_chunk_mesh(chunk, &heightmap, cur_painter, &tile_assets, &tile_mappers);
 			let (col_verts, col_indicies) = generate_chunk_collider(chunk, &heightmap);
-			let collider = Collider::trimesh_with_flags(col_verts, col_indicies, TriMeshFlags::MERGE_DUPLICATE_VERTICES);
+			let collider =
+				Collider::trimesh_with_flags(col_verts, col_indicies, TriMeshFlags::MERGE_DUPLICATE_VERTICES);
 			return (
 				mesh,
 				collider,
