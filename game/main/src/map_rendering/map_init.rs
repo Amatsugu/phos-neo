@@ -3,12 +3,12 @@ use bevy::log::*;
 use bevy::{asset::LoadState, pbr::ExtendedMaterial, prelude::*};
 use bevy_inspector_egui::quick::ResourceInspectorPlugin;
 use bevy_rapier3d::geometry::Collider;
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use world_generation::{
 	biome_painter::*,
 	chunk_colliders::generate_chunk_collider,
 	heightmap::generate_heightmap,
-	hex_utils::{self, offset_to_world, SHORT_DIAGONAL},
+	hex_utils::{self, offset_to_world, OUTER_RADIUS, SHORT_DIAGONAL},
 	mesh_generator::generate_chunk_mesh,
 	prelude::*,
 	tile_manager::*,
@@ -181,7 +181,7 @@ fn create_map(mut commands: Commands, mut cam: Query<(&mut Transform, Entity), W
 		noise_scale: 450.,
 		sea_level: 8.5,
 		border_size: 64.,
-		size: UVec2::splat(1024 / Chunk::SIZE as u32),
+		size: UVec2::splat(1),
 		// size: UVec2::splat(1),
 	};
 	let heightmap = generate_heightmap(&config, 4);
@@ -213,7 +213,7 @@ fn spawn_map(
 	map.regenerate = false;
 
 	let cur_painter = b_painter.unwrap();
-
+	let tile_collider = Collider::cylinder(10., OUTER_RADIUS);
 	let chunk_meshes: Vec<_> = heightmap
 		.chunks
 		.par_iter()
@@ -221,16 +221,9 @@ fn spawn_map(
 			#[cfg(feature = "tracing")]
 			let _gen_mesh = info_span!("Generate Chunk").entered();
 			let mesh = generate_chunk_mesh(chunk, &heightmap, cur_painter, &tile_assets, &tile_mappers);
-			let (col_verts, col_indicies) = generate_chunk_collider(chunk, &heightmap);
-			let collider: Collider;
-			{
-				#[cfg(feature = "tracing")]
-				let _collider_span = info_span!("Create Collider Trimesh").entered();
-				collider = Collider::trimesh(col_verts, col_indicies);
-			}
+
 			return (
 				mesh,
-				collider,
 				offset_to_world(chunk.chunk_offset * Chunk::SIZE as i32, 0.),
 				hex_utils::offset_to_index(chunk.chunk_offset, heightmap.width),
 			);
@@ -247,9 +240,9 @@ fn spawn_map(
 			0.,
 			(Chunk::SIZE / 2) as f32 * 1.5,
 		);
-		for (mesh, collider, pos, index) in chunk_meshes {
+		for (mesh, pos, index) in chunk_meshes {
 			// let mesh_handle = meshes.a
-			let chunk = commands.spawn((
+			let mut chunk = commands.spawn((
 				MaterialMeshBundle {
 					mesh: meshes.add(mesh),
 					material: atlas.chunk_material_handle.clone(),
@@ -258,8 +251,23 @@ fn spawn_map(
 				},
 				PhosChunk::new(index),
 				RenderDistanceVisibility::default().with_offset(visibility_offset),
-				collider,
 			));
+			chunk.with_children(|b| {
+				let heights = &heightmap.chunks[index];
+				let mut colliders: Vec<_> = (0..(Chunk::SIZE * Chunk::SIZE))
+					.into_par_iter()
+					.map(|_| Collider::capsule_y(10., OUTER_RADIUS))
+					.collect();
+				for z in 0..Chunk::SIZE {
+					for x in 0..Chunk::SIZE {
+						let h = heights.heights[x + z * Chunk::SIZE];
+						b.spawn((
+							colliders.remove(0),
+							Transform::from_translation(offset_to_world(IVec2::new(x as i32, z as i32), h)),
+						));
+					}
+				}
+			});
 			registry.chunks.push(chunk.id());
 		}
 	}
