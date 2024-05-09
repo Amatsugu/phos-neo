@@ -2,7 +2,7 @@
 use bevy::log::*;
 use bevy::{asset::LoadState, pbr::ExtendedMaterial, prelude::*};
 use bevy_inspector_egui::quick::ResourceInspectorPlugin;
-use bevy_rapier3d::geometry::Collider;
+use bevy_xpbd_3d::plugins::collision::Collider;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use world_generation::{
 	biome_painter::*,
@@ -181,8 +181,8 @@ fn create_map(mut commands: Commands, mut cam: Query<(&mut Transform, Entity), W
 		noise_scale: 450.,
 		sea_level: 8.5,
 		border_size: 64.,
-		size: UVec2::splat(1024 / Chunk::SIZE as u32),
-		// size: UVec2::splat(1),
+		//size: UVec2::splat(1024 / Chunk::SIZE as u32),
+		size: UVec2::splat(2),
 	};
 	let heightmap = generate_heightmap(&config, 4);
 

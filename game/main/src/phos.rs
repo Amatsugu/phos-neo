@@ -1,6 +1,5 @@
 use crate::camera_system::camera_plugin::PhosCameraPlugin;
 use crate::camera_system::components::PhosCamera;
-use crate::map_rendering::chunk_rebuild::ChunkRebuildPlugin;
 use crate::map_rendering::map_init::MapInitPlugin;
 use crate::shader_extensions::chunk_material::ChunkMaterial;
 use crate::utlis::render_distance_system::RenderDistancePlugin;
@@ -9,9 +8,9 @@ use bevy::{
 	pbr::{wireframe::WireframeConfig, CascadeShadowConfig},
 	prelude::*,
 };
-use bevy_rapier3d::dynamics::{Ccd, RigidBody, Velocity};
-use bevy_rapier3d::geometry::Collider;
-use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
+use bevy_xpbd_3d::components::{LinearVelocity, RigidBody};
+use bevy_xpbd_3d::plugins::collision::Collider;
+use bevy_xpbd_3d::plugins::PhysicsPlugins;
 use iyes_perf_ui::prelude::*;
 use world_generation::biome_painter::BiomePainterPlugin;
 use world_generation::tile_manager::TileAssetPlugin;
@@ -45,7 +44,7 @@ impl Plugin for PhosGamePlugin {
 		app.add_plugins(TileMapperAssetPlugin);
 		app.add_plugins(BiomePainterPlugin);
 		//Physics
-		app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
+		app.add_plugins(PhysicsPlugins::default());
 		// app.add_plugins(RapierDebugRenderPlugin::default());
 
 		app.insert_resource(WireframeConfig {
@@ -104,10 +103,9 @@ fn spawn_sphere(
 				transform: Transform::from_translation(cam_transform.translation),
 				..default()
 			},
-			Collider::ball(0.3),
+			Collider::sphere(0.3),
 			RigidBody::Dynamic,
-			Ccd::enabled(),
-			Velocity::linear(cam_transform.forward() * 50.),
+			LinearVelocity(cam_transform.forward() * 50.),
 		));
 	}
 }

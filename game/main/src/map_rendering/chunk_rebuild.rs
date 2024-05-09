@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_rapier3d::geometry::{Collider, TriMeshFlags};
+use bevy_xpbd_3d::plugins::collision::Collider;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use world_generation::{
 	biome_painter::BiomePainterAsset,
@@ -65,8 +65,7 @@ fn chunk_rebuilder(
 			let chunk = &heightmap.chunks[*idx];
 			let mesh = generate_chunk_mesh(chunk, &heightmap, cur_painter, &tile_assets, &tile_mappers);
 			let (col_verts, col_indicies) = generate_chunk_collider(chunk, &heightmap);
-			let collider =
-				Collider::trimesh_with_flags(col_verts, col_indicies, TriMeshFlags::MERGE_DUPLICATE_VERTICES);
+			let collider = Collider::trimesh(col_verts, col_indicies);
 			return (
 				mesh,
 				collider,

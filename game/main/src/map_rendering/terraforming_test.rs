@@ -1,5 +1,5 @@
 use bevy::{prelude::*, window::PrimaryWindow};
-use bevy_rapier3d::{pipeline::QueryFilter, plugin::RapierContext};
+use bevy_xpbd_3d::plugins::spatial_query::{SpatialQuery, SpatialQueryFilter};
 use world_generation::{hex_utils::HexCoord, prelude::Map};
 
 use crate::{camera_system::components::PhosCamera, prelude::PhosChunkRegistry};
@@ -18,7 +18,7 @@ fn deform(
 	cam_query: Query<(&GlobalTransform, &Camera), With<PhosCamera>>,
 	window: Query<&Window, With<PrimaryWindow>>,
 	mouse: Res<ButtonInput<MouseButton>>,
-	rapier_context: Res<RapierContext>,
+	spatial_query: SpatialQuery,
 	mut heightmap: ResMut<Map>,
 	mut rebuild: ResMut<ChunkRebuildQueue>,
 	time: Res<Time>,
@@ -44,16 +44,16 @@ fn deform(
 		return;
 	};
 
-	let collision = rapier_context.cast_ray(
+	let collision = spatial_query.cast_ray(
 		cam_ray.origin,
 		cam_ray.direction.into(),
 		100.,
 		true,
-		QueryFilter::only_fixed(),
+		SpatialQueryFilter::default(),
 	);
 
-	if let Some((_, dist)) = collision {
-		let contact_point = cam_ray.get_point(dist);
+	if let Some(hit) = collision {
+		let contact_point = cam_ray.get_point(hit.time_of_impact);
 		let contact_coord = HexCoord::from_world_pos(contact_point);
 		let cur_height = heightmap.sample_height(&contact_coord);
 		heightmap.set_height(&contact_coord, cur_height + 1. * time.delta_seconds() * multi);
