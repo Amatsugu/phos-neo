@@ -1,9 +1,7 @@
 use bevy::core_pipeline::experimental::taa::{TemporalAntiAliasBundle, TemporalAntiAliasPlugin};
 use bevy::input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel};
-use bevy::pbr::ScreenSpaceAmbientOcclusionBundle;
 use bevy::prelude::*;
 use bevy::window::CursorGrabMode;
-use bevy_rapier3d::plugin::RapierContext;
 use world_generation::hex_utils::HexCoord;
 use world_generation::prelude::Map;
 

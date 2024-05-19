@@ -1,11 +1,14 @@
+use std::mem::swap;
+
 use bevy::prelude::*;
-use bevy_rapier3d::geometry::{Collider, TriMeshFlags};
+use bevy::tasks::*;
+use bevy::utils::futures;
+use bevy_rapier3d::geometry::Collider;
+use bevy_rapier3d::geometry::TriMeshFlags;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use world_generation::{
 	biome_painter::BiomePainterAsset,
-	chunk_colliders::generate_chunk_collider,
-	hex_utils::{self, offset_to_world, SHORT_DIAGONAL},
-	mesh_generator::generate_chunk_mesh,
+	hex_utils::SHORT_DIAGONAL,
 	prelude::{Chunk, Map},
 	tile_manager::TileAsset,
 	tile_mapper::TileMapperAsset,
@@ -13,7 +16,7 @@ use world_generation::{
 
 use crate::{
 	prelude::{ChunkAtlas, PhosChunk, PhosChunkRegistry},
-	utlis::render_distance_system::RenderDistanceVisibility,
+	utlis::{chunk_utils::prepare_chunk_mesh, render_distance_system::RenderDistanceVisibility},
 };
 
 use super::prelude::CurrentBiomePainter;
@@ -24,6 +27,7 @@ impl Plugin for ChunkRebuildPlugin {
 		app.insert_resource(ChunkRebuildQueue::default());
 		app.init_resource::<PhosChunkRegistry>();
 		app.add_systems(PreUpdate, chunk_rebuilder);
+		app.add_systems(PreUpdate, collider_task_resolver);
 	}
 }
 
@@ -51,6 +55,7 @@ fn chunk_rebuilder(
 
 	for chunk_index in &queue.queue {
 		let chunk = chunks.chunks[*chunk_index];
+		// commands.entity(chunk).remove::<Handle<Mesh>>();
 		commands.entity(chunk).despawn();
 	}
 
@@ -62,21 +67,26 @@ fn chunk_rebuilder(
 		.queue
 		.par_iter()
 		.map(|idx| {
-			let chunk = &heightmap.chunks[*idx];
-			let mesh = generate_chunk_mesh(chunk, &heightmap, cur_painter, &tile_assets, &tile_mappers);
-			let (col_verts, col_indicies) = generate_chunk_collider(chunk, &heightmap);
-			let collider =
-				Collider::trimesh_with_flags(col_verts, col_indicies, TriMeshFlags::MERGE_DUPLICATE_VERTICES);
-			return (
-				mesh,
-				collider,
-				offset_to_world(chunk.chunk_offset * Chunk::SIZE as i32, 0.),
-				hex_utils::offset_to_index(chunk.chunk_offset, heightmap.width),
+			return prepare_chunk_mesh(
+				&heightmap.chunks[*idx],
+				&heightmap,
+				cur_painter,
+				&tile_assets,
+				&tile_mappers,
 			);
 		})
 		.collect();
 
-	for (mesh, collider, pos, index) in chunk_meshes {
+	let pool = TaskPool::new();
+
+	for (mesh, collider_data, pos, index) in chunk_meshes {
+		let task = pool.spawn(async {
+			Collider::trimesh_with_flags(
+				collider_data.0,
+				collider_data.1,
+				TriMeshFlags::DELETE_DUPLICATE_TRIANGLES,
+			)
+		});
 		let chunk = commands.spawn((
 			MaterialMeshBundle {
 				mesh: meshes.add(mesh),
@@ -90,9 +100,25 @@ fn chunk_rebuilder(
 				0.,
 				(Chunk::SIZE / 2) as f32 * 1.5,
 			)),
-			collider,
+			ColliderTask { task },
 		));
 		chunks.chunks[index] = chunk.id();
 	}
 	queue.queue.clear();
+}
+
+fn collider_task_resolver(mut chunks: Query<(&mut ColliderTask, Entity), With<PhosChunk>>, mut commands: Commands) {
+	for (mut task, entity) in &mut chunks {
+		match futures::check_ready(&mut task.task) {
+			Some(c) => {
+				commands.entity(entity).insert(c);
+			}
+			None => (),
+		}
+	}
+}
+
+#[derive(Component)]
+struct ColliderTask {
+	pub task: Task<Collider>,
 }

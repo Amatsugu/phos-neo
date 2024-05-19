@@ -8,7 +8,7 @@ pub mod tile_manager;
 pub mod tile_mapper;
 
 pub mod prelude {
-	use crate::hex_utils::{tile_to_world_distance, HexCoord, INNER_RADIUS, OUTER_RADIUS, SHORT_DIAGONAL};
+	use crate::hex_utils::{HexCoord, INNER_RADIUS, OUTER_RADIUS, SHORT_DIAGONAL};
 	use bevy::math::{IVec2, UVec2, Vec2, Vec3};
 	use bevy::prelude::Resource;
 	use bevy::prelude::*;

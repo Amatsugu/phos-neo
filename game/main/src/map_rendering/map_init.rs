@@ -2,16 +2,9 @@
 use bevy::log::*;
 use bevy::{asset::LoadState, pbr::ExtendedMaterial, prelude::*};
 use bevy_inspector_egui::quick::ResourceInspectorPlugin;
-use bevy_rapier3d::geometry::Collider;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use world_generation::{
-	biome_painter::*,
-	chunk_colliders::generate_chunk_collider,
-	heightmap::generate_heightmap,
-	hex_utils::{self, offset_to_world, SHORT_DIAGONAL},
-	mesh_generator::generate_chunk_mesh,
-	prelude::*,
-	tile_manager::*,
+	biome_painter::*, heightmap::generate_heightmap, hex_utils::SHORT_DIAGONAL, prelude::*, tile_manager::*,
 	tile_mapper::*,
 };
 
@@ -19,7 +12,10 @@ use crate::{
 	camera_system::components::*,
 	prelude::{ChunkAtlas, PhosChunk, PhosChunkRegistry, PhosMap},
 	shader_extensions::chunk_material::ChunkMaterial,
-	utlis::render_distance_system::RenderDistanceVisibility,
+	utlis::{
+		chunk_utils::{prepare_chunk_mesh, prepare_chunk_mesh_with_collider},
+		render_distance_system::RenderDistanceVisibility,
+	},
 };
 
 use super::{
@@ -218,22 +214,7 @@ fn spawn_map(
 		.chunks
 		.par_iter()
 		.map(|chunk: &Chunk| {
-			#[cfg(feature = "tracing")]
-			let _gen_mesh = info_span!("Generate Chunk").entered();
-			let mesh = generate_chunk_mesh(chunk, &heightmap, cur_painter, &tile_assets, &tile_mappers);
-			let (col_verts, col_indicies) = generate_chunk_collider(chunk, &heightmap);
-			let collider: Collider;
-			{
-				#[cfg(feature = "tracing")]
-				let _collider_span = info_span!("Create Collider Trimesh").entered();
-				collider = Collider::trimesh(col_verts, col_indicies);
-			}
-			return (
-				mesh,
-				collider,
-				offset_to_world(chunk.chunk_offset * Chunk::SIZE as i32, 0.),
-				hex_utils::offset_to_index(chunk.chunk_offset, heightmap.width),
-			);
+			return prepare_chunk_mesh_with_collider(chunk, &heightmap, cur_painter, &tile_assets, &tile_mappers);
 		})
 		.collect();
 

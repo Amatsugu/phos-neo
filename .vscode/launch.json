@@ -14,12 +14,12 @@
 			"args": [],
 			"cwd": "${workspaceRoot}/target/debug",
 			"preLaunchTask": "Build",
-			// "environment": [
-			// 	{
-			// 		"name": "RUST_BACKTRACE",
-			// 		"value": "1"
-			// 	}
-			// ]
+			"environment": [
+				{
+					"name": "RUST_BACKTRACE",
+					"value": "1"
+				}
+			]
 		}
 	]
 }

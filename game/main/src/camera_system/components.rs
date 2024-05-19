@@ -1,8 +1,5 @@
 use bevy::prelude::*;
-use world_generation::{
-	hex_utils::{tile_to_world_distance, SHORT_DIAGONAL},
-	prelude::Chunk,
-};
+use world_generation::{hex_utils::SHORT_DIAGONAL, prelude::Chunk};
 
 #[derive(Component, Reflect)]
 #[reflect(Component)]
