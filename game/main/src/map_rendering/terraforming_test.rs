@@ -24,7 +24,7 @@ fn deform(
 	time: Res<Time>,
 ) {
 	let mut multi = 0.;
-	if mouse.just_pressed(MouseButton::Left) {
+	if mouse.pressed(MouseButton::Left) {
 		multi = 1.;
 	} else if mouse.pressed(MouseButton::Right) {
 		multi = -1.;

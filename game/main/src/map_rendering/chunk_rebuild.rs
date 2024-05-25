@@ -1,8 +1,9 @@
-use std::mem::swap;
+use std::thread;
 
+use bevy::ecs::system::CommandQueue;
 use bevy::prelude::*;
+use bevy::tasks::futures_lite::future;
 use bevy::tasks::*;
-use bevy::utils::futures;
 use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::geometry::TriMeshFlags;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
@@ -36,6 +37,7 @@ pub struct ChunkRebuildQueue {
 	pub queue: Vec<usize>,
 }
 
+//Todo: Re-use existing entity/collider until new collider is generated
 fn chunk_rebuilder(
 	mut commands: Commands,
 	mut queue: ResMut<ChunkRebuildQueue>,
@@ -77,17 +79,10 @@ fn chunk_rebuilder(
 		})
 		.collect();
 
-	let pool = TaskPool::new();
+	let pool = AsyncComputeTaskPool::get();
 
 	for (mesh, collider_data, pos, index) in chunk_meshes {
-		let task = pool.spawn(async {
-			Collider::trimesh_with_flags(
-				collider_data.0,
-				collider_data.1,
-				TriMeshFlags::DELETE_DUPLICATE_TRIANGLES,
-			)
-		});
-		let chunk = commands.spawn((
+		let mut chunk = commands.spawn((
 			MaterialMeshBundle {
 				mesh: meshes.add(mesh),
 				material: atlas.chunk_material_handle.clone(),
@@ -100,25 +95,36 @@ fn chunk_rebuilder(
 				0.,
 				(Chunk::SIZE / 2) as f32 * 1.5,
 			)),
-			ColliderTask { task },
 		));
+		let entity = chunk.id();
+		let task = pool.spawn(async move {
+			let mut queue = CommandQueue::default();
+			let c = Collider::trimesh_with_flags(
+				collider_data.0,
+				collider_data.1,
+				TriMeshFlags::DELETE_DUPLICATE_TRIANGLES,
+			);
+			queue.push(move |world: &mut World| {
+				world.entity_mut(entity).insert(c).remove::<ColliderTask>();
+			});
+
+			return queue;
+		});
+		chunk.insert(ColliderTask { task });
 		chunks.chunks[index] = chunk.id();
 	}
 	queue.queue.clear();
 }
 
-fn collider_task_resolver(mut chunks: Query<(&mut ColliderTask, Entity), With<PhosChunk>>, mut commands: Commands) {
-	for (mut task, entity) in &mut chunks {
-		match futures::check_ready(&mut task.task) {
-			Some(c) => {
-				commands.entity(entity).insert(c);
-			}
-			None => (),
+fn collider_task_resolver(mut chunks: Query<&mut ColliderTask, With<PhosChunk>>, mut commands: Commands) {
+	for mut task in &mut chunks {
+		if let Some(mut c) = block_on(future::poll_once(&mut task.task)) {
+			commands.append(&mut c);
 		}
 	}
 }
 
 #[derive(Component)]
 struct ColliderTask {
-	pub task: Task<Collider>,
+	pub task: Task<CommandQueue>,
 }
