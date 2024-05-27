@@ -110,14 +110,7 @@ fn finalize_texture(
 	map.regenerate = true;
 }
 
-fn create_map(
-	mut commands: Commands,
-	mut cam: Query<(&mut Transform, Entity), With<PhosCamera>>,
-	tile_assets: Res<Assets<TileAsset>>,
-	tile_mappers: Res<Assets<TileMapperAsset>>,
-	biome_painters: Res<Assets<BiomePainterAsset>>,
-	painter: Res<CurrentBiomePainter>,
-) {
+fn create_map(mut commands: Commands, mut cam: Query<(&mut Transform, Entity), With<PhosCamera>>) {
 	let config = GenerationConfig {
 		layers: vec![
 			GeneratorLayer {
@@ -187,11 +180,7 @@ fn create_map(
 		size: UVec2::splat(1024 / Chunk::SIZE as u32),
 		// size: UVec2::splat(1),
 	};
-	let mut heightmap = generate_heightmap(&config, 4);
-
-	let b_painter = biome_painters.get(painter.handle.clone());
-	let cur_painter = b_painter.unwrap();
-	paint_map(&mut heightmap, cur_painter, &tile_assets, &tile_mappers);
+	let heightmap = generate_heightmap(&config, 4);
 
 	let (mut cam_t, cam_entity) = cam.single_mut();
 	cam_t.translation = heightmap.get_center();
@@ -203,16 +192,23 @@ fn create_map(
 }
 
 fn spawn_map(
-	heightmap: Res<Map>,
+	mut heightmap: ResMut<Map>,
 	mut commands: Commands,
 	mut meshes: ResMut<Assets<Mesh>>,
 	atlas: Res<ChunkAtlas>,
 	mut map: ResMut<PhosMap>,
+	tile_assets: Res<Assets<TileAsset>>,
+	tile_mappers: Res<Assets<TileMapperAsset>>,
+	biome_painters: Res<Assets<BiomePainterAsset>>,
+	painter: Res<CurrentBiomePainter>,
 ) {
 	if !map.ready || !map.regenerate {
 		return;
 	}
 	map.regenerate = false;
+	let b_painter = biome_painters.get(painter.handle.clone());
+	let cur_painter = b_painter.unwrap();
+	paint_map(&mut heightmap, cur_painter, &tile_assets, &tile_mappers);
 
 	let chunk_meshes: Vec<_> = heightmap
 		.chunks

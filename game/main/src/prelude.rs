@@ -44,3 +44,6 @@ impl PhosChunkRegistry {
 		};
 	}
 }
+
+#[derive(Component)]
+pub struct RebuildChunk;

@@ -68,6 +68,7 @@ pub mod prelude {
 		pub first_layer_mask: bool,
 	}
 
+	#[derive(Clone)]
 	pub struct Chunk {
 		pub heights: [f32; Chunk::SIZE * Chunk::SIZE],
 		pub textures: [[u32; 2]; Chunk::SIZE * Chunk::SIZE],
@@ -80,7 +81,7 @@ pub mod prelude {
 		fn default() -> Self {
 			Self {
 				heights: [0.; Chunk::SIZE * Chunk::SIZE],
-				textures: [[0;2]; Chunk::SIZE * Chunk::SIZE],
+				textures: [[0; 2]; Chunk::SIZE * Chunk::SIZE],
 				moisture: [0.; Chunk::SIZE * Chunk::SIZE],
 				temperature: [0.; Chunk::SIZE * Chunk::SIZE],
 				chunk_offset: Default::default(),
@@ -95,7 +96,7 @@ pub mod prelude {
 		pub const WORLD_SIZE: Vec2 = Vec2::new(Chunk::WORLD_WIDTH, Chunk::WORLD_HEIGHT);
 	}
 
-	#[derive(Resource)]
+	#[derive(Resource, Clone)]
 	pub struct Map {
 		pub chunks: Vec<Chunk>,
 		pub height: usize,

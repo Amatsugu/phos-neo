@@ -2,7 +2,10 @@ use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_rapier3d::{pipeline::QueryFilter, plugin::RapierContext};
 use world_generation::{hex_utils::HexCoord, prelude::Map};
 
-use crate::{camera_system::components::PhosCamera, prelude::PhosChunkRegistry};
+use crate::{
+	camera_system::components::PhosCamera,
+	prelude::{PhosChunkRegistry, RebuildChunk},
+};
 
 use super::chunk_rebuild::ChunkRebuildQueue;
 
@@ -16,11 +19,12 @@ impl Plugin for TerraFormingTestPlugin {
 
 fn deform(
 	cam_query: Query<(&GlobalTransform, &Camera), With<PhosCamera>>,
+	mut commands: Commands,
 	window: Query<&Window, With<PrimaryWindow>>,
 	mouse: Res<ButtonInput<MouseButton>>,
 	rapier_context: Res<RapierContext>,
 	mut heightmap: ResMut<Map>,
-	mut rebuild: ResMut<ChunkRebuildQueue>,
+	chunks: Res<PhosChunkRegistry>,
 	time: Res<Time>,
 ) {
 	let mut multi = 0.;
@@ -52,22 +56,22 @@ fn deform(
 		QueryFilter::only_fixed(),
 	);
 
-	if let Some((_, dist)) = collision {
+	if let Some((e, dist)) = collision {
 		let contact_point = cam_ray.get_point(dist);
 		let contact_coord = HexCoord::from_world_pos(contact_point);
 		let cur_height = heightmap.sample_height(&contact_coord);
 		heightmap.set_height(&contact_coord, cur_height + 1. * time.delta_seconds() * multi);
 		let cur_chunk = contact_coord.to_chunk_index(heightmap.width);
-
+		commands.entity(e).insert(RebuildChunk);
 		if contact_coord.is_on_chunk_edge() {
 			let neighbors = contact_coord.get_neighbors();
-			let mut other_chunks: Vec<_> = neighbors
+			neighbors
 				.iter()
 				.map(|c| c.to_chunk_index(heightmap.width))
 				.filter(|c| c != &cur_chunk)
-				.collect();
-			rebuild.queue.append(&mut other_chunks);
+				.for_each(|c| {
+					commands.entity(chunks.chunks[c]).insert(RebuildChunk);
+				});
 		}
-		rebuild.queue.push(cur_chunk);
 	}
 }
