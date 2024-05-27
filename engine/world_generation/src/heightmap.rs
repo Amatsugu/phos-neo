@@ -1,5 +1,6 @@
 use bevy::math::IVec2;
 use bevy::prelude::{FloatExt, Vec2};
+use bevy::utils::default;
 use noise::{NoiseFn, SuperSimplex};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
@@ -50,6 +51,7 @@ pub fn generate_chunk(chunk_x: f64, chunk_z: f64, cfg: &GenerationConfig, seed: 
 		moisture: moisture,
 		temperature: temp,
 		chunk_offset: IVec2::new(chunk_x as i32, chunk_z as i32),
+		..default()
 	};
 }
 

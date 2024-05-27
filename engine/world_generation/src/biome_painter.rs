@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::tile_mapper::TileMapperAsset;
 
-#[derive(Serialize, Deserialize, Debug, TypePath, Asset)]
+#[derive(Serialize, Deserialize, Debug, TypePath, Asset, Clone)]
 pub struct BiomePainterAsset {
 	#[serde(skip)]
 	pub biomes: Vec<Handle<TileMapperAsset>>,

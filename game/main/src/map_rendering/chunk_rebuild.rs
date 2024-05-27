@@ -44,16 +44,15 @@ fn chunk_rebuilder(
 	mut chunks: ResMut<PhosChunkRegistry>,
 	atlas: Res<ChunkAtlas>,
 	heightmap: Res<Map>,
-	tile_assets: Res<Assets<TileAsset>>,
-	tile_mappers: Res<Assets<TileMapperAsset>>,
 	mut meshes: ResMut<Assets<Mesh>>,
-	biome_painters: Res<Assets<BiomePainterAsset>>,
-	painter: Res<CurrentBiomePainter>,
 ) {
 	if queue.queue.len() == 0 {
 		return;
 	}
 	queue.queue.dedup();
+
+	let chunk_indices = queue.queue.clone();
+	let pool = AsyncComputeTaskPool::get();
 
 	for chunk_index in &queue.queue {
 		let chunk = chunks.chunks[*chunk_index];
@@ -61,25 +60,13 @@ fn chunk_rebuilder(
 		commands.entity(chunk).despawn();
 	}
 
-	let b_painter = biome_painters.get(painter.handle.clone());
-
-	let cur_painter = b_painter.unwrap();
-
 	let chunk_meshes: Vec<_> = queue
 		.queue
 		.par_iter()
 		.map(|idx| {
-			return prepare_chunk_mesh(
-				&heightmap.chunks[*idx],
-				&heightmap,
-				cur_painter,
-				&tile_assets,
-				&tile_mappers,
-			);
+			return prepare_chunk_mesh(&heightmap.chunks[*idx], &heightmap);
 		})
 		.collect();
-
-	let pool = AsyncComputeTaskPool::get();
 
 	for (mesh, collider_data, pos, index) in chunk_meshes {
 		let mut chunk = commands.spawn((

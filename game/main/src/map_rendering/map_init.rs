@@ -13,7 +13,7 @@ use crate::{
 	prelude::{ChunkAtlas, PhosChunk, PhosChunkRegistry, PhosMap},
 	shader_extensions::chunk_material::ChunkMaterial,
 	utlis::{
-		chunk_utils::{prepare_chunk_mesh, prepare_chunk_mesh_with_collider},
+		chunk_utils::{paint_map, prepare_chunk_mesh, prepare_chunk_mesh_with_collider},
 		render_distance_system::RenderDistanceVisibility,
 	},
 };
@@ -110,7 +110,14 @@ fn finalize_texture(
 	map.regenerate = true;
 }
 
-fn create_map(mut commands: Commands, mut cam: Query<(&mut Transform, Entity), With<PhosCamera>>) {
+fn create_map(
+	mut commands: Commands,
+	mut cam: Query<(&mut Transform, Entity), With<PhosCamera>>,
+	tile_assets: Res<Assets<TileAsset>>,
+	tile_mappers: Res<Assets<TileMapperAsset>>,
+	biome_painters: Res<Assets<BiomePainterAsset>>,
+	painter: Res<CurrentBiomePainter>,
+) {
 	let config = GenerationConfig {
 		layers: vec![
 			GeneratorLayer {
@@ -180,7 +187,11 @@ fn create_map(mut commands: Commands, mut cam: Query<(&mut Transform, Entity), W
 		size: UVec2::splat(1024 / Chunk::SIZE as u32),
 		// size: UVec2::splat(1),
 	};
-	let heightmap = generate_heightmap(&config, 4);
+	let mut heightmap = generate_heightmap(&config, 4);
+
+	let b_painter = biome_painters.get(painter.handle.clone());
+	let cur_painter = b_painter.unwrap();
+	paint_map(&mut heightmap, cur_painter, &tile_assets, &tile_mappers);
 
 	let (mut cam_t, cam_entity) = cam.single_mut();
 	cam_t.translation = heightmap.get_center();
@@ -197,24 +208,17 @@ fn spawn_map(
 	mut meshes: ResMut<Assets<Mesh>>,
 	atlas: Res<ChunkAtlas>,
 	mut map: ResMut<PhosMap>,
-	tile_assets: Res<Assets<TileAsset>>,
-	tile_mappers: Res<Assets<TileMapperAsset>>,
-	biome_painters: Res<Assets<BiomePainterAsset>>,
-	painter: Res<CurrentBiomePainter>,
 ) {
 	if !map.ready || !map.regenerate {
 		return;
 	}
-	let b_painter = biome_painters.get(painter.handle.clone());
 	map.regenerate = false;
-
-	let cur_painter = b_painter.unwrap();
 
 	let chunk_meshes: Vec<_> = heightmap
 		.chunks
 		.par_iter()
 		.map(|chunk: &Chunk| {
-			return prepare_chunk_mesh_with_collider(chunk, &heightmap, cur_painter, &tile_assets, &tile_mappers);
+			return prepare_chunk_mesh_with_collider(chunk, &heightmap);
 		})
 		.collect();
 

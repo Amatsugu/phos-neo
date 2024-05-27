@@ -24,7 +24,7 @@ impl TileManager {
 	}
 }
 
-#[derive(Serialize, Deserialize, Debug, TypePath, Asset)]
+#[derive(Serialize, Deserialize, Debug, TypePath, Asset, Clone)]
 pub struct TileAsset {
 	#[serde(skip)]
 	pub id: usize,

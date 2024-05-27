@@ -70,9 +70,22 @@ pub mod prelude {
 
 	pub struct Chunk {
 		pub heights: [f32; Chunk::SIZE * Chunk::SIZE],
+		pub textures: [[u32; 2]; Chunk::SIZE * Chunk::SIZE],
 		pub moisture: [f32; Chunk::SIZE * Chunk::SIZE],
 		pub temperature: [f32; Chunk::SIZE * Chunk::SIZE],
 		pub chunk_offset: IVec2,
+	}
+
+	impl Default for Chunk {
+		fn default() -> Self {
+			Self {
+				heights: [0.; Chunk::SIZE * Chunk::SIZE],
+				textures: [[0;2]; Chunk::SIZE * Chunk::SIZE],
+				moisture: [0.; Chunk::SIZE * Chunk::SIZE],
+				temperature: [0.; Chunk::SIZE * Chunk::SIZE],
+				chunk_offset: Default::default(),
+			}
+		}
 	}
 
 	impl Chunk {

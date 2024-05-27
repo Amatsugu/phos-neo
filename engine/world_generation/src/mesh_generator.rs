@@ -13,13 +13,7 @@ use bevy::{
 	},
 };
 
-pub fn generate_chunk_mesh(
-	chunk: &Chunk,
-	map: &Map,
-	painter: &BiomePainterAsset,
-	tiles: &Res<Assets<TileAsset>>,
-	mappers: &Res<Assets<TileMapperAsset>>,
-) -> Mesh {
+pub fn generate_chunk_mesh(chunk: &Chunk, map: &Map) -> Mesh {
 	#[cfg(feature = "tracing")]
 	let span = info_span!("generate_chunk_mesh").entered();
 
@@ -31,17 +25,13 @@ pub fn generate_chunk_mesh(
 
 	for z in 0..Chunk::SIZE {
 		for x in 0..Chunk::SIZE {
-			let height = chunk.heights[x + z * Chunk::SIZE];
-			let moisture = chunk.moisture[x + z * Chunk::SIZE];
-			let temperature = chunk.temperature[x + z * Chunk::SIZE];
+			let idx = x + z * Chunk::SIZE;
+			let height = chunk.heights[idx];
 			let off_pos = Vec3::new(x as f32, height, z as f32);
 			let tile_pos = offset3d_to_world(off_pos);
 			let coord =
 				HexCoord::from_offset(IVec2::new(x as i32, z as i32) + (chunk.chunk_offset * Chunk::SIZE as i32));
 			let n = map.get_neighbors(&coord);
-			let biome = mappers.get(painter.sample_biome(moisture, temperature));
-			let tile_handle = biome.unwrap().sample_tile(height);
-			let tile = tiles.get(tile_handle).unwrap();
 
 			create_tile(
 				tile_pos,
@@ -51,8 +41,8 @@ pub fn generate_chunk_mesh(
 				&mut indices,
 				&mut normals,
 				// &mut tex,
-				tile.texture_id,
-				tile.side_texture_id,
+				chunk.textures[idx][0],
+				chunk.textures[idx][1],
 			);
 		}
 	}
