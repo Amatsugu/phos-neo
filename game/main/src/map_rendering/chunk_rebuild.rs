@@ -38,7 +38,11 @@ fn chunk_rebuilder(
 	for (chunk, idx) in &chunk_query {
 		#[cfg(feature = "tracing")]
 		let _spawn_span = info_span!("Rebuild Chunk").entered();
-		let map = heightmap.clone();
+		let map: Map;
+		{
+			let _clone_span = info_span!("Clone").entered();
+			map = heightmap.clone();
+		}
 		let chunk_index = idx.index;
 		let task = pool.spawn(async move {
 			#[cfg(feature = "tracing")]
