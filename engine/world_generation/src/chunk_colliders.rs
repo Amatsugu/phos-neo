@@ -5,7 +5,7 @@ use bevy::prelude::*;
 
 const CHUNK_TOTAL: usize = Chunk::SIZE * Chunk::SIZE;
 
-pub fn generate_chunk_collider(chunk: &Chunk, map: &Map) -> (Vec<Vec3>, Vec<[u32; 3]>) {
+pub fn generate_chunk_collider(chunk: &MeshChunkData) -> (Vec<Vec3>, Vec<[u32; 3]>) {
 	#[cfg(feature = "tracing")]
 	let span = info_span!("generate_chunk_collider").entered();
 	let vertex_count: usize = CHUNK_TOTAL * 6;
@@ -14,9 +14,8 @@ pub fn generate_chunk_collider(chunk: &Chunk, map: &Map) -> (Vec<Vec3>, Vec<[u32
 	for z in 0..Chunk::SIZE {
 		for x in 0..Chunk::SIZE {
 			let height = chunk.heights[x + z * Chunk::SIZE];
-			let coord =
-				HexCoord::from_offset(IVec2::new(x as i32, z as i32) + (chunk.chunk_offset * Chunk::SIZE as i32));
-			let neighbors = map.get_neighbors(&coord);
+			let coord = HexCoord::from_grid_pos(x, z);
+			let neighbors = chunk.get_neighbors(&coord);
 			let off_pos = Vec3::new(x as f32, height, z as f32);
 			let tile_pos = offset3d_to_world(off_pos);
 			create_tile_collider(tile_pos, &mut verts, &mut indices, &neighbors);
@@ -25,7 +24,7 @@ pub fn generate_chunk_collider(chunk: &Chunk, map: &Map) -> (Vec<Vec3>, Vec<[u32
 	return (verts, indices);
 }
 
-fn create_tile_collider(pos: Vec3, verts: &mut Vec<Vec3>, indices: &mut Vec<[u32; 3]>, neighbors: &[Option<f32>; 6]) {
+fn create_tile_collider(pos: Vec3, verts: &mut Vec<Vec3>, indices: &mut Vec<[u32; 3]>, neighbors: &[f32; 6]) {
 	let idx = verts.len() as u32;
 	for i in 0..6 {
 		let p = pos + HEX_CORNERS[i];
@@ -39,20 +38,15 @@ fn create_tile_collider(pos: Vec3, verts: &mut Vec<Vec3>, indices: &mut Vec<[u32
 	indices.push([idx + 2, idx + 3, idx + 4]);
 
 	for i in 0..neighbors.len() {
-		let cur_n = neighbors[i];
-		match cur_n {
-			Some(n_height) => {
-				if n_height < pos.y {
-					create_tile_wall_collider(
-						idx,
-						Vec3::new(pos.x, n_height.min(pos.y - OUTER_RADIUS / 2.), pos.z),
-						i,
-						verts,
-						indices,
-					);
-				}
-			}
-			_ => {}
+		let n_height = neighbors[i];
+		if n_height < pos.y {
+			create_tile_wall_collider(
+				idx,
+				Vec3::new(pos.x, n_height.min(pos.y - OUTER_RADIUS / 2.), pos.z),
+				i,
+				verts,
+				indices,
+			);
 		}
 	}
 }

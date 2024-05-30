@@ -4,7 +4,11 @@ use bevy::{asset::LoadState, pbr::ExtendedMaterial, prelude::*};
 use bevy_inspector_egui::quick::ResourceInspectorPlugin;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use world_generation::{
-	biome_painter::*, heightmap::generate_heightmap, hex_utils::SHORT_DIAGONAL, prelude::*, tile_manager::*,
+	biome_painter::*,
+	heightmap::generate_heightmap,
+	hex_utils::{offset_to_index, SHORT_DIAGONAL},
+	prelude::*,
+	tile_manager::*,
 	tile_mapper::*,
 };
 
@@ -214,7 +218,8 @@ fn spawn_map(
 		.chunks
 		.par_iter()
 		.map(|chunk: &Chunk| {
-			return prepare_chunk_mesh_with_collider(chunk, &heightmap);
+			let index = offset_to_index(chunk.chunk_offset, heightmap.width);
+			return prepare_chunk_mesh_with_collider(&heightmap.get_chunk_mesh_data(index), chunk.chunk_offset, index);
 		})
 		.collect();
 

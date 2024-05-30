@@ -1,6 +1,11 @@
 #[cfg(feature = "tracing")]
 use bevy::log::*;
-use bevy::{asset::Assets, ecs::system::Res, math::Vec3, render::mesh::Mesh};
+use bevy::{
+	asset::Assets,
+	ecs::system::Res,
+	math::{IVec2, Vec3},
+	render::mesh::Mesh,
+};
 use bevy_rapier3d::geometry::{Collider, TriMeshFlags};
 use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 use world_generation::{
@@ -8,7 +13,7 @@ use world_generation::{
 	chunk_colliders::generate_chunk_collider,
 	hex_utils::{offset_to_index, offset_to_world},
 	mesh_generator::generate_chunk_mesh,
-	prelude::{Chunk, Map},
+	prelude::{Chunk, Map, MeshChunkData},
 	tile_manager::TileAsset,
 	tile_mapper::TileMapperAsset,
 };
@@ -44,22 +49,30 @@ pub fn paint_chunk(
 	}
 }
 
-pub fn prepare_chunk_mesh(chunk: &Chunk, heightmap: &Map) -> (Mesh, (Vec<Vec3>, Vec<[u32; 3]>), Vec3, usize) {
+pub fn prepare_chunk_mesh(
+	chunk: &MeshChunkData,
+	chunk_offset: IVec2,
+	chunk_index: usize,
+) -> (Mesh, (Vec<Vec3>, Vec<[u32; 3]>), Vec3, usize) {
 	#[cfg(feature = "tracing")]
 	let _gen_mesh = info_span!("Generate Chunk").entered();
-	let mesh = generate_chunk_mesh(chunk, &heightmap);
-	let col_data = generate_chunk_collider(chunk, &heightmap);
+	let mesh = generate_chunk_mesh(chunk);
+	let col_data = generate_chunk_collider(chunk);
 
 	return (
 		mesh,
 		col_data,
-		offset_to_world(chunk.chunk_offset * Chunk::SIZE as i32, 0.),
-		offset_to_index(chunk.chunk_offset, heightmap.width),
+		offset_to_world(chunk_offset * Chunk::SIZE as i32, 0.),
+		chunk_index,
 	);
 }
 
-pub fn prepare_chunk_mesh_with_collider(chunk: &Chunk, heightmap: &Map) -> (Mesh, Collider, Vec3, usize) {
-	let (mesh, (col_verts, col_indicies), pos, index) = prepare_chunk_mesh(chunk, heightmap);
+pub fn prepare_chunk_mesh_with_collider(
+	chunk: &MeshChunkData,
+	chunk_offset: IVec2,
+	chunk_index: usize,
+) -> (Mesh, Collider, Vec3, usize) {
+	let (mesh, (col_verts, col_indicies), pos, index) = prepare_chunk_mesh(chunk, chunk_offset, chunk_index);
 	let collider: Collider;
 	{
 		#[cfg(feature = "tracing")]

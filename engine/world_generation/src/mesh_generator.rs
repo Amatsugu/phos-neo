@@ -1,7 +1,4 @@
-use crate::biome_painter::BiomePainterAsset;
 use crate::hex_utils::HexCoord;
-use crate::tile_manager::TileAsset;
-use crate::tile_mapper::TileMapperAsset;
 use crate::{hex_utils::offset3d_to_world, prelude::*};
 #[cfg(feature = "tracing")]
 use bevy::log::*;
@@ -13,7 +10,7 @@ use bevy::{
 	},
 };
 
-pub fn generate_chunk_mesh(chunk: &Chunk, map: &Map) -> Mesh {
+pub fn generate_chunk_mesh(chunk: &MeshChunkData) -> Mesh {
 	#[cfg(feature = "tracing")]
 	let span = info_span!("generate_chunk_mesh").entered();
 
@@ -29,9 +26,8 @@ pub fn generate_chunk_mesh(chunk: &Chunk, map: &Map) -> Mesh {
 			let height = chunk.heights[idx];
 			let off_pos = Vec3::new(x as f32, height, z as f32);
 			let tile_pos = offset3d_to_world(off_pos);
-			let coord =
-				HexCoord::from_offset(IVec2::new(x as i32, z as i32) + (chunk.chunk_offset * Chunk::SIZE as i32));
-			let n = map.get_neighbors(&coord);
+			let coord = HexCoord::from_grid_pos(x, z);
+			let n = chunk.get_neighbors(&coord);
 
 			create_tile(
 				tile_pos,
@@ -60,7 +56,7 @@ pub fn generate_chunk_mesh(chunk: &Chunk, map: &Map) -> Mesh {
 
 fn create_tile(
 	pos: Vec3,
-	neighbors: &[Option<f32>; 6],
+	neighbors: &[f32; 6],
 	verts: &mut Vec<Vec3>,
 	uvs: &mut Vec<Vec2>,
 	indices: &mut Vec<u32>,
@@ -91,14 +87,9 @@ fn create_tile(
 	indices.push(idx + 4);
 
 	for i in 0..neighbors.len() {
-		let cur_n = neighbors[i];
-		match cur_n {
-			Some(n_height) => {
-				if n_height < pos.y {
-					create_tile_wall(pos, i, n_height, verts, uvs, indices, normals, side_tex_off);
-				}
-			}
-			_ => {}
+		let n_height = neighbors[i];
+		if n_height < pos.y {
+			create_tile_wall(pos, i, n_height, verts, uvs, indices, normals, side_tex_off);
 		}
 	}
 }

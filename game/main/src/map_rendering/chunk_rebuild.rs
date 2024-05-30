@@ -35,33 +35,31 @@ fn chunk_rebuilder(
 ) {
 	let pool = AsyncComputeTaskPool::get();
 
-	for (chunk, idx) in &chunk_query {
+	for (chunk_entity, idx) in &chunk_query {
 		#[cfg(feature = "tracing")]
 		let _spawn_span = info_span!("Rebuild Chunk").entered();
-		let map: Map;
-		{
-			let _clone_span = info_span!("Clone").entered();
-			map = heightmap.clone();
-		}
+
 		let chunk_index = idx.index;
+		let chunk_data = heightmap.get_chunk_mesh_data(chunk_index);
+		let chunk_offset = heightmap.chunks[chunk_index].chunk_offset;
 		let task = pool.spawn(async move {
 			#[cfg(feature = "tracing")]
 			let _spawn_span = info_span!("Rebuild Task").entered();
 			let mut queue = CommandQueue::default();
-			let (mesh, collider_data, _, _) = prepare_chunk_mesh(&map.chunks[chunk_index], &map);
+			let (mesh, collider_data, _, _) = prepare_chunk_mesh(&chunk_data, chunk_offset, chunk_index);
 			let c = Collider::trimesh_with_flags(
 				collider_data.0,
 				collider_data.1,
 				TriMeshFlags::DELETE_DUPLICATE_TRIANGLES,
 			);
 			queue.push(move |world: &mut World| {
-				world.entity_mut(chunk).insert(c).remove::<ChunkRebuildTask>();
+				world.entity_mut(chunk_entity).insert(c).remove::<ChunkRebuildTask>();
 			});
 
 			return (queue, mesh);
 		});
 		commands
-			.entity(chunk)
+			.entity(chunk_entity)
 			.insert(ChunkRebuildTask { task })
 			.remove::<RebuildChunk>();
 	}
