@@ -249,13 +249,13 @@ pub mod prelude {
 			assert!(radius != 0, "Radius cannot be zero");
 			let width = self.width;
 
-			let mut chunks = self.hex_select_mut(pos, radius, true, |h, r| {
+			let mut chunks = self.hex_select_mut(pos, radius, true, |p, h, r| {
 				let d = (r as f32) / (radius as f32);
-				let cur = h.clone();
+				let cur = *h;
 				let h2 = cur - depth;
 				*h = h2.lerp(cur, d * d);
 
-				return pos.to_chunk_index(width);
+				return p.to_chunk_index(width);
 			});
 
 			chunks.dedup();
@@ -263,21 +263,15 @@ pub mod prelude {
 			return chunks;
 		}
 
-		pub fn hex_select<OP, Ret>(
-			&mut self,
-			center: &HexCoord,
-			radius: usize,
-			include_center: bool,
-			op: OP,
-		) -> Vec<Ret>
+		pub fn hex_select<OP, Ret>(&self, center: &HexCoord, radius: usize, include_center: bool, op: OP) -> Vec<Ret>
 		where
-			OP: Fn(f32, usize) -> Ret + Sync + Send,
+			OP: Fn(&HexCoord, f32, usize) -> Ret + Sync + Send,
 		{
 			assert!(radius != 0, "Radius cannot be zero");
 
 			if include_center {
-				let h = self.sample_height(center);
-				(op)(h, 0);
+				let h = self.sample_height(&center);
+				(op)(&center, h, 0);
 			}
 
 			let mut result = Vec::with_capacity(get_tile_count(radius));
@@ -288,7 +282,7 @@ pub mod prelude {
 					for _j in 0..k {
 						p = p.get_neighbor(i);
 						let h = self.sample_height(&p);
-						result.push((op)(h, k));
+						result.push((op)(&p, h, k));
 					}
 				}
 			}
@@ -304,13 +298,13 @@ pub mod prelude {
 			op: OP,
 		) -> Vec<Ret>
 		where
-			OP: Fn(&mut f32, usize) -> Ret + Sync + Send,
+			OP: Fn(&HexCoord, &mut f32, usize) -> Ret + Sync + Send,
 		{
 			assert!(radius != 0, "Radius cannot be zero");
 
 			if include_center {
-				let h = self.sample_height_mut(center);
-				(op)(h, 0);
+				let h = self.sample_height_mut(&center);
+				(op)(&center, h, 0);
 			}
 
 			let mut result = Vec::with_capacity(get_tile_count(radius));
@@ -321,7 +315,7 @@ pub mod prelude {
 					for _j in 0..k {
 						p = p.get_neighbor(i);
 						let h = self.sample_height_mut(&p);
-						result.push((op)(h, k));
+						result.push((op)(&p, h, k));
 					}
 				}
 			}
