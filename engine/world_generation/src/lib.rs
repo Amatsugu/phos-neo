@@ -8,7 +8,7 @@ pub mod tile_manager;
 pub mod tile_mapper;
 
 pub mod prelude {
-	use crate::hex_utils::{HexCoord, INNER_RADIUS, OUTER_RADIUS, SHORT_DIAGONAL};
+	use crate::hex_utils::{get_tile_count, HexCoord, INNER_RADIUS, OUTER_RADIUS, SHORT_DIAGONAL};
 	use bevy::math::{IVec2, UVec2, Vec2, Vec3};
 	use bevy::prelude::Resource;
 	use bevy::prelude::*;
@@ -205,6 +205,11 @@ pub mod prelude {
 			return chunk.heights[pos.to_chunk_local_index()];
 		}
 
+		pub fn sample_height_mut(&mut self, pos: &HexCoord) -> &mut f32 {
+			let chunk = &mut self.chunks[pos.to_chunk_index(self.width)];
+			return &mut chunk.heights[pos.to_chunk_local_index()];
+		}
+
 		pub fn is_in_bounds(&self, pos: &HexCoord) -> bool {
 			return pos.is_in_bounds(self.height * Chunk::SIZE, self.width * Chunk::SIZE);
 		}
@@ -238,6 +243,90 @@ pub mod prelude {
 
 		pub fn set_height(&mut self, pos: &HexCoord, height: f32) {
 			self.chunks[pos.to_chunk_index(self.width)].heights[pos.to_chunk_local_index()] = height;
+		}
+
+		pub fn create_crater(&mut self, pos: &HexCoord, radius: usize, depth: f32) -> Vec<usize> {
+			assert!(radius != 0, "Radius cannot be zero");
+			let width = self.width;
+
+			let mut chunks = self.hex_select_mut(pos, radius, true, |h, r| {
+				let d = (r as f32) / (radius as f32);
+				let cur = h.clone();
+				let h2 = cur - depth;
+				*h = h2.lerp(cur, d * d);
+
+				return pos.to_chunk_index(width);
+			});
+
+			chunks.dedup();
+
+			return chunks;
+		}
+
+		pub fn hex_select<OP, Ret>(
+			&mut self,
+			center: &HexCoord,
+			radius: usize,
+			include_center: bool,
+			op: OP,
+		) -> Vec<Ret>
+		where
+			OP: Fn(f32, usize) -> Ret + Sync + Send,
+		{
+			assert!(radius != 0, "Radius cannot be zero");
+
+			if include_center {
+				let h = self.sample_height(center);
+				(op)(h, 0);
+			}
+
+			let mut result = Vec::with_capacity(get_tile_count(radius));
+
+			for k in 0..(radius + 1) {
+				let mut p = center.scale(4, k);
+				for i in 0..6 {
+					for _j in 0..k {
+						p = p.get_neighbor(i);
+						let h = self.sample_height(&p);
+						result.push((op)(h, k));
+					}
+				}
+			}
+
+			return result;
+		}
+
+		pub fn hex_select_mut<OP, Ret>(
+			&mut self,
+			center: &HexCoord,
+			radius: usize,
+			include_center: bool,
+			op: OP,
+		) -> Vec<Ret>
+		where
+			OP: Fn(&mut f32, usize) -> Ret + Sync + Send,
+		{
+			assert!(radius != 0, "Radius cannot be zero");
+
+			if include_center {
+				let h = self.sample_height_mut(center);
+				(op)(h, 0);
+			}
+
+			let mut result = Vec::with_capacity(get_tile_count(radius));
+
+			for k in 0..(radius + 1) {
+				let mut p = center.scale(4, k);
+				for i in 0..6 {
+					for _j in 0..k {
+						p = p.get_neighbor(i);
+						let h = self.sample_height_mut(&p);
+						result.push((op)(h, k));
+					}
+				}
+			}
+
+			return result;
 		}
 	}
 	pub const ATTRIBUTE_PACKED_VERTEX_DATA: MeshVertexAttribute =

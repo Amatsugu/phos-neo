@@ -30,7 +30,7 @@ pub struct ChunkRebuildQueue {
 
 fn chunk_rebuilder(
 	mut commands: Commands,
-	chunk_query: Query<(Entity, &PhosChunk), With<RebuildChunk>>,
+	chunk_query: Query<(Entity, &PhosChunk), (With<RebuildChunk>, Without<ChunkRebuildTask>)>,
 	heightmap: Res<Map>,
 ) {
 	let pool = AsyncComputeTaskPool::get();

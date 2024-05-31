@@ -52,7 +52,7 @@ pub fn tile_to_world_distance(dist: u32) -> f32 {
 	return dist as f32 * (2. * INNER_RADIUS);
 }
 
-pub fn get_tile_count(radius: u32) -> u32 {
+pub fn get_tile_count(radius: usize) -> usize {
 	return 1 + 3 * (radius + 1) * radius;
 }
 
@@ -219,5 +219,47 @@ impl HexCoord {
 			self.get_neighbor(4),
 			self.get_neighbor(5),
 		];
+	}
+
+	pub fn hex_select(&self, radius: usize, include_center: bool) -> Vec<HexCoord> {
+		assert!(radius != 0, "Radius cannot be zero");
+		let mut result = Vec::with_capacity(get_tile_count(radius));
+
+		if include_center {
+			result.push(*self);
+		}
+
+		for k in 0..(radius + 1) {
+			let mut p = self.scale(4, k);
+			for i in 0..6 {
+				for _j in 0..k {
+					p = p.get_neighbor(i);
+					result.push(p);
+				}
+			}
+		}
+
+		return result;
+	}
+
+	pub fn select_ring(&self, radius: usize) -> Vec<HexCoord> {
+		assert!(radius != 0, "Radius cannot be zero");
+		let mut result = Vec::with_capacity(radius * 6);
+
+		let mut p = self.scale(4, radius);
+
+		if radius == 1 {
+			result.push(*self);
+			return result;
+		}
+
+		for i in 0..6 {
+			for _j in 0..radius {
+				result.push(p);
+				p = p.get_neighbor(i);
+			}
+		}
+
+		return result;
 	}
 }

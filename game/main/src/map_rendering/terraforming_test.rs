@@ -7,8 +7,6 @@ use crate::{
 	prelude::{PhosChunkRegistry, RebuildChunk},
 };
 
-use super::chunk_rebuild::ChunkRebuildQueue;
-
 pub struct TerraFormingTestPlugin;
 
 impl Plugin for TerraFormingTestPlugin {
@@ -25,12 +23,11 @@ fn deform(
 	rapier_context: Res<RapierContext>,
 	mut heightmap: ResMut<Map>,
 	chunks: Res<PhosChunkRegistry>,
-	time: Res<Time>,
 ) {
 	let mut multi = 0.;
-	if mouse.pressed(MouseButton::Left) {
+	if mouse.just_pressed(MouseButton::Left) {
 		multi = 1.;
-	} else if mouse.pressed(MouseButton::Right) {
+	} else if mouse.just_pressed(MouseButton::Right) {
 		multi = -1.;
 	}
 
@@ -38,6 +35,8 @@ fn deform(
 		return;
 	}
 
+	#[cfg(feature = "tracing")]
+	let span = info_span!("Deform Mesh").entered();
 	let win = window.single();
 	let (cam_transform, camera) = cam_query.single();
 	let Some(cursor_pos) = win.cursor_position() else {
@@ -59,19 +58,10 @@ fn deform(
 	if let Some((e, dist)) = collision {
 		let contact_point = cam_ray.get_point(dist);
 		let contact_coord = HexCoord::from_world_pos(contact_point);
-		let cur_height = heightmap.sample_height(&contact_coord);
-		heightmap.set_height(&contact_coord, cur_height + 1. * time.delta_seconds() * multi);
-		let cur_chunk = contact_coord.to_chunk_index(heightmap.width);
-		commands.entity(e).insert(RebuildChunk);
-		if contact_coord.is_on_chunk_edge() {
-			let neighbors = contact_coord.get_neighbors();
-			neighbors
-				.iter()
-				.map(|c| c.to_chunk_index(heightmap.width))
-				.filter(|c| c != &cur_chunk)
-				.for_each(|c| {
-					commands.entity(chunks.chunks[c]).insert(RebuildChunk);
-				});
+		let modified_chunks = heightmap.create_crater(&contact_coord, 5, 5. * multi);
+		for c in modified_chunks {
+			commands.entity(chunks.chunks[c]).insert(RebuildChunk);
 		}
+		commands.entity(e).insert(RebuildChunk);
 	}
 }
