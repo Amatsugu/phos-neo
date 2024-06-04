@@ -1322,6 +1322,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "buildings"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "world_generation",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.15.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3246,6 +3254,7 @@ dependencies = [
  "bevy",
  "bevy-inspector-egui 0.23.4",
  "bevy_rapier3d",
+ "buildings",
  "iyes_perf_ui",
  "noise 0.8.2",
  "rayon",

@@ -10,9 +10,8 @@ use bevy_rapier3d::geometry::{Collider, TriMeshFlags};
 use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 use world_generation::{
 	biome_painter::BiomePainterAsset,
-	chunk_colliders::generate_chunk_collider,
-	hex_utils::{offset_to_index, offset_to_world},
-	mesh_generator::generate_chunk_mesh,
+	generators::{chunk_colliders::generate_chunk_collider, mesh_generator::generate_chunk_mesh},
+	hex_utils::offset_to_world,
 	prelude::{Chunk, Map, MeshChunkData},
 	tile_manager::TileAsset,
 	tile_mapper::TileMapperAsset,

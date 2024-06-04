@@ -14,7 +14,7 @@ noise = "0.8.2"
 world_generation ={path="../../engine/world_generation"}
 bevy_rapier3d = { version = "0.25.0", features = [ "simd-stable","parallel" ] }
 rayon = "1.10.0"
-
+buildings = {path="../buildings"}
 
 [features]
-tracing = ["bevy/trace_tracy", "world_generation/tracing"]
+tracing = ["bevy/trace_tracy", "world_generation/tracing", "buildings/tracing"]

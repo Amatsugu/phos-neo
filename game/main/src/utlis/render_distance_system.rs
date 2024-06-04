@@ -34,7 +34,6 @@ impl Default for RenderDistanceSettings {
 
 #[derive(Component)]
 pub struct RenderDistanceVisibility {
-	pub distance_multiplier: f32,
 	pub offset: Vec3,
 }
 
@@ -43,19 +42,11 @@ impl RenderDistanceVisibility {
 		self.offset = offset;
 		return self;
 	}
-
-	pub fn with_multiplier(mut self, distance_multiplier: f32) -> Self {
-		self.distance_multiplier = distance_multiplier;
-		return self;
-	}
 }
 
 impl Default for RenderDistanceVisibility {
 	fn default() -> Self {
-		Self {
-			distance_multiplier: 1.,
-			offset: Vec3::ZERO,
-		}
+		Self { offset: Vec3::ZERO }
 	}
 }
 
@@ -66,7 +57,7 @@ fn render_distance_system(
 ) {
 	let camera = camera_query.single();
 	for (t, mut vis, r) in objects.iter_mut() {
-		let dist = (camera.translation - (t.translation + r.offset)).length() * r.distance_multiplier;
+		let dist = (camera.translation - (t.translation + r.offset)).length();
 		if settings.render_distance < dist {
 			*vis = Visibility::Hidden;
 		} else {
