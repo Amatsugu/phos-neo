@@ -1,5 +1,5 @@
 [package]
-name = "buildings"
+name = "shared"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,9 +7,7 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.13.2"
-world_generation = {path = "../../engine/world_generation"}
-shared = {path = "../shared"}
-bevy_rapier3d = "0.26.0"
+
 
 [features]
 tracing = []

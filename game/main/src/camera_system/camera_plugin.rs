@@ -2,6 +2,8 @@ use bevy::core_pipeline::experimental::taa::{TemporalAntiAliasBundle, TemporalAn
 use bevy::input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
 use bevy::window::CursorGrabMode;
+use shared::states::GameState;
+use shared::tags::MainCamera;
 use world_generation::hex_utils::HexCoord;
 use world_generation::prelude::Map;
 
@@ -15,7 +17,7 @@ impl Plugin for PhosCameraPlugin {
 
 		app.add_systems(PreStartup, setup);
 
-		app.add_systems(Update, rts_camera_system);
+		app.add_systems(Update, rts_camera_system.run_if(in_state(GameState::Playing)));
 		app.add_systems(PostUpdate, limit_camera_bounds);
 		//Free Cam
 		//app.add_systems(Update, (grab_mouse, (update_camera, update_camera_mouse).chain()));
@@ -32,6 +34,7 @@ fn setup(mut commands: Commands, mut msaa: ResMut<Msaa>) {
 				..default()
 			},
 			PhosCamera::default(),
+			MainCamera,
 			PhosCameraTargets::default(),
 		))
 		.insert(TemporalAntiAliasBundle::default());

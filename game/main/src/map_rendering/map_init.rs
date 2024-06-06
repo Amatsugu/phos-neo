@@ -3,6 +3,7 @@ use bevy::log::*;
 use bevy::{asset::LoadState, pbr::ExtendedMaterial, prelude::*};
 use bevy_inspector_egui::quick::ResourceInspectorPlugin;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+use shared::states::{GameState, GameplayState};
 use world_generation::{
 	biome_painter::*,
 	heightmap::generate_heightmap,
@@ -14,10 +15,10 @@ use world_generation::{
 
 use crate::{
 	camera_system::components::*,
-	prelude::{ChunkAtlas, PhosChunk, PhosChunkRegistry, PhosMap},
+	prelude::{ChunkAtlas, PhosChunk, PhosChunkRegistry},
 	shader_extensions::chunk_material::ChunkMaterial,
 	utlis::{
-		chunk_utils::{paint_map, prepare_chunk_mesh, prepare_chunk_mesh_with_collider},
+		chunk_utils::{paint_map, prepare_chunk_mesh_with_collider},
 		render_distance_system::RenderDistanceVisibility,
 	},
 };
@@ -30,22 +31,45 @@ pub struct MapInitPlugin;
 
 impl Plugin for MapInitPlugin {
 	fn build(&self, app: &mut App) {
+		app.insert_state(GeneratorState::GenerateHeightmap);
+		app.insert_state(AssetLoadState::StartLoading);
+
 		app.add_plugins((
-			ResourceInspectorPlugin::<PhosMap>::default(),
 			ResourceInspectorPlugin::<GenerationConfig>::default(),
 			ChunkRebuildPlugin,
 			TerraFormingTestPlugin,
 		));
 
-		app.add_systems(Startup, (load_textures, load_tiles));
-		app.add_systems(PostStartup, create_map);
+		app.add_systems(Startup, (load_textures, load_tiles).in_set(AssetLoaderSet));
+		app.add_systems(Startup, create_heightmap.in_set(GeneratorSet));
 
-		app.add_systems(Update, finalize_texture);
-		app.add_systems(PostUpdate, (despawn_map, spawn_map).chain());
+		app.configure_sets(Startup, AssetLoaderSet.run_if(in_state(AssetLoadState::StartLoading)));
+		app.configure_sets(
+			Startup,
+			GeneratorSet.run_if(in_state(GeneratorState::GenerateHeightmap)),
+		);
+
+		app.add_systems(Update, check_asset_load.run_if(in_state(AssetLoadState::Loading)));
+		app.add_systems(
+			Update,
+			finalize_texture.run_if(in_state(AssetLoadState::FinalizeAssets)),
+		);
+		app.add_systems(Update, despawn_map.run_if(in_state(GeneratorState::Regenerate)));
+		app.add_systems(
+			Update,
+			spawn_map
+				.run_if(in_state(AssetLoadState::LoadComplete))
+				.run_if(in_state(GeneratorState::SpawnMap)),
+		);
+
 		app.insert_resource(TileManager::default());
-		app.insert_resource(PhosMap::default());
 	}
 }
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+struct GeneratorSet;
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+struct AssetLoaderSet;
 
 fn load_textures(
 	mut commands: Commands,
@@ -67,26 +91,25 @@ fn load_textures(
 	});
 }
 
-fn load_tiles(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn load_tiles(
+	mut commands: Commands,
+	asset_server: Res<AssetServer>,
+	mut next_state: ResMut<NextState<AssetLoadState>>,
+) {
 	let handle: Handle<BiomePainterAsset> = asset_server.load("biome_painters/terra.biomes.json");
 	commands.insert_resource(CurrentBiomePainter { handle });
+	next_state.set(AssetLoadState::Loading);
 }
 
-fn finalize_texture(
+fn check_asset_load(
 	asset_server: Res<AssetServer>,
-	mut atlas: ResMut<ChunkAtlas>,
-	mut map: ResMut<PhosMap>,
-	mut images: ResMut<Assets<Image>>,
+	atlas: Res<ChunkAtlas>,
 	painter: Res<CurrentBiomePainter>,
 	painter_load: Res<BiomePainterLoadState>,
 	tile_load: Res<TileAssetLoadState>,
-	mut chunk_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, ChunkMaterial>>>,
 	mapper_load: Res<TileMapperLoadState>,
+	mut next_state: ResMut<NextState<AssetLoadState>>,
 ) {
-	if atlas.is_loaded {
-		return;
-	}
-
 	if !painter_load.is_all_loaded() || !tile_load.is_all_loaded() || !mapper_load.is_all_loaded() {
 		return;
 	}
@@ -97,6 +120,16 @@ fn finalize_texture(
 	if asset_server.load_state(painter.handle.clone()) != LoadState::Loaded {
 		return;
 	}
+
+	next_state.set(AssetLoadState::FinalizeAssets);
+}
+
+fn finalize_texture(
+	mut atlas: ResMut<ChunkAtlas>,
+	mut images: ResMut<Assets<Image>>,
+	mut chunk_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, ChunkMaterial>>>,
+	mut next_state: ResMut<NextState<AssetLoadState>>,
+) {
 	let image = images.get_mut(&atlas.handle).unwrap();
 
 	let array_layers = 14;
@@ -110,11 +143,15 @@ fn finalize_texture(
 		},
 	});
 	atlas.chunk_material_handle = chunk_material;
-	map.ready = true;
-	map.regenerate = true;
+
+	next_state.set(AssetLoadState::LoadComplete);
 }
 
-fn create_map(mut commands: Commands, mut cam: Query<(&mut Transform, Entity), With<PhosCamera>>) {
+fn create_heightmap(
+	mut commands: Commands,
+	mut cam: Query<(&mut Transform, Entity), With<PhosCamera>>,
+	mut next_state: ResMut<NextState<GeneratorState>>,
+) {
 	let config = GenerationConfig {
 		layers: vec![
 			GeneratorLayer {
@@ -193,6 +230,7 @@ fn create_map(mut commands: Commands, mut cam: Query<(&mut Transform, Entity), W
 
 	commands.insert_resource(heightmap);
 	commands.insert_resource(config);
+	next_state.set(GeneratorState::SpawnMap);
 }
 
 fn spawn_map(
@@ -200,16 +238,15 @@ fn spawn_map(
 	mut commands: Commands,
 	mut meshes: ResMut<Assets<Mesh>>,
 	atlas: Res<ChunkAtlas>,
-	mut map: ResMut<PhosMap>,
 	tile_assets: Res<Assets<TileAsset>>,
 	tile_mappers: Res<Assets<TileMapperAsset>>,
 	biome_painters: Res<Assets<BiomePainterAsset>>,
 	painter: Res<CurrentBiomePainter>,
+	mut generator_state: ResMut<NextState<GeneratorState>>,
+	cur_game_state: Res<State<GameState>>,
+	mut game_state: ResMut<NextState<GameState>>,
+	mut gameplay_state: ResMut<NextState<GameplayState>>,
 ) {
-	if !map.ready || !map.regenerate {
-		return;
-	}
-	map.regenerate = false;
 	let b_painter = biome_painters.get(painter.handle.clone());
 	let cur_painter = b_painter.unwrap();
 	paint_map(&mut heightmap, cur_painter, &tile_assets, &tile_mappers);
@@ -224,7 +261,6 @@ fn spawn_map(
 		.collect();
 
 	let mut registry = PhosChunkRegistry::new(chunk_meshes.len());
-
 	{
 		#[cfg(feature = "tracing")]
 		let _spawn_span = info_span!("Spawn Chunks").entered();
@@ -262,21 +298,24 @@ fn spawn_map(
 	},));
 
 	commands.insert_resource(registry);
+	generator_state.set(GeneratorState::Idle);
+	if cur_game_state.get() != &GameState::Playing {
+		game_state.set(GameState::Playing);
+		gameplay_state.set(GameplayState::PlaceHQ);
+	}
 }
 
 fn despawn_map(
 	mut commands: Commands,
 	mut heightmap: ResMut<Map>,
 	cfg: Res<GenerationConfig>,
-	map: Res<PhosMap>,
 	chunks: Query<Entity, With<PhosChunk>>,
+	mut next_state: ResMut<NextState<GeneratorState>>,
 ) {
-	if !map.regenerate {
-		return;
-	}
 	for chunk in chunks.iter() {
 		commands.entity(chunk).despawn();
 	}
 
 	*heightmap = generate_heightmap(&cfg, 4);
+	next_state.set(GeneratorState::SpawnMap);
 }

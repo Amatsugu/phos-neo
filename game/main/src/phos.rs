@@ -12,7 +12,10 @@ use bevy::{
 use bevy_rapier3d::dynamics::{Ccd, RigidBody, Velocity};
 use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
+use buildings::BuildingPugin;
 use iyes_perf_ui::prelude::*;
+use shared::despawn::DespawnPuglin;
+use shared::states::{GameState, GameplayState};
 use world_generation::biome_painter::BiomePainterPlugin;
 use world_generation::tile_manager::TileAssetPlugin;
 use world_generation::tile_mapper::TileMapperAssetPlugin;
@@ -26,7 +29,12 @@ impl Plugin for PhosGamePlugin {
 			MapInitPlugin,
 			MaterialPlugin::<ExtendedMaterial<StandardMaterial, ChunkMaterial>>::default(),
 			RenderDistancePlugin,
+			BuildingPugin,
+			DespawnPuglin,
 		));
+
+		app.insert_state(GameState::Startup);
+		app.insert_state(GameplayState::Waiting);
 
 		//Systems - Startup
 		app.add_systems(Startup, init_game);

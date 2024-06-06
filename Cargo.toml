@@ -3,8 +3,9 @@ resolver = "2"
 members = [
     "game/main",
 	"game/buildings",
+	"game/shared",
     "engine/world_generation",
-	"engine/asset_loader", "game/buildings"]
+	"engine/asset_loader", "game/buildings", "game/shared"]
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]

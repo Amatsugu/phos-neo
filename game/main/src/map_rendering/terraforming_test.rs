@@ -1,6 +1,6 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_rapier3d::{pipeline::QueryFilter, plugin::RapierContext};
-use world_generation::{hex_utils::HexCoord, prelude::Map};
+use world_generation::{hex_utils::HexCoord, prelude::Map, states::GeneratorState};
 
 use crate::{
 	camera_system::components::PhosCamera,
@@ -11,7 +11,7 @@ pub struct TerraFormingTestPlugin;
 
 impl Plugin for TerraFormingTestPlugin {
 	fn build(&self, app: &mut App) {
-		app.add_systems(Update, deform);
+		app.add_systems(Update, deform.run_if(in_state(GeneratorState::Idle)));
 	}
 }
 
@@ -35,8 +35,6 @@ fn deform(
 		return;
 	}
 
-	#[cfg(feature = "tracing")]
-	let span = info_span!("Deform Mesh").entered();
 	let win = window.single();
 	let (cam_transform, camera) = cam_query.single();
 	let Some(cursor_pos) = win.cursor_position() else {
@@ -50,12 +48,14 @@ fn deform(
 	let collision = rapier_context.cast_ray(
 		cam_ray.origin,
 		cam_ray.direction.into(),
-		100.,
+		500.,
 		true,
 		QueryFilter::only_fixed(),
 	);
 
 	if let Some((e, dist)) = collision {
+		#[cfg(feature = "tracing")]
+		let span = info_span!("Deform Mesh").entered();
 		let contact_point = cam_ray.get_point(dist);
 		let contact_coord = HexCoord::from_world_pos(contact_point);
 		let modified_chunks = heightmap.create_crater(&contact_coord, 5, 5. * multi);

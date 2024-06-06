@@ -12,9 +12,10 @@ bevy-inspector-egui = "0.23.4"
 iyes_perf_ui = "0.2.3"
 noise = "0.8.2"
 world_generation ={path="../../engine/world_generation"}
-bevy_rapier3d = { version = "0.25.0", features = [ "simd-stable","parallel" ] }
+bevy_rapier3d = { version = "0.26.0", features = [ "simd-stable","parallel" ] }
 rayon = "1.10.0"
 buildings = {path="../buildings"}
+shared = {path="../shared"}
 
 [features]
 tracing = ["bevy/trace_tracy", "world_generation/tracing", "buildings/tracing"]

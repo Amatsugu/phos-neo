@@ -14,13 +14,6 @@ pub struct ChunkAtlas {
 	pub is_loaded: bool,
 }
 
-#[derive(Resource, Default, Reflect)]
-#[reflect(Resource)]
-pub struct PhosMap {
-	pub ready: bool,
-	pub regenerate: bool,
-}
-
 #[derive(Component)]
 pub struct PhosChunk {
 	pub index: usize,

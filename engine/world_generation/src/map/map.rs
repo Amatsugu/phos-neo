@@ -107,7 +107,7 @@ impl Map {
 
 	pub fn hex_select<OP, Ret>(&self, center: &HexCoord, radius: usize, include_center: bool, op: OP) -> Vec<Ret>
 	where
-		OP: Fn(&HexCoord, f32, usize) -> Ret + Sync + Send,
+		OP: (Fn(&HexCoord, f32, usize) -> Ret) + Sync + Send,
 	{
 		assert!(radius != 0, "Radius cannot be zero");
 
@@ -140,7 +140,7 @@ impl Map {
 		op: OP,
 	) -> Vec<Ret>
 	where
-		OP: Fn(&HexCoord, &mut f32, usize) -> Ret + Sync + Send,
+		OP: (Fn(&HexCoord, &mut f32, usize) -> Ret) + Sync + Send,
 	{
 		assert!(radius != 0, "Radius cannot be zero");
 
