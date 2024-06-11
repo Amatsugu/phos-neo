@@ -20,9 +20,11 @@ fn main() {
 					primary_window: Some(Window {
 						title: "Phos".into(),
 						name: Some("phos".into()),
+						#[cfg(debug_assertions)]
 						resolution: (1920., 1080.).into(),
 						present_mode: PresentMode::AutoNoVsync,
-						// mode: bevy::window::WindowMode::BorderlessFullscreen,
+						#[cfg(not(debug_assertions))]
+						mode: bevy::window::WindowMode::BorderlessFullscreen,
 						..default()
 					}),
 					..default()

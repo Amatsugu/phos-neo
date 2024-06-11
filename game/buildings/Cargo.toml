@@ -10,6 +10,7 @@ bevy = "0.13.2"
 world_generation = {path = "../../engine/world_generation"}
 shared = {path = "../shared"}
 bevy_rapier3d = "0.26.0"
+serde = {version="1.0.203", features=["derive"]}
 
 [features]
 tracing = []
