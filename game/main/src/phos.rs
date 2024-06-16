@@ -27,7 +27,6 @@ impl Plugin for PhosGamePlugin {
 		app.add_plugins((
 			PhosCameraPlugin,
 			MapInitPlugin,
-			MaterialPlugin::<ExtendedMaterial<StandardMaterial, ChunkMaterial>>::default(),
 			RenderDistancePlugin,
 			BuildingPugin,
 			DespawnPuglin,

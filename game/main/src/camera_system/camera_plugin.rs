@@ -1,4 +1,5 @@
 use bevy::core_pipeline::experimental::taa::{TemporalAntiAliasBundle, TemporalAntiAliasPlugin};
+use bevy::core_pipeline::prepass::DepthPrepass;
 use bevy::input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
 use bevy::window::CursorGrabMode;
@@ -35,6 +36,7 @@ fn setup(mut commands: Commands, mut msaa: ResMut<Msaa>) {
 			},
 			PhosCamera::default(),
 			MainCamera,
+			DepthPrepass,
 			PhosCameraTargets::default(),
 		))
 		.insert(TemporalAntiAliasBundle::default());

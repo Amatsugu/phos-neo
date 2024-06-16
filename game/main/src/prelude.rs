@@ -2,15 +2,15 @@ use bevy::asset::Handle;
 use bevy::pbr::ExtendedMaterial;
 use bevy::prelude::*;
 use bevy::prelude::{Component, Image, Resource};
-use bevy::reflect::Reflect;
 
 use crate::shader_extensions::chunk_material::ChunkMaterial;
+use crate::shader_extensions::water_material::WaterMaterial;
 
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct ChunkAtlas {
 	pub handle: Handle<Image>,
 	pub chunk_material_handle: Handle<ExtendedMaterial<StandardMaterial, ChunkMaterial>>,
-	pub water_material: Handle<StandardMaterial>,
+	pub water_material: Handle<ExtendedMaterial<StandardMaterial, WaterMaterial>>,
 	pub is_loaded: bool,
 }
 

@@ -95,7 +95,7 @@ impl Map {
 			let d = (r as f32) / (radius as f32);
 			let cur = *h;
 			let h2 = cur - depth;
-			*h = h2.lerp(cur, d * d);
+			*h = h2.lerp(cur, d * d).max(0.);
 
 			return p.to_chunk_index(width);
 		});

@@ -1,6 +1,12 @@
+use std::sync::Arc;
+
 #[cfg(feature = "tracing")]
 use bevy::log::*;
-use bevy::{asset::LoadState, pbr::ExtendedMaterial, prelude::*};
+use bevy::{
+	asset::{LoadState, StrongHandle},
+	pbr::{ExtendedMaterial, NotShadowCaster},
+	prelude::*,
+};
 use bevy_inspector_egui::quick::ResourceInspectorPlugin;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use shared::states::{GameState, GameplayState};
@@ -16,7 +22,10 @@ use world_generation::{
 use crate::{
 	camera_system::components::*,
 	prelude::{ChunkAtlas, PhosChunk, PhosChunkRegistry},
-	shader_extensions::chunk_material::ChunkMaterial,
+	shader_extensions::{
+		chunk_material::ChunkMaterial,
+		water_material::{WaterMaterial, WaterSettings},
+	},
 	utlis::{
 		chunk_utils::{paint_map, prepare_chunk_mesh_with_collider},
 		render_distance_system::RenderDistanceVisibility,
@@ -34,10 +43,18 @@ impl Plugin for MapInitPlugin {
 		app.insert_state(GeneratorState::GenerateHeightmap);
 		app.insert_state(AssetLoadState::StartLoading);
 
+		app.add_plugins(ResourceInspectorPlugin::<GenerationConfig>::default());
+		app.add_plugins(ResourceInspectorPlugin::<WaterInspect>::default());
+		app.register_type::<ExtendedMaterial<StandardMaterial, WaterMaterial>>();
+		app.register_asset_reflect::<ExtendedMaterial<StandardMaterial, WaterMaterial>>();
 		app.add_plugins((
-			ResourceInspectorPlugin::<GenerationConfig>::default(),
 			ChunkRebuildPlugin,
 			TerraFormingTestPlugin,
+			MaterialPlugin::<ExtendedMaterial<StandardMaterial, ChunkMaterial>>::default(),
+			MaterialPlugin::<ExtendedMaterial<StandardMaterial, WaterMaterial>> {
+				prepass_enabled: false,
+				..Default::default()
+			},
 		));
 
 		app.add_systems(Startup, (load_textures, load_tiles).in_set(AssetLoaderSet));
@@ -71,18 +88,33 @@ struct GeneratorSet;
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 struct AssetLoaderSet;
 
+#[derive(Resource, Reflect, Default)]
+#[reflect(Resource)]
+struct WaterInspect(Handle<ExtendedMaterial<StandardMaterial, WaterMaterial>>);
+
 fn load_textures(
 	mut commands: Commands,
 	asset_server: Res<AssetServer>,
-	mut standard_materials: ResMut<Assets<StandardMaterial>>,
+	mut water_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, WaterMaterial>>>,
 ) {
 	let main_tex = asset_server.load("textures/world/stack.png");
 
-	let water_material = standard_materials.add(StandardMaterial {
-		base_color: Color::AQUAMARINE.with_a(0.5),
-		alpha_mode: AlphaMode::Blend,
-		..default()
+	let water_material = water_materials.add(ExtendedMaterial {
+		base: StandardMaterial {
+			base_color: Color::CYAN.with_a(1.),
+			alpha_mode: AlphaMode::Blend,
+			..Default::default()
+		},
+		extension: WaterMaterial {
+			settings: WaterSettings {
+				offset: 0.5,
+				scale: 100.,
+				..Default::default()
+			},
+			..default()
+		},
 	});
+	commands.insert_resource(WaterInspect(water_material.clone()));
 	commands.insert_resource(ChunkAtlas {
 		handle: main_tex.clone(),
 		is_loaded: false,
@@ -221,7 +253,7 @@ fn create_heightmap(
 		size: UVec2::splat(1024 / Chunk::SIZE as u32),
 		// size: UVec2::splat(1),
 	};
-	let heightmap = generate_heightmap(&config, 4);
+	let heightmap = generate_heightmap(&config, 42069);
 
 	let (mut cam_t, cam_entity) = cam.single_mut();
 	cam_t.translation = heightmap.get_center();
@@ -286,16 +318,19 @@ fn spawn_map(
 		}
 	}
 
-	commands.spawn((PbrBundle {
-		transform: Transform::from_translation(heightmap.get_center()),
-		mesh: meshes.add(
-			Plane3d::default()
-				.mesh()
-				.size(heightmap.get_world_width(), heightmap.get_world_height()),
-		),
-		material: atlas.water_material.clone(),
-		..default()
-	},));
+	commands.spawn((
+		MaterialMeshBundle {
+			transform: Transform::from_translation(heightmap.get_center()),
+			mesh: meshes.add(
+				Plane3d::default()
+					.mesh()
+					.size(heightmap.get_world_width(), heightmap.get_world_height()),
+			),
+			material: atlas.water_material.clone(),
+			..default()
+		},
+		NotShadowCaster,
+	));
 
 	commands.insert_resource(registry);
 	generator_state.set(GeneratorState::Idle);
