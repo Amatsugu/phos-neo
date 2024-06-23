@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 #[cfg(feature = "tracing")]
 use bevy::log::*;
 use bevy::{
