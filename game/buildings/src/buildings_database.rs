@@ -56,10 +56,43 @@ impl BuildingChunk {
 pub struct BuildingEntry {
 	pub coord: HexCoord,
 	pub entity: Entity,
+	pub is_main: bool,
+	pub main_entity: Option<Entity>,
+	pub has_children: bool,
+	pub child_entities: Option<Vec<Entity>>,
 }
 
 impl BuildingEntry {
 	pub fn new(coord: HexCoord, entity: Entity) -> Self {
-		return BuildingEntry { coord, entity };
+		return BuildingEntry {
+			coord,
+			entity,
+			child_entities: None,
+			has_children: false,
+			main_entity: None,
+			is_main: true,
+		};
+	}
+
+	pub fn new_with_children(coord: HexCoord, entity: Entity, children: Vec<Entity>) -> BuildingEntry {
+		return BuildingEntry {
+			coord,
+			entity,
+			child_entities: Some(children),
+			has_children: true,
+			main_entity: None,
+			is_main: true,
+		};
+	}
+
+	pub fn new_with_parent(coord: HexCoord, entity: Entity, main: Entity) -> BuildingEntry {
+		return BuildingEntry {
+			coord,
+			entity,
+			child_entities: None,
+			has_children: false,
+			main_entity: Some(main),
+			is_main: false,
+		};
 	}
 }
