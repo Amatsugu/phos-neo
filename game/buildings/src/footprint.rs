@@ -2,7 +2,7 @@ use bevy::math::{IVec2, Vec3Swizzles};
 use serde::{Deserialize, Serialize};
 use world_generation::hex_utils::HexCoord;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct BuildingFootprint {
 	pub footprint: Vec<IVec2>,
 }

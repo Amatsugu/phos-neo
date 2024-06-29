@@ -1325,6 +1325,7 @@ dependencies = [
 name = "buildings"
 version = "0.1.0"
 dependencies = [
+ "asset_loader",
  "bevy",
  "bevy_rapier3d",
  "serde",

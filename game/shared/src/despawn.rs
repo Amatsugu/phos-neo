@@ -1,4 +1,4 @@
-use crate::states::GameState;
+use crate::states::MenuState;
 use bevy::prelude::*;
 
 pub struct DespawnPuglin;
@@ -17,7 +17,7 @@ impl Plugin for DespawnPuglin {
 		app.add_systems(PostUpdate, despawn_at);
 		app.add_systems(
 			PreUpdate,
-			(despawn, despawn_after).run_if(not(in_state(GameState::Paused))),
+			(despawn, despawn_after).run_if(not(in_state(MenuState::Paused))),
 		);
 	}
 }

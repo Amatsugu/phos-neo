@@ -1,6 +1,8 @@
+use bevy::prelude::Resource;
 use shared::building::BuildingIdentifier;
 use world_generation::hex_utils::HexCoord;
 
+#[derive(Resource)]
 pub struct BuildQueue {
 	pub queue: Vec<QueueEntry>,
 }

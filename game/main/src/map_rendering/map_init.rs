@@ -7,7 +7,7 @@ use bevy::{
 };
 use bevy_inspector_egui::quick::ResourceInspectorPlugin;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
-use shared::states::{GameState, GameplayState};
+use shared::states::{GameplayState, MenuState};
 use world_generation::{
 	biome_painter::*,
 	heightmap::generate_heightmap,
@@ -273,8 +273,8 @@ fn spawn_map(
 	biome_painters: Res<Assets<BiomePainterAsset>>,
 	painter: Res<CurrentBiomePainter>,
 	mut generator_state: ResMut<NextState<GeneratorState>>,
-	cur_game_state: Res<State<GameState>>,
-	mut game_state: ResMut<NextState<GameState>>,
+	cur_game_state: Res<State<MenuState>>,
+	mut game_state: ResMut<NextState<MenuState>>,
 	mut gameplay_state: ResMut<NextState<GameplayState>>,
 ) {
 	let b_painter = biome_painters.get(painter.handle.clone());
@@ -332,8 +332,8 @@ fn spawn_map(
 
 	commands.insert_resource(registry);
 	generator_state.set(GeneratorState::Idle);
-	if cur_game_state.get() != &GameState::Playing {
-		game_state.set(GameState::Playing);
+	if cur_game_state.get() != &MenuState::InGame {
+		game_state.set(MenuState::InGame);
 		gameplay_state.set(GameplayState::PlaceHQ);
 	}
 }

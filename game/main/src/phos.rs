@@ -12,7 +12,7 @@ use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
 use buildings::BuildingPugin;
 use iyes_perf_ui::prelude::*;
 use shared::despawn::DespawnPuglin;
-use shared::states::{GameState, GameplayState};
+use shared::states::{MenuState, GameplayState};
 use world_generation::biome_painter::BiomePainterPlugin;
 use world_generation::tile_manager::TileAssetPlugin;
 use world_generation::tile_mapper::TileMapperAssetPlugin;
@@ -29,7 +29,7 @@ impl Plugin for PhosGamePlugin {
 			DespawnPuglin,
 		));
 
-		app.insert_state(GameState::Startup);
+		app.insert_state(MenuState::Startup);
 		app.insert_state(GameplayState::Waiting);
 
 		//Systems - Startup

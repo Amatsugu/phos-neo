@@ -3,7 +3,7 @@ use bevy::core_pipeline::prepass::DepthPrepass;
 use bevy::input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
 use bevy::window::CursorGrabMode;
-use shared::states::GameState;
+use shared::states::MenuState;
 use shared::tags::MainCamera;
 use world_generation::hex_utils::HexCoord;
 use world_generation::prelude::Map;
@@ -18,7 +18,7 @@ impl Plugin for PhosCameraPlugin {
 
 		app.add_systems(PreStartup, setup);
 
-		app.add_systems(Update, rts_camera_system.run_if(in_state(GameState::Playing)));
+		app.add_systems(Update, rts_camera_system.run_if(in_state(MenuState::InGame)));
 		app.add_systems(PostUpdate, limit_camera_bounds);
 		//Free Cam
 		//app.add_systems(Update, (grab_mouse, (update_camera, update_camera_mouse).chain()));

@@ -2,13 +2,13 @@ use bevy::prelude::*;
 use world_generation::hex_utils::HexCoord;
 
 #[derive(Resource)]
-pub struct BuildingDatabase {
+pub struct BuildingMap {
 	pub chunks: Vec<BuildingChunk>,
 }
 
-impl BuildingDatabase {
+impl BuildingMap {
 	pub fn new(size: UVec2) -> Self {
-		let mut db = BuildingDatabase {
+		let mut db = BuildingMap {
 			chunks: Vec::with_capacity(size.length_squared() as usize),
 		};
 
