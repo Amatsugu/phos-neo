@@ -1,11 +1,14 @@
 use asset_loader::create_asset_loader;
-use bevy::prelude::{self, Resource};
+use bevy::prelude::Resource;
 use serde::{Deserialize, Serialize};
 
 use super::building_asset::BuildingAsset;
 
+#[derive(Resource)]
+pub struct BuildingDatabase(Handle<BuildingDatabaseAsset>);
+
 #[derive(Serialize, Deserialize, Debug, TypePath, Asset)]
-pub struct BuildingDatabase {
+pub struct BuildingDatabaseAsset {
 	pub hq: u32,
 	pub buildings_paths: Vec<String>,
 	#[serde(skip)]
@@ -15,7 +18,7 @@ pub struct BuildingDatabase {
 create_asset_loader!(
 	BuildingDatabasePlugin,
 	BuildingDatabaseLoader,
-	BuildingDatabase,
+	BuildingDatabaseAsset,
 	BuildingDatabaseState,
 	&["buildings.db.json"],;
 	buildings_paths -> buildings
