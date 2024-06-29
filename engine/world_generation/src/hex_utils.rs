@@ -1,5 +1,6 @@
 use crate::prelude::Chunk;
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 pub const OUTER_RADIUS: f32 = 1.;
 pub const INNER_RADIUS: f32 = OUTER_RADIUS * (SQRT_3 / 2.);
@@ -56,7 +57,7 @@ pub fn get_tile_count(radius: usize) -> usize {
 	return 1 + 3 * (radius + 1) * radius;
 }
 
-#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
 pub struct HexCoord {
 	pub hex: IVec3,
 }
