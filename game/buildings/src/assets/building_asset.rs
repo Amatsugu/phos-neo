@@ -1,3 +1,4 @@
+use asset_loader::create_asset_loader;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use shared::resource::ResourceIdentifier;
@@ -10,9 +11,20 @@ pub struct BuildingAsset {
 	pub description: String,
 	pub footprint: BuildingFootprint,
 	pub prefab_path: String,
-	pub prefab: (),
+	#[serde(skip)]
+	pub prefab: Handle<()>,
 
 	pub cost: Vec<ResourceIdentifier>,
 	pub consumption: Vec<ResourceIdentifier>,
 	pub production: Vec<ResourceIdentifier>,
 }
+
+create_asset_loader!(
+	BuildingAssetPlugin,
+	BuildingAssetLoader,
+	BuildingAsset,
+	BuildingAssetLoadState,
+	&["building.json"],
+	prefab_path -> prefab
+	;?
+);

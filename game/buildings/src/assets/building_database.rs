@@ -8,7 +8,8 @@ use super::building_asset::BuildingAsset;
 pub struct BuildingDatabase {
 	pub hq: u32,
 	pub buildings_paths: Vec<String>,
-	pub buildings: Vec<BuildingAsset>,
+	#[serde(skip)]
+	pub buildings: Vec<Handle<BuildingAsset>>,
 }
 
 create_asset_loader!(
@@ -16,7 +17,7 @@ create_asset_loader!(
 	BuildingDatabaseLoader,
 	BuildingDatabase,
 	BuildingDatabaseState,
-	&["building.db.json"],;
+	&["buildings.db.json"],;
 	buildings_paths -> buildings
 	?
 );
