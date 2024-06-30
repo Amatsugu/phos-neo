@@ -1329,6 +1329,7 @@ dependencies = [
  "bevy",
  "bevy_rapier3d",
  "serde",
+ "serde_json",
  "shared",
  "world_generation",
 ]

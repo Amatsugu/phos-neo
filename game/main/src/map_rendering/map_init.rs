@@ -95,11 +95,11 @@ fn load_textures(
 	asset_server: Res<AssetServer>,
 	mut water_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, WaterMaterial>>>,
 ) {
-	let main_tex = asset_server.load("textures/world/stack.png");
+	let main_tex = asset_server.load("textures/world/Terra.png");
 
 	let water_material = water_materials.add(ExtendedMaterial {
 		base: StandardMaterial {
-			base_color: Color::CYAN.with_a(1.),
+			base_color: Color::CYAN.with_a(0.8),
 			alpha_mode: AlphaMode::Blend,
 			..Default::default()
 		},
@@ -162,7 +162,7 @@ fn finalize_texture(
 ) {
 	let image = images.get_mut(&atlas.handle).unwrap();
 
-	let array_layers = 14;
+	let array_layers = image.height() / image.width();
 	image.reinterpret_stacked_2d_as_array(array_layers);
 
 	atlas.is_loaded = true;

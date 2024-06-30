@@ -12,6 +12,7 @@ shared = {path = "../shared"}
 bevy_rapier3d = "0.26.0"
 serde = {version="1.0.203", features=["derive"]}
 asset_loader = {path = "../../engine/asset_loader"}
+serde_json = "1.0.115"
 
 
 [features]
