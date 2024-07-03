@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::InspectorOptions;
+use serde::{Deserialize, Serialize};
 
 use super::chunk::Chunk;
 
@@ -9,6 +10,7 @@ pub struct GenerationConfig {
 	pub noise_scale: f64,
 	pub sea_level: f64,
 	pub border_size: f32,
+	pub biome_blend: usize,
 	pub size: UVec2,
 	pub layers: Vec<GeneratorLayer>,
 }
@@ -22,7 +24,7 @@ impl GenerationConfig {
 	}
 }
 
-#[derive(Reflect, InspectorOptions)]
+#[derive(Reflect, InspectorOptions, Serialize, Deserialize, Debug)]
 pub struct GeneratorLayer {
 	pub strength: f64,
 	pub min_value: f64,

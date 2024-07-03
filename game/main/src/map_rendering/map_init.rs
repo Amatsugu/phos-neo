@@ -183,6 +183,7 @@ fn create_heightmap(
 	mut next_state: ResMut<NextState<GeneratorState>>,
 ) {
 	let config = GenerationConfig {
+		biome_blend: 3,
 		layers: vec![
 			GeneratorLayer {
 				base_roughness: 2.14,
