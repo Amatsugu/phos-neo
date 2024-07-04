@@ -1,8 +1,8 @@
-use crate::biome_painter::BiomePainterAsset;
 use crate::hex_utils::HexCoord;
 use crate::prelude::*;
 use crate::tile_manager::TileAsset;
 use crate::tile_mapper::TileMapperAsset;
+use crate::{biome_asset::BiomeAsset, biome_painter::BiomePainterAsset};
 use bevy::{
 	prelude::*,
 	render::{
@@ -16,6 +16,7 @@ pub fn generate_packed_chunk_mesh(
 	map: &Map,
 	painter: &BiomePainterAsset,
 	tiles: &Res<Assets<TileAsset>>,
+	biomes: &Res<Assets<BiomeAsset>>,
 	mappers: &Res<Assets<TileMapperAsset>>,
 ) -> Mesh {
 	let vertex_count: usize = Chunk::SIZE * Chunk::SIZE * 6;
@@ -31,8 +32,12 @@ pub fn generate_packed_chunk_mesh(
 			let coord =
 				HexCoord::from_offset(IVec2::new(x as i32, z as i32) + (chunk.chunk_offset * Chunk::SIZE as i32));
 			let n = map.get_neighbors(&coord);
-			let biome = mappers.get(painter.sample_biome(moisture, temperature));
-			let tile_handle = biome.unwrap().sample_tile(height);
+			let biome = biomes
+				.get(painter.sample_biome(biomes, moisture, temperature, 1.))
+				.unwrap();
+
+			let mapper = mappers.get(biome.tile_mapper.clone());
+			let tile_handle = mapper.unwrap().sample_tile(height);
 			let tile = tiles.get(tile_handle).unwrap();
 
 			create_packed_tile(

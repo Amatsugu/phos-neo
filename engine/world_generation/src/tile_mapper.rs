@@ -17,7 +17,6 @@ pub struct TileMapperAsset {
 	pub tiles: Vec<Handle<TileAsset>>,
 	pub tiles_path: Vec<String>,
 	pub thresholds: Vec<f32>,
-	pub generator_layers: Vec<GeneratorLayer>
 }
 
 impl TileMapperAsset {

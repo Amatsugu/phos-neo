@@ -24,7 +24,7 @@ impl GenerationConfig {
 	}
 }
 
-#[derive(Reflect, InspectorOptions, Serialize, Deserialize, Debug)]
+#[derive(Reflect, InspectorOptions, Serialize, Deserialize, Debug, Clone)]
 pub struct GeneratorLayer {
 	pub strength: f64,
 	pub min_value: f64,

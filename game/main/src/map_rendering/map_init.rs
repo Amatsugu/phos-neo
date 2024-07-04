@@ -9,6 +9,7 @@ use bevy_inspector_egui::quick::ResourceInspectorPlugin;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use shared::states::{GameplayState, MenuState};
 use world_generation::{
+	biome_asset::BiomeAsset,
 	biome_painter::*,
 	heightmap::generate_heightmap,
 	hex_utils::{offset_to_index, SHORT_DIAGONAL},
@@ -272,6 +273,7 @@ fn spawn_map(
 	tile_assets: Res<Assets<TileAsset>>,
 	tile_mappers: Res<Assets<TileMapperAsset>>,
 	biome_painters: Res<Assets<BiomePainterAsset>>,
+	biome_assets: Res<Assets<BiomeAsset>>,
 	painter: Res<CurrentBiomePainter>,
 	mut generator_state: ResMut<NextState<GeneratorState>>,
 	cur_game_state: Res<State<MenuState>>,
@@ -280,7 +282,7 @@ fn spawn_map(
 ) {
 	let b_painter = biome_painters.get(painter.handle.clone());
 	let cur_painter = b_painter.unwrap();
-	paint_map(&mut heightmap, cur_painter, &tile_assets, &tile_mappers);
+	paint_map(&mut heightmap, cur_painter, &tile_assets, &biome_assets, &tile_mappers);
 
 	let chunk_meshes: Vec<_> = heightmap
 		.chunks

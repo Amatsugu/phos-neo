@@ -8,3 +8,4 @@ pub mod prelude;
 pub mod states;
 pub mod tile_manager;
 pub mod tile_mapper;
+pub mod biome_asset;
