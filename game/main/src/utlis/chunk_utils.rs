@@ -38,8 +38,8 @@ pub fn paint_chunk(
 		for x in 0..Chunk::SIZE {
 			let idx = x + z * Chunk::SIZE;
 			let height = chunk.heights[idx];
-			let biome_data = &chunk.biome_data[idx];
-			let biome = painter.sample_biome(biome_data);
+			let biome_id = chunk.biome_id[idx];
+			let biome = &painter.biomes[biome_id];
 			let mapper = mappers.get(biome.tile_mapper.clone());
 			let tile_handle = mapper.unwrap().sample_tile(height);
 			let tile = tiles.get(tile_handle).unwrap();

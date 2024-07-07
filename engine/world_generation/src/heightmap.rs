@@ -64,7 +64,7 @@ pub fn generate_biome_chunk(
 			let moisture = sample_point(
 				x as f64 + chunk_x as f64 * Chunk::SIZE as f64,
 				z as f64 + chunk_y as f64 * Chunk::SIZE as f64,
-				&cfg.moisture_layer,
+				&cfg.moisture_noise,
 				&noise_m,
 				cfg.size.as_vec2(),
 				cfg.border_size,
@@ -72,7 +72,7 @@ pub fn generate_biome_chunk(
 			let temperature = sample_point(
 				x as f64 + chunk_x as f64 * Chunk::SIZE as f64,
 				z as f64 + chunk_y as f64 * Chunk::SIZE as f64,
-				&cfg.temperature_layer,
+				&cfg.temperature_noise,
 				&noise_t,
 				cfg.size.as_vec2(),
 				cfg.border_size,
@@ -80,7 +80,7 @@ pub fn generate_biome_chunk(
 			let continentality = sample_point(
 				x as f64 + chunk_x as f64 * Chunk::SIZE as f64,
 				z as f64 + chunk_y as f64 * Chunk::SIZE as f64,
-				&cfg.continent_layer,
+				&cfg.continent_noise,
 				&noise_c,
 				cfg.size.as_vec2(),
 				cfg.border_size,
@@ -109,8 +109,9 @@ pub fn generate_chunk(
 	biome_chunk: &BiomeChunk,
 	biome_painter: &BiomePainter,
 ) -> Chunk {
-	let mut result: [f32; Chunk::SIZE * Chunk::SIZE] = [0.; Chunk::SIZE * Chunk::SIZE];
-	let mut data = [BiomeData::default(); Chunk::SIZE * Chunk::SIZE];
+	let mut result: [f32; Chunk::SIZE * Chunk::SIZE] = [0.; Chunk::AREA];
+	let mut data = [BiomeData::default(); Chunk::AREA];
+	let mut biome_ids = [0; Chunk::AREA];
 	let noise = SuperSimplex::new(seed);
 	for z in 0..Chunk::SIZE {
 		for x in 0..Chunk::SIZE {
@@ -132,13 +133,16 @@ pub fn generate_chunk(
 					cfg.border_size,
 				) * blend;
 			}
-			result[x + z * Chunk::SIZE] = sample;
-			data[x + z * Chunk::SIZE] = biome_data.clone();
+			let idx = x + z * Chunk::SIZE;
+			biome_ids[idx] = biome_chunk.get_biome_id_dithered(x, z, &noise, cfg.biome_dither);
+			result[idx] = sample;
+			data[idx] = biome_data.clone();
 		}
 	}
 	return Chunk {
 		heights: result,
 		biome_data: data,
+		biome_id: biome_ids,
 		chunk_offset: IVec2::new(chunk_x as i32, chunk_z as i32),
 		..default()
 	};

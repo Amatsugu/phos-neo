@@ -207,8 +207,9 @@ fn create_heightmap(
 ) {
 	let config = GenerationConfig {
 		biome_blend: 16,
-		continent_layer: NoiseConfig {
-			scale: 450.,
+		biome_dither: 16.,
+		continent_noise: NoiseConfig {
+			scale: 500.,
 			layers: vec![GeneratorLayer {
 				base_roughness: 2.14,
 				roughness: 0.87,
@@ -222,8 +223,8 @@ fn create_heightmap(
 				first_layer_mask: false,
 			}],
 		},
-		moisture_layer: NoiseConfig {
-			scale: 450.,
+		moisture_noise: NoiseConfig {
+			scale: 500.,
 			layers: vec![GeneratorLayer {
 				base_roughness: 2.14,
 				roughness: 0.87,
@@ -237,8 +238,8 @@ fn create_heightmap(
 				first_layer_mask: false,
 			}],
 		},
-		temperature_layer: NoiseConfig {
-			scale: 450.,
+		temperature_noise: NoiseConfig {
+			scale: 500.,
 			layers: vec![GeneratorLayer {
 				base_roughness: 2.14,
 				roughness: 0.87,

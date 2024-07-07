@@ -10,9 +10,10 @@ pub struct GenerationConfig {
 	pub sea_level: f64,
 	pub border_size: f32,
 	pub biome_blend: usize,
-	pub moisture_layer: NoiseConfig,
-	pub temperature_layer: NoiseConfig,
-	pub continent_layer: NoiseConfig,
+	pub biome_dither: f64,
+	pub moisture_noise: NoiseConfig,
+	pub temperature_noise: NoiseConfig,
+	pub continent_noise: NoiseConfig,
 	pub size: UVec2,
 }
 
