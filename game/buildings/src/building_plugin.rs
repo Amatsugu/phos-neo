@@ -16,7 +16,7 @@ impl Plugin for BuildingPugin {
 		app.insert_resource(BuildQueue::default());
 
 		app.add_systems(Startup, init);
-		app.add_systems(Update, hq_placement.run_if(in_state(GameplayState::PlaceHQ)));
+		//app.add_systems(Update, hq_placement.run_if(in_state(GameplayState::PlaceHQ)));
 
 		app.add_systems(PreUpdate, process_build_queue.run_if(in_state(GameplayState::Playing)));
 	}

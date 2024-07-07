@@ -1,4 +1,4 @@
-use bevy::math::IVec2;
+use bevy::math::{IVec2, UVec2};
 use bevy::prelude::{FloatExt, Vec2};
 use bevy::utils::default;
 use bevy::utils::petgraph::data;
@@ -10,7 +10,7 @@ use crate::map::biome_map::{self, BiomeChunk, BiomeData, BiomeMap};
 use crate::prelude::*;
 
 pub fn generate_heightmap(cfg: &GenerationConfig, seed: u32, painter: &BiomePainter) -> Map {
-	let biomes = &generate_biomes(cfg, seed);
+	let biomes = &generate_biomes(cfg, seed, painter);
 	// let mut chunks: Vec<Chunk> = Vec::with_capacity(cfg.size.length_squared() as usize);
 	let chunks = (0..cfg.size.y)
 		.into_par_iter()
@@ -29,13 +29,13 @@ pub fn generate_heightmap(cfg: &GenerationConfig, seed: u32, painter: &BiomePain
 	};
 }
 
-pub fn generate_biomes(cfg: &GenerationConfig, seed: u32) -> BiomeMap {
-	let mut map = BiomeMap::new(cfg.size, 8);
+pub fn generate_biomes(cfg: &GenerationConfig, seed: u32, biome_painter: &BiomePainter) -> BiomeMap {
+	let mut map = BiomeMap::new(cfg.size, biome_painter.biomes.len());
 	map.chunks = (0..cfg.size.y)
 		.into_par_iter()
 		.flat_map(|y| {
 			(0..cfg.size.x).into_par_iter().map(move |x| {
-				return generate_biome_chunk(x as usize, y as usize, cfg, seed);
+				return generate_biome_chunk(x as usize, y as usize, cfg, seed, biome_painter);
 			})
 		})
 		.collect();
@@ -43,8 +43,15 @@ pub fn generate_biomes(cfg: &GenerationConfig, seed: u32) -> BiomeMap {
 	return map;
 }
 
-pub fn generate_biome_chunk(chunk_x: usize, chunk_y: usize, cfg: &GenerationConfig, seed: u32) -> BiomeChunk {
+pub fn generate_biome_chunk(
+	chunk_x: usize,
+	chunk_y: usize,
+	cfg: &GenerationConfig,
+	seed: u32,
+	biome_painter: &BiomePainter,
+) -> BiomeChunk {
 	let mut chunk = BiomeChunk {
+		offset: UVec2::new(chunk_x as u32, chunk_y as u32),
 		data: [BiomeData::default(); Chunk::AREA],
 		tiles: Vec::with_capacity(Chunk::AREA),
 	};
@@ -78,11 +85,16 @@ pub fn generate_biome_chunk(chunk_x: usize, chunk_y: usize, cfg: &GenerationConf
 				cfg.size.as_vec2(),
 				cfg.border_size,
 			);
-			chunk.data[x + z * Chunk::SIZE] = BiomeData {
-				moisture,
-				temperature,
-				continentality,
+			let data = BiomeData {
+				moisture: moisture.clamp(0., 100.),
+				temperature: temperature.clamp(0., 100.),
+				continentality: continentality.clamp(0., 100.),
 			};
+			let mut b = vec![0.; biome_painter.biomes.len()];
+			b[biome_painter.sample_biome_index(&data)] = 1.;
+
+			chunk.data[x + z * Chunk::SIZE] = data;
+			chunk.tiles.push(b);
 		}
 	}
 
@@ -103,15 +115,23 @@ pub fn generate_chunk(
 	for z in 0..Chunk::SIZE {
 		for x in 0..Chunk::SIZE {
 			let biome_data = biome_chunk.get_biome_data(x, z);
-			let biome = biome_painter.sample_biome(biome_data);
-			let sample = sample_point(
-				x as f64 + chunk_x as f64 * Chunk::SIZE as f64,
-				z as f64 + chunk_z as f64 * Chunk::SIZE as f64,
-				&biome.noise,
-				&noise,
-				cfg.size.as_vec2(),
-				cfg.border_size,
-			);
+			let biome_blend = biome_chunk.get_biome(x, z);
+			let mut sample = 0.;
+			for i in 0..biome_blend.len() {
+				let blend = biome_blend[i];
+				if blend == 0. {
+					continue;
+				}
+				let biome = &biome_painter.biomes[i];
+				sample += sample_point(
+					x as f64 + chunk_x as f64 * Chunk::SIZE as f64,
+					z as f64 + chunk_z as f64 * Chunk::SIZE as f64,
+					&biome.noise,
+					&noise,
+					cfg.size.as_vec2(),
+					cfg.border_size,
+				) * blend;
+			}
 			result[x + z * Chunk::SIZE] = sample;
 			data[x + z * Chunk::SIZE] = biome_data.clone();
 		}

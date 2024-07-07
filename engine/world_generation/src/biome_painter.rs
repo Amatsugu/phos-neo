@@ -64,6 +64,22 @@ impl BiomePainter {
 
 		return biome;
 	}
+
+	pub fn sample_biome_index(&self, data: &BiomeData) -> usize {
+		assert!(self.biomes.length() != 0, "There are no biomes");
+		let mut biome = 0;
+		let mut dist = f32::INFINITY;
+
+		for i in 0..self.biomes.len() {
+			let d = self.biomes[i].distance(data.into());
+			if d < dist {
+				biome = i;
+				dist = d;
+			}
+		}
+
+		return biome;
+	}
 }
 
 create_asset_loader!(

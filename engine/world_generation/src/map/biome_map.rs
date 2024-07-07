@@ -6,6 +6,7 @@ use super::chunk::Chunk;
 pub struct BiomeMap {
 	pub height: usize,
 	pub width: usize,
+	pub size: UVec2,
 	pub biome_count: usize,
 	pub chunks: Vec<BiomeChunk>,
 }
@@ -33,6 +34,7 @@ impl BiomeMap {
 	pub fn new(size: UVec2, biome_count: usize) -> Self {
 		let len = size.x as usize * size.y as usize * Chunk::AREA;
 		return BiomeMap {
+			size: size,
 			height: size.y as usize * Chunk::SIZE,
 			width: size.x as usize * Chunk::SIZE,
 			biome_count,
@@ -57,7 +59,10 @@ impl BiomeMap {
 					.map(|y| {
 						let mut new_tiles = Vec::with_capacity(self.width);
 						for x in 0..Chunk::SIZE {
-							let kernel = self.get_kernel(x as i32, y as i32);
+							let tx = x as u32 + chunk.offset.x * Chunk::SIZE as u32;
+							let ty = y as u32 + chunk.offset.y * Chunk::SIZE as u32;
+							let kernel = self.get_kernel(tx as i32, ty as i32);
+
 							let r = kernel
 								.iter()
 								.filter_map(|f| *f)
@@ -77,6 +82,7 @@ impl BiomeMap {
 					.flatten()
 					.collect();
 				return BiomeChunk {
+					offset: chunk.offset,
 					tiles,
 					data: chunk.data,
 				};
@@ -107,27 +113,27 @@ impl BiomeMap {
 			return None;
 		}
 
-		let cx = x as usize / Chunk::SIZE;
-		let cy = y as usize / Chunk::SIZE;
+		let cx = (x as f32 / Chunk::SIZE as f32).floor() as usize;
+		let cy = (y as f32 / Chunk::SIZE as f32).floor() as usize;
 
-		let chunk = &self.chunks[cx + cy * Chunk::SIZE];
-
+		let chunk = &self.chunks[cx + cy * self.size.x as usize];
 		return Some(chunk.get_biome(x as usize - cx * Chunk::SIZE, y as usize - cy * Chunk::SIZE));
 	}
 
 	pub fn get_biome_data(&self, x: usize, y: usize) -> &BiomeData {
-		let cx = x / Chunk::SIZE;
-		let cy = y / Chunk::SIZE;
+		let cx = (x as f32 / Chunk::SIZE as f32).floor() as usize;
+		let cy = (y as f32 / Chunk::SIZE as f32).floor() as usize;
 
-		let chunk = &self.chunks[cx + cy * Chunk::SIZE];
+		let chunk = &self.chunks[cx + cy * self.size.x as usize];
 
-		return chunk.get_biome_data(x - cx * Chunk::SIZE, y - cy * Chunk::SIZE);
+		return chunk.get_biome_data(x - (cx * Chunk::SIZE), y - (cy * Chunk::SIZE));
 	}
 }
 
 #[derive(Clone)]
 pub struct BiomeChunk {
 	pub tiles: Vec<Vec<f32>>,
+	pub offset: UVec2,
 	pub data: [BiomeData; Chunk::AREA],
 }
 
@@ -148,9 +154,9 @@ mod tests {
 
 	#[test]
 	fn biome_blend() {
-		let mut biome = BiomeMap::new(UVec2::ONE * 16, 8);
-		let w = biome.width / Chunk::SIZE;
-		let h = biome.height / Chunk::SIZE;
+		let mut biome = BiomeMap::new(UVec2::splat(4), 8);
+		let w = biome.size.x as usize;
+		let h = biome.size.y as usize;
 
 		for y in 0..h {
 			for x in 0..w {
@@ -162,10 +168,12 @@ mod tests {
 		}
 
 		biome.blend(8);
+		assert!(biome.chunks.iter().all(|f| f.tiles.len() == Chunk::AREA), "Data Lost");
 	}
 
 	fn generate_chunk(x: usize, y: usize, biome: Vec<f32>) -> BiomeChunk {
 		let chunk = BiomeChunk {
+			offset: UVec2::new(x as u32, y as u32),
 			data: [BiomeData::default(); Chunk::AREA],
 			tiles: (0..Chunk::AREA).into_iter().map(|_| biome.clone()).collect(),
 		};
