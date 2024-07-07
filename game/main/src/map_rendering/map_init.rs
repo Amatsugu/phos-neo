@@ -1,7 +1,7 @@
 #[cfg(feature = "tracing")]
 use bevy::log::*;
 use bevy::{
-	asset::{LoadState, StrongHandle},
+	asset::LoadState,
 	pbr::{ExtendedMaterial, NotShadowCaster},
 	prelude::*,
 };
@@ -9,7 +9,7 @@ use bevy_inspector_egui::quick::ResourceInspectorPlugin;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use shared::states::{GameplayState, MenuState};
 use world_generation::{
-	biome_asset::BiomeAsset,
+	biome_asset::{BiomeAsset, BiomeAssetLoadState},
 	biome_painter::*,
 	heightmap::generate_heightmap,
 	hex_utils::{offset_to_index, SHORT_DIAGONAL},
@@ -39,7 +39,7 @@ pub struct MapInitPlugin;
 
 impl Plugin for MapInitPlugin {
 	fn build(&self, app: &mut App) {
-		app.insert_state(GeneratorState::GenerateHeightmap);
+		app.insert_state(GeneratorState::Startup);
 		app.insert_state(AssetLoadState::StartLoading);
 
 		app.add_plugins(ResourceInspectorPlugin::<GenerationConfig>::default());
@@ -57,18 +57,17 @@ impl Plugin for MapInitPlugin {
 		));
 
 		app.add_systems(Startup, (load_textures, load_tiles).in_set(AssetLoaderSet));
-		app.add_systems(Startup, create_heightmap.in_set(GeneratorSet));
-
 		app.configure_sets(Startup, AssetLoaderSet.run_if(in_state(AssetLoadState::StartLoading)));
-		app.configure_sets(
-			Startup,
-			GeneratorSet.run_if(in_state(GeneratorState::GenerateHeightmap)),
+
+		app.add_systems(
+			Update,
+			create_heightmap.run_if(in_state(GeneratorState::GenerateHeightmap)),
 		);
 
 		app.add_systems(Update, check_asset_load.run_if(in_state(AssetLoadState::Loading)));
 		app.add_systems(
 			Update,
-			finalize_texture.run_if(in_state(AssetLoadState::FinalizeAssets)),
+			(finalize_texture, finalize_biome_painter).run_if(in_state(AssetLoadState::FinalizeAssets)),
 		);
 		app.add_systems(Update, despawn_map.run_if(in_state(GeneratorState::Regenerate)));
 		app.add_systems(
@@ -82,8 +81,6 @@ impl Plugin for MapInitPlugin {
 	}
 }
 
-#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
-struct GeneratorSet;
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 struct AssetLoaderSet;
 
@@ -137,11 +134,16 @@ fn check_asset_load(
 	atlas: Res<ChunkAtlas>,
 	painter: Res<CurrentBiomePainter>,
 	painter_load: Res<BiomePainterLoadState>,
+	biome_load: Res<BiomeAssetLoadState>,
 	tile_load: Res<TileAssetLoadState>,
 	mapper_load: Res<TileMapperLoadState>,
 	mut next_state: ResMut<NextState<AssetLoadState>>,
 ) {
-	if !painter_load.is_all_loaded() || !tile_load.is_all_loaded() || !mapper_load.is_all_loaded() {
+	if !painter_load.is_all_loaded()
+		|| !tile_load.is_all_loaded()
+		|| !mapper_load.is_all_loaded()
+		|| !biome_load.is_all_loaded()
+	{
 		return;
 	}
 
@@ -155,11 +157,30 @@ fn check_asset_load(
 	next_state.set(AssetLoadState::FinalizeAssets);
 }
 
+fn finalize_biome_painter(
+	mut commands: Commands,
+	mut next_generator_state: ResMut<NextState<GeneratorState>>,
+	painter: Res<CurrentBiomePainter>,
+	painter_load: Res<BiomePainterLoadState>,
+	biome_load: Res<BiomeAssetLoadState>,
+	biome_painters: Res<Assets<BiomePainterAsset>>,
+	biome_assets: Res<Assets<BiomeAsset>>,
+) {
+	if !painter_load.is_all_loaded() || !biome_load.is_all_loaded() {
+		return;
+	}
+
+	let painter_asset = biome_painters.get(painter.handle.clone()).unwrap();
+	let biome_painter = painter_asset.build(&biome_assets);
+	commands.insert_resource(biome_painter);
+	next_generator_state.set(GeneratorState::GenerateHeightmap);
+}
+
 fn finalize_texture(
 	mut atlas: ResMut<ChunkAtlas>,
 	mut images: ResMut<Assets<Image>>,
 	mut chunk_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, ChunkMaterial>>>,
-	mut next_state: ResMut<NextState<AssetLoadState>>,
+	mut next_load_state: ResMut<NextState<AssetLoadState>>,
 ) {
 	let image = images.get_mut(&atlas.handle).unwrap();
 
@@ -175,21 +196,23 @@ fn finalize_texture(
 	});
 	atlas.chunk_material_handle = chunk_material;
 
-	next_state.set(AssetLoadState::LoadComplete);
+	next_load_state.set(AssetLoadState::LoadComplete);
 }
 
 fn create_heightmap(
 	mut commands: Commands,
 	mut cam: Query<(&mut Transform, Entity), With<PhosCamera>>,
 	mut next_state: ResMut<NextState<GeneratorState>>,
+	biome_painter: Res<BiomePainter>,
 ) {
 	let config = GenerationConfig {
 		biome_blend: 3,
-		layers: vec![
-			GeneratorLayer {
+		continent_layer: NoiseConfig {
+			scale: 450.,
+			layers: vec![GeneratorLayer {
 				base_roughness: 2.14,
 				roughness: 0.87,
-				strength: 8.3,
+				strength: 100.,
 				min_value: -0.2,
 				persistence: 0.77,
 				is_rigid: false,
@@ -197,63 +220,44 @@ fn create_heightmap(
 				weight_multi: 0.,
 				layers: 4,
 				first_layer_mask: false,
-			},
-			GeneratorLayer {
-				base_roughness: 2.85,
-				roughness: 2.,
-				strength: -0.23,
-				min_value: -0.,
-				persistence: 1.,
+			}],
+		},
+		moisture_layer: NoiseConfig {
+			scale: 450.,
+			layers: vec![GeneratorLayer {
+				base_roughness: 2.14,
+				roughness: 0.87,
+				strength: 100.,
+				min_value: -0.2,
+				persistence: 0.77,
 				is_rigid: false,
 				weight: 0.,
 				weight_multi: 0.,
 				layers: 4,
 				first_layer_mask: false,
-			},
-			GeneratorLayer {
-				base_roughness: 2.6,
-				roughness: 4.,
-				strength: 3.1,
-				min_value: 0.,
-				persistence: 1.57,
-				is_rigid: true,
-				weight: 1.,
-				weight_multi: 0.35,
+			}],
+		},
+		temperature_layer: NoiseConfig {
+			scale: 450.,
+			layers: vec![GeneratorLayer {
+				base_roughness: 2.14,
+				roughness: 0.87,
+				strength: 100.,
+				min_value: -0.2,
+				persistence: 0.77,
+				is_rigid: false,
+				weight: 0.,
+				weight_multi: 0.,
 				layers: 4,
-				first_layer_mask: true,
-			},
-			GeneratorLayer {
-				base_roughness: 3.87,
-				roughness: 5.8,
-				strength: -1.,
-				min_value: 0.,
-				persistence: 0.,
-				is_rigid: true,
-				weight: 1.,
-				weight_multi: 4.57,
-				layers: 3,
-				first_layer_mask: true,
-			},
-			GeneratorLayer {
-				base_roughness: 3.87,
-				roughness: 5.8,
-				strength: -1.5,
-				min_value: 0.,
-				persistence: 0.3,
-				is_rigid: true,
-				weight: 1.,
-				weight_multi: 4.57,
-				layers: 3,
 				first_layer_mask: false,
-			},
-		],
-		noise_scale: 450.,
+			}],
+		},
 		sea_level: 8.5,
 		border_size: 64.,
 		size: UVec2::splat(1024 / Chunk::SIZE as u32),
 		// size: UVec2::splat(1),
 	};
-	let heightmap = generate_heightmap(&config, 42069);
+	let heightmap = generate_heightmap(&config, 42069, &biome_painter);
 
 	let (mut cam_t, cam_entity) = cam.single_mut();
 	cam_t.translation = heightmap.get_center();
@@ -272,17 +276,13 @@ fn spawn_map(
 	atlas: Res<ChunkAtlas>,
 	tile_assets: Res<Assets<TileAsset>>,
 	tile_mappers: Res<Assets<TileMapperAsset>>,
-	biome_painters: Res<Assets<BiomePainterAsset>>,
-	biome_assets: Res<Assets<BiomeAsset>>,
-	painter: Res<CurrentBiomePainter>,
 	mut generator_state: ResMut<NextState<GeneratorState>>,
 	cur_game_state: Res<State<MenuState>>,
 	mut game_state: ResMut<NextState<MenuState>>,
 	mut gameplay_state: ResMut<NextState<GameplayState>>,
+	biome_painter: Res<BiomePainter>,
 ) {
-	let b_painter = biome_painters.get(painter.handle.clone());
-	let cur_painter = b_painter.unwrap();
-	paint_map(&mut heightmap, cur_painter, &tile_assets, &biome_assets, &tile_mappers);
+	paint_map(&mut heightmap, &biome_painter, &tile_assets, &tile_mappers);
 
 	let chunk_meshes: Vec<_> = heightmap
 		.chunks
@@ -347,11 +347,12 @@ fn despawn_map(
 	cfg: Res<GenerationConfig>,
 	chunks: Query<Entity, With<PhosChunk>>,
 	mut next_state: ResMut<NextState<GeneratorState>>,
+	biome_painter: Res<BiomePainter>,
 ) {
 	for chunk in chunks.iter() {
 		commands.entity(chunk).despawn();
 	}
 
-	*heightmap = generate_heightmap(&cfg, 4);
+	*heightmap = generate_heightmap(&cfg, 4, &biome_painter);
 	next_state.set(GeneratorState::SpawnMap);
 }

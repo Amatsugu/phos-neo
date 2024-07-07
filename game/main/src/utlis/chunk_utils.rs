@@ -9,8 +9,7 @@ use bevy::{
 use bevy_rapier3d::geometry::{Collider, TriMeshFlags};
 use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 use world_generation::{
-	biome_asset::BiomeAsset,
-	biome_painter::BiomePainterAsset,
+	biome_painter::BiomePainter,
 	generators::{chunk_colliders::generate_chunk_collider, mesh_generator::generate_chunk_mesh},
 	hex_utils::offset_to_world,
 	prelude::{Chunk, Map, MeshChunkData},
@@ -20,32 +19,27 @@ use world_generation::{
 
 pub fn paint_map(
 	map: &mut Map,
-	painter: &BiomePainterAsset,
+	painter: &BiomePainter,
 	tiles: &Res<Assets<TileAsset>>,
-	biomes: &Res<Assets<BiomeAsset>>,
 	mappers: &Res<Assets<TileMapperAsset>>,
 ) {
 	map.chunks.par_iter_mut().for_each(|chunk: &mut Chunk| {
-		paint_chunk(chunk, painter, tiles, biomes, mappers);
+		paint_chunk(chunk, painter, tiles, mappers);
 	});
 }
 
 pub fn paint_chunk(
 	chunk: &mut Chunk,
-	painter: &BiomePainterAsset,
+	painter: &BiomePainter,
 	tiles: &Res<Assets<TileAsset>>,
-	biomes: &Res<Assets<BiomeAsset>>,
 	mappers: &Res<Assets<TileMapperAsset>>,
 ) {
 	for z in 0..Chunk::SIZE {
 		for x in 0..Chunk::SIZE {
 			let idx = x + z * Chunk::SIZE;
 			let height = chunk.heights[idx];
-			let moisture = chunk.moisture[idx];
-			let temperature = chunk.temperature[idx];
-			let biome = biomes
-				.get(painter.sample_biome(&biomes, moisture, temperature, 0.))
-				.unwrap();
+			let biome_data = &chunk.biome_data[idx];
+			let biome = painter.sample_biome(biome_data);
 			let mapper = mappers.get(biome.tile_mapper.clone());
 			let tile_handle = mapper.unwrap().sample_tile(height);
 			let tile = tiles.get(tile_handle).unwrap();

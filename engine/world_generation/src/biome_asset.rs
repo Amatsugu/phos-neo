@@ -1,7 +1,7 @@
 use asset_loader::create_asset_loader;
 use serde::{Deserialize, Serialize};
 
-use crate::{prelude::GeneratorLayer, tile_mapper::TileMapperAsset};
+use crate::{prelude::NoiseConfig, tile_mapper::TileMapperAsset};
 
 #[derive(Serialize, Deserialize, Asset, TypePath, Debug, Clone)]
 pub struct BiomeAsset {
@@ -12,17 +12,13 @@ pub struct BiomeAsset {
 	#[serde(skip)]
 	pub tile_mapper: Handle<TileMapperAsset>,
 	pub tile_mapper_path: String,
-	pub generator_layers: Vec<GeneratorLayer>,
+	pub noise: NoiseConfig,
 }
 
 impl BiomeAsset {
-	pub fn distance(&self, moisture: f32, temperature: f32, continentality: f32) -> f32 {
-		let a = Vec3::new(
-			self.moisture - moisture,
-			self.temperature - temperature,
-			self.continentality - continentality,
-		);
-		return a.length();
+	pub fn distance(&self, data: Vec3) -> f32 {
+		let a = Vec3::new(self.moisture, self.temperature, self.continentality);
+		return (a - data).length();
 	}
 }
 

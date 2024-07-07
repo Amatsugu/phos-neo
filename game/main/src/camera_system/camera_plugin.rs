@@ -19,7 +19,7 @@ impl Plugin for PhosCameraPlugin {
 		app.add_systems(PreStartup, setup);
 
 		app.add_systems(Update, rts_camera_system.run_if(in_state(MenuState::InGame)));
-		app.add_systems(PostUpdate, limit_camera_bounds);
+		app.add_systems(PostUpdate, limit_camera_bounds.run_if(in_state(MenuState::InGame)));
 		//Free Cam
 		//app.add_systems(Update, (grab_mouse, (update_camera, update_camera_mouse).chain()));
 

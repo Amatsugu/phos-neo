@@ -58,12 +58,12 @@ impl Map {
 
 	pub fn get_moisture(&self, pos: &HexCoord) -> f32 {
 		let chunk = &self.chunks[pos.to_chunk_index(self.width)];
-		return chunk.moisture[pos.to_chunk_local_index()];
+		return chunk.biome_data[pos.to_chunk_local_index()].moisture;
 	}
 
 	pub fn get_tempurature(&self, pos: &HexCoord) -> f32 {
 		let chunk = &self.chunks[pos.to_chunk_index(self.width)];
-		return chunk.temperature[pos.to_chunk_local_index()];
+		return chunk.biome_data[pos.to_chunk_local_index()].temperature;
 	}
 
 	pub fn get_center(&self) -> Vec3 {

@@ -7,12 +7,13 @@ use super::chunk::Chunk;
 #[derive(Resource, Reflect, Default)]
 #[reflect(Resource)]
 pub struct GenerationConfig {
-	pub noise_scale: f64,
 	pub sea_level: f64,
 	pub border_size: f32,
 	pub biome_blend: usize,
+	pub moisture_layer: NoiseConfig,
+	pub temperature_layer: NoiseConfig,
+	pub continent_layer: NoiseConfig,
 	pub size: UVec2,
-	pub layers: Vec<GeneratorLayer>,
 }
 
 impl GenerationConfig {
@@ -24,7 +25,13 @@ impl GenerationConfig {
 	}
 }
 
-#[derive(Reflect, InspectorOptions, Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Default, Reflect, Clone, Debug)]
+pub struct NoiseConfig {
+	pub scale: f64,
+	pub layers: Vec<GeneratorLayer>,
+}
+
+#[derive(Reflect, InspectorOptions, Serialize, Deserialize, Debug, Clone, Default)]
 pub struct GeneratorLayer {
 	pub strength: f64,
 	pub min_value: f64,

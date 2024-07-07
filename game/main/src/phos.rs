@@ -12,10 +12,10 @@ use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
 use buildings::BuildingPugin;
 use iyes_perf_ui::prelude::*;
 use shared::despawn::DespawnPuglin;
-use shared::states::{MenuState, GameplayState};
-use world_generation::biome_painter::BiomePainterPlugin;
+use shared::states::{GameplayState, MenuState};
 use world_generation::tile_manager::TileAssetPlugin;
 use world_generation::tile_mapper::TileMapperAssetPlugin;
+use world_generation::{biome_asset::BiomeAssetPlugin, biome_painter::BiomePainterPlugin};
 
 pub struct PhosGamePlugin;
 
@@ -48,6 +48,7 @@ impl Plugin for PhosGamePlugin {
 		app.add_plugins(TileAssetPlugin);
 		app.add_plugins(TileMapperAssetPlugin);
 		app.add_plugins(BiomePainterPlugin);
+		app.add_plugins(BiomeAssetPlugin);
 		//Physics
 		app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
 		// app.add_plugins(RapierDebugRenderPlugin::default());

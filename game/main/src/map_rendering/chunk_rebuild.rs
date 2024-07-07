@@ -5,6 +5,7 @@ use bevy::utils::futures;
 use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::geometry::TriMeshFlags;
 use world_generation::prelude::Map;
+use world_generation::states::GeneratorState;
 
 use crate::prelude::RebuildChunk;
 use crate::{
@@ -18,7 +19,7 @@ impl Plugin for ChunkRebuildPlugin {
 	fn build(&self, app: &mut App) {
 		app.insert_resource(ChunkRebuildQueue::default());
 		app.init_resource::<PhosChunkRegistry>();
-		app.add_systems(PreUpdate, chunk_rebuilder);
+		app.add_systems(PreUpdate, chunk_rebuilder.run_if(in_state(GeneratorState::SpawnMap)));
 		app.add_systems(PostUpdate, collider_task_resolver);
 	}
 }

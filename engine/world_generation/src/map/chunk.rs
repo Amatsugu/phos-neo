@@ -1,12 +1,13 @@
 use crate::hex_utils::SHORT_DIAGONAL;
 use bevy::prelude::*;
 
+use super::biome_map::BiomeData;
+
 #[derive(Clone)]
 pub struct Chunk {
 	pub heights: [f32; Chunk::AREA],
 	pub textures: [[u32; 2]; Chunk::AREA],
-	pub moisture: [f32; Chunk::AREA],
-	pub temperature: [f32; Chunk::AREA],
+	pub biome_data: [BiomeData; Chunk::AREA],
 	pub chunk_offset: IVec2,
 }
 
@@ -15,8 +16,7 @@ impl Default for Chunk {
 		Self {
 			heights: [0.; Chunk::AREA],
 			textures: [[0; 2]; Chunk::AREA],
-			moisture: [0.; Chunk::AREA],
-			temperature: [0.; Chunk::AREA],
+			biome_data: [BiomeData::default(); Chunk::AREA],
 			chunk_offset: Default::default(),
 		}
 	}

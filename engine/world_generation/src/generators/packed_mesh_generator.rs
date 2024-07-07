@@ -27,14 +27,11 @@ pub fn generate_packed_chunk_mesh(
 	for z in 0..Chunk::SIZE {
 		for x in 0..Chunk::SIZE {
 			let height = chunk.heights[x + z * Chunk::SIZE];
-			let moisture = chunk.moisture[x + z * Chunk::SIZE];
-			let temperature = chunk.temperature[x + z * Chunk::SIZE];
+			let data = chunk.biome_data[x + z * Chunk::SIZE];
 			let coord =
 				HexCoord::from_offset(IVec2::new(x as i32, z as i32) + (chunk.chunk_offset * Chunk::SIZE as i32));
 			let n = map.get_neighbors(&coord);
-			let biome = biomes
-				.get(painter.sample_biome(biomes, moisture, temperature, 1.))
-				.unwrap();
+			let biome = biomes.get(painter.sample_biome(biomes, &data)).unwrap();
 
 			let mapper = mappers.get(biome.tile_mapper.clone());
 			let tile_handle = mapper.unwrap().sample_tile(height);

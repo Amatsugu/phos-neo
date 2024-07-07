@@ -16,8 +16,8 @@ impl Default for PhosCamera {
 	fn default() -> Self {
 		Self {
 			min_height: 10.,
-			max_height: 120.,
-			speed: 30.,
+			max_height: 420.,
+			speed: 100.,
 			zoom_speed: 0.3,
 			min_angle: (20. as f32).to_radians(),
 			max_angle: 1.,
