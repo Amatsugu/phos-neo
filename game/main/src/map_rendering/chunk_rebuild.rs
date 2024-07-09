@@ -1,4 +1,4 @@
-use bevy::ecs::system::CommandQueue;
+use bevy::ecs::world::CommandQueue;
 use bevy::prelude::*;
 use bevy::tasks::*;
 use bevy::utils::futures;

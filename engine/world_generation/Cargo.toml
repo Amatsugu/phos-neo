@@ -6,13 +6,13 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.13.2"
+bevy = "0.14.0"
 noise = "0.9.0"
-serde = {version="1.0.203", features=["derive"]}
+serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.115"
-asset_loader = {path = "../asset_loader"}
+asset_loader = { path = "../asset_loader" }
 rayon = "1.10.0"
-bevy-inspector-egui = "0.24.0"
+bevy-inspector-egui = "0.25.0"
 
 [features]
 tracing = ["bevy/trace_tracy"]

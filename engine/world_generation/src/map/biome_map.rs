@@ -35,7 +35,7 @@ impl BiomeMap {
 	pub fn new(size: UVec2, biome_count: usize) -> Self {
 		let len = size.x as usize * size.y as usize * Chunk::AREA;
 		return BiomeMap {
-			size: size,
+			size,
 			height: size.y as usize * Chunk::SIZE,
 			width: size.x as usize * Chunk::SIZE,
 			biome_count,

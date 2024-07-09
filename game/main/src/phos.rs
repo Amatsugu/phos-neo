@@ -55,7 +55,7 @@ impl Plugin for PhosGamePlugin {
 
 		app.insert_resource(WireframeConfig {
 			global: false,
-			default_color: Color::hex("FF0064").unwrap(),
+			default_color: Srgba::hex("FF0064").unwrap().into(),
 		});
 	}
 }
@@ -83,7 +83,7 @@ fn init_game(mut commands: Commands, mut materials: ResMut<Assets<StandardMateri
 	});
 
 	let sphere_mat = StandardMaterial {
-		base_color: Color::CYAN,
+		base_color: Color::srgb(1., 1., 0.),
 		..default()
 	};
 	let handle = materials.add(sphere_mat);

@@ -6,13 +6,13 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.13.2"
-world_generation = {path = "../../engine/world_generation"}
-shared = {path = "../shared"}
-bevy_rapier3d = "0.26.0"
-serde = {version="1.0.203", features=["derive"]}
-asset_loader = {path = "../../engine/asset_loader"}
-serde_json = "1.0.115"
+bevy = "0.14.0"
+world_generation = { path = "../../engine/world_generation" }
+shared = { path = "../shared" }
+bevy_rapier3d = "0.27.0"
+serde = { version = "1.0.204", features = ["derive"] }
+asset_loader = { path = "../../engine/asset_loader" }
+serde_json = "1.0.120"
 
 
 [features]

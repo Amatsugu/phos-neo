@@ -33,7 +33,7 @@ pub fn generate_packed_chunk_mesh(
 			let n = map.get_neighbors(&coord);
 			let biome = biomes.get(painter.sample_biome(biomes, &data)).unwrap();
 
-			let mapper = mappers.get(biome.tile_mapper.clone());
+			let mapper = mappers.get(biome.tile_mapper.id());
 			let tile_handle = mapper.unwrap().sample_tile(height);
 			let tile = tiles.get(tile_handle).unwrap();
 

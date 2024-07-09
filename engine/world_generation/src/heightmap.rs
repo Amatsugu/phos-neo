@@ -1,12 +1,11 @@
 use bevy::math::{IVec2, UVec2};
 use bevy::prelude::{FloatExt, Vec2};
 use bevy::utils::default;
-use bevy::utils::petgraph::data;
 use noise::{NoiseFn, SuperSimplex};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
-use crate::biome_painter::{self, BiomePainter};
-use crate::map::biome_map::{self, BiomeChunk, BiomeData, BiomeMap};
+use crate::biome_painter::BiomePainter;
+use crate::map::biome_map::{BiomeChunk, BiomeData, BiomeMap};
 use crate::prelude::*;
 
 pub fn generate_heightmap(cfg: &GenerationConfig, seed: u32, painter: &BiomePainter) -> Map {

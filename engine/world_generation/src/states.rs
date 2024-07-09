@@ -1,4 +1,4 @@
-use bevy::ecs::schedule::States;
+use bevy::prelude::*;
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum GeneratorState {

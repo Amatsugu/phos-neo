@@ -7,15 +7,15 @@ build = "build.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.13.2"
-bevy-inspector-egui = "0.23.4"
-iyes_perf_ui = "0.2.3"
+bevy = "0.14.0"
+bevy-inspector-egui = "0.25.0"
+iyes_perf_ui = "0.3.0"
 noise = "0.8.2"
-world_generation ={path="../../engine/world_generation"}
-bevy_rapier3d = { version = "0.26.0", features = [ "simd-stable","parallel" ] }
+world_generation = { path = "../../engine/world_generation" }
+bevy_rapier3d = { version = "0.27.0", features = ["simd-stable", "parallel"] }
 rayon = "1.10.0"
-buildings = {path="../buildings"}
-shared = {path="../shared"}
+buildings = { path = "../buildings" }
+shared = { path = "../shared" }
 
 [features]
 tracing = ["bevy/trace_tracy", "world_generation/tracing", "buildings/tracing"]

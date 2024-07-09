@@ -40,7 +40,7 @@ pub fn paint_chunk(
 			let height = chunk.heights[idx];
 			let biome_id = chunk.biome_id[idx];
 			let biome = &painter.biomes[biome_id];
-			let mapper = mappers.get(biome.tile_mapper.clone());
+			let mapper = mappers.get(biome.tile_mapper.id());
 			let tile_handle = mapper.unwrap().sample_tile(height);
 			let tile = tiles.get(tile_handle).unwrap();
 			chunk.textures[idx] = [tile.texture_id, tile.side_texture_id];

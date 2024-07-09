@@ -1,7 +1,8 @@
 use bevy::asset::Asset;
+use bevy::math::VectorSpace;
 use bevy::pbr::MaterialExtension;
+use bevy::prelude::*;
 use bevy::reflect::Reflect;
-use bevy::render::color::Color;
 use bevy::render::render_resource::{AsBindGroup, ShaderRef, ShaderType};
 
 #[derive(Asset, Reflect, AsBindGroup, Debug, Clone, Default)]
@@ -14,7 +15,7 @@ pub struct WaterMaterial {
 pub struct WaterSettings {
 	pub offset: f32,
 	pub scale: f32,
-	pub deep_color: Color,
+	pub deep_color: Vec3,
 }
 
 impl Default for WaterSettings {
@@ -22,7 +23,7 @@ impl Default for WaterSettings {
 		Self {
 			offset: 0.0,
 			scale: 1.0,
-			deep_color: Color::BLACK,
+			deep_color: Vec3::ZERO,
 		}
 	}
 }

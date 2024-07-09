@@ -1,13 +1,9 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_rapier3d::{pipeline::QueryFilter, plugin::RapierContext};
-use shared::{
-	despawn::Despawn,
-	states::{GameplayState, MenuState},
-	tags::MainCamera,
-};
+use shared::{despawn::Despawn, states::GameplayState, tags::MainCamera};
 use world_generation::{hex_utils::HexCoord, map::map::Map};
 
-use crate::build_queue::{self, BuildQueue, QueueEntry};
+use crate::build_queue::{BuildQueue, QueueEntry};
 
 pub struct BuildingPugin;
 

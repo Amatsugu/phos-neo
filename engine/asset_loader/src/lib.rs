@@ -12,7 +12,7 @@ pub mod macros {
 			$($string_array_name: ident -> $handle_array_name: ident)* ?
 		) => {
 			use bevy::prelude::*;
-			use bevy::asset::{AssetLoader, AssetEvent, LoadContext, AsyncReadExt, io::Reader};
+			use bevy::asset::{AssetLoader, AssetEvent, AssetEvents, LoadContext, LoadState, AsyncReadExt, io::Reader};
 			use bevy::utils::BoxedFuture;
 			pub struct $plugin_name;
 			impl Plugin for $plugin_name {
@@ -37,6 +37,7 @@ pub mod macros {
 							let asset = assets.get_mut(id.clone()).unwrap();
 
 							$(
+
 								asset.$handle_name = asset_server.load(&asset.$string_name);
 							)*
 							$(
@@ -76,25 +77,24 @@ pub mod macros {
 
 				type Error = String;
 
-				fn load<'a>(
+				async fn load<'a>(
 					&'a self,
-					reader: &'a mut Reader,
+					reader: &'a mut Reader<'_>,
 					_settings: &'a Self::Settings,
-					_load_context: &'a mut LoadContext,
-				) -> BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
-					return Box::pin(async move {
-						let mut data: String = String::new();
-						let read_result = reader.read_to_string(&mut data).await;
-						if read_result.is_err() {
-							return Err(read_result.err().unwrap().to_string());
-						}
-						let serialized: Result<Self::Asset, serde_json::Error> =
-							serde_json::from_str(&data);
-						if serialized.is_err() {
-							return Err(serialized.err().unwrap().to_string());
-						}
-						return Ok(serialized.unwrap());
-					});
+					_load_context: &'a mut LoadContext<'_>,
+				) -> Result<Self::Asset, Self::Error> {
+					let mut data: String = String::new();
+					let read_result = reader.read_to_string(&mut data).await;
+					if read_result.is_err() {
+						return Err(read_result.err().unwrap().to_string());
+					}
+					let serialized: Result<Self::Asset, serde_json::Error> =
+						serde_json::from_str(&data);
+					if serialized.is_err() {
+						return Err(serialized.err().unwrap().to_string());
+					}
+					let r = serialized.unwrap();
+					return Ok(r);
 				}
 
 				fn extensions(&self) -> &[&str] {

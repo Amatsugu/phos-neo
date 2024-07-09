@@ -1,7 +1,7 @@
 #[cfg(feature = "tracing")]
 use bevy::log::*;
 use bevy::{
-	asset::LoadState,
+	asset::{AssetEvents, LoadState},
 	pbr::{ExtendedMaterial, NotShadowCaster},
 	prelude::*,
 };
@@ -97,7 +97,7 @@ fn load_textures(
 
 	let water_material = water_materials.add(ExtendedMaterial {
 		base: StandardMaterial {
-			base_color: Color::CYAN.with_a(0.8),
+			base_color: Color::srgba(0., 0.5, 1., 0.8),
 			alpha_mode: AlphaMode::Blend,
 			..Default::default()
 		},
@@ -112,10 +112,10 @@ fn load_textures(
 	});
 	commands.insert_resource(WaterInspect(water_material.clone()));
 	commands.insert_resource(ChunkAtlas {
-		handle: main_tex.clone(),
+		handle: main_tex,
 		is_loaded: false,
 		chunk_material_handle: Handle::default(),
-		water_material: water_material,
+		water_material,
 	});
 }
 
@@ -147,13 +147,12 @@ fn check_asset_load(
 		return;
 	}
 
-	if asset_server.load_state(atlas.handle.clone()) != LoadState::Loaded {
+	if asset_server.load_state(atlas.handle.id()) != LoadState::Loaded {
 		return;
 	}
-	if asset_server.load_state(painter.handle.clone()) != LoadState::Loaded {
+	if asset_server.load_state(painter.handle.id()) != LoadState::Loaded {
 		return;
 	}
-
 	next_state.set(AssetLoadState::FinalizeAssets);
 }
 
@@ -170,7 +169,7 @@ fn finalize_biome_painter(
 		return;
 	}
 
-	let painter_asset = biome_painters.get(painter.handle.clone()).unwrap();
+	let painter_asset = biome_painters.get(painter.handle.id()).unwrap();
 	let biome_painter = painter_asset.build(&biome_assets);
 	commands.insert_resource(biome_painter);
 	next_generator_state.set(GeneratorState::GenerateHeightmap);
@@ -182,7 +181,7 @@ fn finalize_texture(
 	mut chunk_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, ChunkMaterial>>>,
 	mut next_load_state: ResMut<NextState<AssetLoadState>>,
 ) {
-	let image = images.get_mut(&atlas.handle).unwrap();
+	let image = images.get_mut(atlas.handle.id()).unwrap();
 
 	let array_layers = image.height() / image.width();
 	image.reinterpret_stacked_2d_as_array(array_layers);
@@ -264,7 +263,6 @@ fn create_heightmap(
 	cam_t.translation = heightmap.get_center();
 
 	commands.entity(cam_entity).insert(CameraBounds::from_size(config.size));
-
 	commands.insert_resource(heightmap);
 	commands.insert_resource(config);
 	next_state.set(GeneratorState::SpawnMap);
