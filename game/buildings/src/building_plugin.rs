@@ -1,18 +1,29 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_rapier3d::{pipeline::QueryFilter, plugin::RapierContext};
-use shared::{despawn::Despawn, states::GameplayState, tags::MainCamera};
+use shared::{
+	despawn::Despawn,
+	states::{AssetLoadState, GameplayState},
+	tags::MainCamera,
+};
 use world_generation::{hex_utils::HexCoord, map::map::Map};
 
-use crate::build_queue::{BuildQueue, QueueEntry};
+use crate::{
+	assets::{
+		building_asset::BuildingAssetPlugin,
+		building_database::{BuildingDatabase, BuildingDatabasePlugin},
+	},
+	build_queue::{BuildQueue, QueueEntry},
+};
 
 pub struct BuildingPugin;
 
 impl Plugin for BuildingPugin {
 	fn build(&self, app: &mut App) {
 		app.insert_resource(BuildQueue::default());
+		app.add_plugins(BuildingAssetPlugin).add_plugins(BuildingDatabasePlugin);
 
-		app.add_systems(Startup, init);
-		//app.add_systems(Update, hq_placement.run_if(in_state(GameplayState::PlaceHQ)));
+		app.add_systems(Startup, init.run_if(in_state(AssetLoadState::StartLoading)));
+		app.add_systems(Update, hq_placement.run_if(in_state(GameplayState::PlaceHQ)));
 
 		app.add_systems(PreUpdate, process_build_queue.run_if(in_state(GameplayState::Playing)));
 	}
@@ -21,11 +32,19 @@ impl Plugin for BuildingPugin {
 #[derive(Resource)]
 struct IndicatorCube(Handle<Mesh>, Handle<StandardMaterial>);
 
-fn init(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
+fn init(
+	mut commands: Commands,
+	mut meshes: ResMut<Assets<Mesh>>,
+	mut materials: ResMut<Assets<StandardMaterial>>,
+	asset_server: Res<AssetServer>,
+) {
 	let cube = Cuboid::from_size(Vec3::splat(1.));
 	let mesh_handle = meshes.add(cube);
 	let mat_handle = materials.add(Color::WHITE);
 	commands.insert_resource(IndicatorCube(mesh_handle, mat_handle));
+
+	let db = asset_server.load("buildings/buildings.db.json");
+	commands.insert_resource(BuildingDatabase { handle: db });
 }
 
 fn hq_placement(

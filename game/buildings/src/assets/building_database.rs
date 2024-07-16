@@ -5,7 +5,9 @@ use serde::{Deserialize, Serialize};
 use super::building_asset::BuildingAsset;
 
 #[derive(Resource)]
-pub struct BuildingDatabase(Handle<BuildingDatabaseAsset>);
+pub struct BuildingDatabase{
+	pub handle: Handle<BuildingDatabaseAsset>
+}
 
 #[derive(Serialize, Deserialize, Debug, TypePath, Asset)]
 pub struct BuildingDatabaseAsset {

@@ -1,15 +1,15 @@
 #[cfg(feature = "tracing")]
 use bevy::log::*;
 use bevy::{
-	asset::{AssetEvents, LoadState},
+	asset::LoadState,
 	pbr::{ExtendedMaterial, NotShadowCaster},
 	prelude::*,
 };
 use bevy_inspector_egui::quick::ResourceInspectorPlugin;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
-use shared::states::{GameplayState, MenuState};
+use shared::states::{AssetLoadState, GameplayState, MenuState};
 use world_generation::{
-	biome_asset::{BiomeAsset, BiomeAssetLoadState},
+	biome_asset::{BiomeAsset, BiomeAssetLoadState, BiomeAssetPlugin},
 	biome_painter::*,
 	heightmap::generate_heightmap,
 	hex_utils::{offset_to_index, SHORT_DIAGONAL},
@@ -41,6 +41,12 @@ impl Plugin for MapInitPlugin {
 	fn build(&self, app: &mut App) {
 		app.insert_state(GeneratorState::Startup);
 		app.insert_state(AssetLoadState::StartLoading);
+
+		//Assets
+		app.add_plugins(TileAssetPlugin);
+		app.add_plugins(TileMapperAssetPlugin);
+		app.add_plugins(BiomePainterPlugin);
+		app.add_plugins(BiomeAssetPlugin);
 
 		app.add_plugins(ResourceInspectorPlugin::<GenerationConfig>::default());
 		app.add_plugins(ResourceInspectorPlugin::<WaterInspect>::default());

@@ -15,3 +15,11 @@ pub enum GameplayState {
 	PlaceHQ,
 	Playing,
 }
+
+#[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum AssetLoadState {
+	StartLoading,
+	Loading,
+	FinalizeAssets,
+	LoadComplete,
+}

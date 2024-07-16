@@ -12,7 +12,7 @@ pub struct BuildingAsset {
 	pub footprint: BuildingFootprint,
 	pub prefab_path: String,
 	#[serde(skip)]
-	pub prefab: Handle<()>,
+	pub prefab: Handle<Scene>,
 
 	pub cost: Vec<ResourceIdentifier>,
 	pub consumption: Vec<ResourceIdentifier>,

@@ -9,10 +9,3 @@ pub enum GeneratorState {
 	Regenerate,
 }
 
-#[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
-pub enum AssetLoadState {
-	StartLoading,
-	Loading,
-	FinalizeAssets,
-	LoadComplete,
-}
