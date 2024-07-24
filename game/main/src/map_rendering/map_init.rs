@@ -62,8 +62,8 @@ impl Plugin for MapInitPlugin {
 			},
 		));
 
-		app.add_systems(Startup, (load_textures, load_tiles).in_set(AssetLoaderSet));
-		app.configure_sets(Startup, AssetLoaderSet.run_if(in_state(AssetLoadState::StartLoading)));
+		//app.add_systems(Startup, (load_textures, load_tiles).in_set(AssetLoaderSet));
+		//app.configure_sets(Startup, AssetLoaderSet.run_if(in_state(AssetLoadState::StartLoading)));
 
 		app.add_systems(
 			Update,
@@ -96,11 +96,9 @@ struct WaterInspect(Handle<ExtendedMaterial<StandardMaterial, WaterMaterial>>);
 
 fn load_textures(
 	mut commands: Commands,
-	asset_server: Res<AssetServer>,
+	mut atlas: ResMut<ChunkAtlas>,
 	mut water_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, WaterMaterial>>>,
 ) {
-	let main_tex = asset_server.load("textures/world/Terra.png");
-
 	let water_material = water_materials.add(ExtendedMaterial {
 		base: StandardMaterial {
 			base_color: Color::srgba(0., 0.5, 1., 0.8),
@@ -117,12 +115,7 @@ fn load_textures(
 		},
 	});
 	commands.insert_resource(WaterInspect(water_material.clone()));
-	commands.insert_resource(ChunkAtlas {
-		handle: main_tex,
-		is_loaded: false,
-		chunk_material_handle: Handle::default(),
-		water_material,
-	});
+	atlas.water_material = water_material;
 }
 
 fn load_tiles(
@@ -192,7 +185,6 @@ fn finalize_texture(
 	let array_layers = image.height() / image.width();
 	image.reinterpret_stacked_2d_as_array(array_layers);
 
-	atlas.is_loaded = true;
 	let chunk_material = chunk_materials.add(ExtendedMaterial {
 		base: StandardMaterial::default(),
 		extension: ChunkMaterial {

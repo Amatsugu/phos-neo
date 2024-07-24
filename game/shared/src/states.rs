@@ -2,9 +2,9 @@ use bevy::prelude::*;
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum MenuState {
+	Loading,
 	Startup,
 	MainMenu,
-	Loading,
 	InGame,
 	Paused,
 }
@@ -18,7 +18,6 @@ pub enum GameplayState {
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AssetLoadState {
-	StartLoading,
 	Loading,
 	FinalizeAssets,
 	LoadComplete,

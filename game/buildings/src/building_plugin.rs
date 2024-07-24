@@ -22,7 +22,7 @@ impl Plugin for BuildingPugin {
 		app.insert_resource(BuildQueue::default());
 		app.add_plugins(BuildingAssetPlugin).add_plugins(BuildingDatabasePlugin);
 
-		app.add_systems(Startup, init.run_if(in_state(AssetLoadState::StartLoading)));
+		app.add_systems(Startup, init.run_if(in_state(AssetLoadState::Loading)));
 		app.add_systems(Update, hq_placement.run_if(in_state(GameplayState::PlaceHQ)));
 
 		app.add_systems(PreUpdate, process_build_queue.run_if(in_state(GameplayState::Playing)));

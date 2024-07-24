@@ -6,13 +6,14 @@ use bevy::{
 	pbr::{wireframe::WireframeConfig, CascadeShadowConfig},
 	prelude::*,
 };
+use bevy_asset_loader::prelude::*;
 use bevy_rapier3d::dynamics::{Ccd, RigidBody, Velocity};
 use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
 use buildings::BuildingPugin;
 use iyes_perf_ui::prelude::*;
-use shared::despawn::DespawnPuglin;
 use shared::states::{GameplayState, MenuState};
+use shared::{despawn::DespawnPuglin, states::AssetLoadState};
 
 pub struct PhosGamePlugin;
 
@@ -22,12 +23,17 @@ impl Plugin for PhosGamePlugin {
 			PhosCameraPlugin,
 			MapInitPlugin,
 			RenderDistancePlugin,
-			BuildingPugin,
+			// BuildingPugin,
 			DespawnPuglin,
 		));
 
-		app.insert_state(MenuState::Startup);
+		app.insert_state(AssetLoadState::Loading);
+		app.insert_state(MenuState::Loading);
 		app.insert_state(GameplayState::Waiting);
+
+		app.add_loading_state(
+			LoadingState::new(AssetLoadState::Loading).continue_to_state(AssetLoadState::FinalizeAssets),
+		);
 
 		//Systems - Startup
 		app.add_systems(Startup, init_game);
