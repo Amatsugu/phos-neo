@@ -11,7 +11,6 @@ mod phos;
 mod prelude;
 mod shader_extensions;
 mod utlis;
-pub mod assets;
 
 fn main() {
 	App::new()

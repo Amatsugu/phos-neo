@@ -5,6 +5,8 @@ use bevy::{
 	pbr::{ExtendedMaterial, NotShadowCaster},
 	prelude::*,
 };
+use bevy_asset_loader::prelude::*;
+
 use bevy_inspector_egui::quick::ResourceInspectorPlugin;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use shared::states::{AssetLoadState, GameplayState, MenuState};
@@ -31,21 +33,18 @@ use crate::{
 	},
 };
 
-use super::{
-	chunk_rebuild::ChunkRebuildPlugin, prelude::CurrentBiomePainter, terraforming_test::TerraFormingTestPlugin,
-};
+use super::{chunk_rebuild::ChunkRebuildPlugin, terraforming_test::TerraFormingTestPlugin};
 
 pub struct MapInitPlugin;
 
 impl Plugin for MapInitPlugin {
 	fn build(&self, app: &mut App) {
 		app.insert_state(GeneratorState::Startup);
-		app.insert_state(AssetLoadState::StartLoading);
+		app.insert_state(AssetLoadState::Loading);
 
 		//Assets
 		app.add_plugins(TileAssetPlugin);
 		app.add_plugins(TileMapperAssetPlugin);
-		app.add_plugins(BiomePainterPlugin);
 		app.add_plugins(BiomeAssetPlugin);
 
 		app.add_plugins(ResourceInspectorPlugin::<GenerationConfig>::default());
@@ -62,18 +61,32 @@ impl Plugin for MapInitPlugin {
 			},
 		));
 
-		//app.add_systems(Startup, (load_textures, load_tiles).in_set(AssetLoaderSet));
-		//app.configure_sets(Startup, AssetLoaderSet.run_if(in_state(AssetLoadState::StartLoading)));
+		app.configure_loading_state(
+			LoadingStateConfig::new(AssetLoadState::Loading)
+				.with_dynamic_assets_file::<StandardDynamicAssetCollection>("phos.assets.ron")
+				.load_collection::<ChunkAtlas>(),
+		);
+
+		app.add_systems(Startup, load_textures.run_if(in_state(AssetLoadState::FinalizeAssets)));
 
 		app.add_systems(
 			Update,
 			create_heightmap.run_if(in_state(GeneratorState::GenerateHeightmap)),
 		);
 
-		app.add_systems(Update, check_asset_load.run_if(in_state(AssetLoadState::Loading)));
+		// app.add_systems(
+		// 	Update,
+		// 	check_asset_load.run_if(in_state(AssetLoadState::FinalizeAssets)),
+		// );
 		app.add_systems(
 			Update,
 			(finalize_texture, finalize_biome_painter).run_if(in_state(AssetLoadState::FinalizeAssets)),
+		);
+		app.add_systems(
+			Update,
+			finalize_biome_painter
+				.run_if(in_state(AssetLoadState::FinalizeAssets))
+				.run_if(in_state(AssetLoadState::LoadComplete)),
 		);
 		app.add_systems(Update, despawn_map.run_if(in_state(GeneratorState::Regenerate)));
 		app.add_systems(
@@ -86,9 +99,6 @@ impl Plugin for MapInitPlugin {
 		app.insert_resource(TileManager::default());
 	}
 }
-
-#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
-struct AssetLoaderSet;
 
 #[derive(Resource, Reflect, Default)]
 #[reflect(Resource)]
@@ -118,60 +128,16 @@ fn load_textures(
 	atlas.water_material = water_material;
 }
 
-fn load_tiles(
-	mut commands: Commands,
-	asset_server: Res<AssetServer>,
-	mut next_state: ResMut<NextState<AssetLoadState>>,
-) {
-	let handle: Handle<BiomePainterAsset> = asset_server.load("biome_painters/terra.biomes.json");
-	commands.insert_resource(CurrentBiomePainter { handle });
-	next_state.set(AssetLoadState::Loading);
-}
-
-fn check_asset_load(
-	asset_server: Res<AssetServer>,
-	atlas: Res<ChunkAtlas>,
-	painter: Res<CurrentBiomePainter>,
-	painter_load: Res<BiomePainterLoadState>,
-	biome_load: Res<BiomeAssetLoadState>,
-	tile_load: Res<TileAssetLoadState>,
-	mapper_load: Res<TileMapperLoadState>,
-	mut next_state: ResMut<NextState<AssetLoadState>>,
-) {
-	if !painter_load.is_all_loaded()
-		|| !tile_load.is_all_loaded()
-		|| !mapper_load.is_all_loaded()
-		|| !biome_load.is_all_loaded()
-	{
-		return;
-	}
-
-	if asset_server.load_state(atlas.handle.id()) != LoadState::Loaded {
-		return;
-	}
-	if asset_server.load_state(painter.handle.id()) != LoadState::Loaded {
-		return;
-	}
-	next_state.set(AssetLoadState::FinalizeAssets);
-}
-
 fn finalize_biome_painter(
 	mut commands: Commands,
 	mut next_generator_state: ResMut<NextState<GeneratorState>>,
-	painter: Res<CurrentBiomePainter>,
-	painter_load: Res<BiomePainterLoadState>,
-	biome_load: Res<BiomeAssetLoadState>,
-	biome_painters: Res<Assets<BiomePainterAsset>>,
-	biome_assets: Res<Assets<BiomeAsset>>,
+	biome_painter: Res<BiomePainterAsset>,
+	biomes: Res<Assets<BiomeAsset>>,
 ) {
-	if !painter_load.is_all_loaded() || !biome_load.is_all_loaded() {
-		return;
-	}
-
-	let painter_asset = biome_painters.get(painter.handle.id()).unwrap();
-	let biome_painter = painter_asset.build(&biome_assets);
+	let biome_painter = biome_painter.build(&biomes);
 	commands.insert_resource(biome_painter);
 	next_generator_state.set(GeneratorState::GenerateHeightmap);
+	println!("Finalize Biome");
 }
 
 fn finalize_texture(
@@ -180,6 +146,7 @@ fn finalize_texture(
 	mut chunk_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, ChunkMaterial>>>,
 	mut next_load_state: ResMut<NextState<AssetLoadState>>,
 ) {
+	println!("Finalize Tex");
 	let image = images.get_mut(atlas.handle.id()).unwrap();
 
 	let array_layers = image.height() / image.width();

@@ -19,14 +19,6 @@ pub struct PhosGamePlugin;
 
 impl Plugin for PhosGamePlugin {
 	fn build(&self, app: &mut App) {
-		app.add_plugins((
-			PhosCameraPlugin,
-			MapInitPlugin,
-			RenderDistancePlugin,
-			// BuildingPugin,
-			DespawnPuglin,
-		));
-
 		app.insert_state(AssetLoadState::Loading);
 		app.insert_state(MenuState::Loading);
 		app.insert_state(GameplayState::Waiting);
@@ -34,6 +26,14 @@ impl Plugin for PhosGamePlugin {
 		app.add_loading_state(
 			LoadingState::new(AssetLoadState::Loading).continue_to_state(AssetLoadState::FinalizeAssets),
 		);
+
+		app.add_plugins((
+			PhosCameraPlugin,
+			MapInitPlugin,
+			RenderDistancePlugin,
+			// BuildingPugin,
+			DespawnPuglin,
+		));
 
 		//Systems - Startup
 		app.add_systems(Startup, init_game);

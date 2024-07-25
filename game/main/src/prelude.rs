@@ -9,7 +9,7 @@ use crate::shader_extensions::water_material::WaterMaterial;
 
 #[derive(AssetCollection, Resource, Default)]
 pub struct ChunkAtlas {
-	#[asset(path = "textures/world/Terra.png")]
+	#[asset(key = "chunk_atlas")]
 	pub handle: Handle<Image>,
 	pub chunk_material_handle: Handle<ExtendedMaterial<StandardMaterial, ChunkMaterial>>,
 	pub water_material: Handle<ExtendedMaterial<StandardMaterial, WaterMaterial>>,
