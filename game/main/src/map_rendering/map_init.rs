@@ -22,7 +22,7 @@ use world_generation::{
 
 use crate::{
 	camera_system::components::*,
-	prelude::{ChunkAtlas, PhosChunk, PhosChunkRegistry},
+	prelude::{PhosAssets, PhosChunk, PhosChunkRegistry},
 	shader_extensions::{
 		chunk_material::ChunkMaterial,
 		water_material::{WaterMaterial, WaterSettings},
@@ -64,7 +64,8 @@ impl Plugin for MapInitPlugin {
 		app.configure_loading_state(
 			LoadingStateConfig::new(AssetLoadState::Loading)
 				.with_dynamic_assets_file::<StandardDynamicAssetCollection>("phos.assets.ron")
-				.load_collection::<ChunkAtlas>(),
+				.load_collection::<PhosAssets>()
+				.load_collection::<BiomePainterAsset>()
 		);
 
 		app.add_systems(Startup, load_textures.run_if(in_state(AssetLoadState::FinalizeAssets)));
@@ -106,7 +107,7 @@ struct WaterInspect(Handle<ExtendedMaterial<StandardMaterial, WaterMaterial>>);
 
 fn load_textures(
 	mut commands: Commands,
-	mut atlas: ResMut<ChunkAtlas>,
+	mut atlas: ResMut<PhosAssets>,
 	mut water_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, WaterMaterial>>>,
 ) {
 	let water_material = water_materials.add(ExtendedMaterial {
@@ -141,7 +142,7 @@ fn finalize_biome_painter(
 }
 
 fn finalize_texture(
-	mut atlas: ResMut<ChunkAtlas>,
+	mut atlas: ResMut<PhosAssets>,
 	mut images: ResMut<Assets<Image>>,
 	mut chunk_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, ChunkMaterial>>>,
 	mut next_load_state: ResMut<NextState<AssetLoadState>>,
@@ -237,7 +238,7 @@ fn spawn_map(
 	mut heightmap: ResMut<Map>,
 	mut commands: Commands,
 	mut meshes: ResMut<Assets<Mesh>>,
-	atlas: Res<ChunkAtlas>,
+	atlas: Res<PhosAssets>,
 	tile_assets: Res<Assets<TileAsset>>,
 	tile_mappers: Res<Assets<TileMapperAsset>>,
 	mut generator_state: ResMut<NextState<GeneratorState>>,

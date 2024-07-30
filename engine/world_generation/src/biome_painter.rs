@@ -1,17 +1,13 @@
-use asset_loader::create_asset_loader;
 use bevy::prelude::*;
-use bevy::{asset::Asset, reflect::TypePath, render::render_resource::encase::rts_array::Length};
-use serde::{Deserialize, Serialize};
+use bevy::render::render_resource::encase::rts_array::Length;
 
 use crate::{biome_asset::BiomeAsset, map::biome_map::BiomeData};
 use bevy_asset_loader::prelude::*;
 
 #[derive(AssetCollection, Debug, Clone, Resource)]
 pub struct BiomePainterAsset {
-	// #[serde(skip)]
 	#[asset(key = "biomes", collection(typed))]
 	pub biomes: Vec<Handle<BiomeAsset>>,
-	// pub biomes_path: Vec<String>,
 }
 
 impl BiomePainterAsset {
