@@ -67,27 +67,17 @@ impl Plugin for MapInitPlugin {
 				.load_collection::<BiomePainterAsset>(),
 		);
 
-		app.add_systems(Startup, load_textures.run_if(in_state(AssetLoadState::FinalizeAssets)));
-
 		app.add_systems(
 			Update,
 			create_heightmap.run_if(in_state(GeneratorState::GenerateHeightmap)),
 		);
 
-		// app.add_systems(
-		// 	Update,
-		// 	check_asset_load.run_if(in_state(AssetLoadState::FinalizeAssets)),
-		// );
 		app.add_systems(
 			Update,
-			(finalize_texture, finalize_biome_painter).run_if(in_state(AssetLoadState::FinalizeAssets)),
+			(finalize_texture, setup_materials, finalize_biome_painter)
+				.run_if(in_state(AssetLoadState::FinalizeAssets)),
 		);
-		app.add_systems(
-			Update,
-			finalize_biome_painter
-				.run_if(in_state(AssetLoadState::FinalizeAssets))
-				.run_if(in_state(AssetLoadState::LoadComplete)),
-		);
+
 		app.add_systems(Update, despawn_map.run_if(in_state(GeneratorState::Regenerate)));
 		app.add_systems(
 			Update,
@@ -104,9 +94,9 @@ impl Plugin for MapInitPlugin {
 #[reflect(Resource)]
 struct WaterInspect(Handle<ExtendedMaterial<StandardMaterial, WaterMaterial>>);
 
-fn load_textures(
+fn setup_materials(
 	mut commands: Commands,
-	mut atlas: ResMut<PhosAssets>,
+	mut phos_assets: ResMut<PhosAssets>,
 	mut water_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, WaterMaterial>>>,
 ) {
 	let water_material = water_materials.add(ExtendedMaterial {
@@ -125,7 +115,7 @@ fn load_textures(
 		},
 	});
 	commands.insert_resource(WaterInspect(water_material.clone()));
-	atlas.water_material = water_material;
+	phos_assets.water_material = water_material;
 }
 
 fn finalize_biome_painter(
@@ -137,7 +127,6 @@ fn finalize_biome_painter(
 	let biome_painter = biome_painter.build(&biomes);
 	commands.insert_resource(biome_painter);
 	next_generator_state.set(GeneratorState::GenerateHeightmap);
-	println!("Finalize Biome");
 }
 
 fn finalize_texture(
@@ -146,7 +135,6 @@ fn finalize_texture(
 	mut chunk_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, ChunkMaterial>>>,
 	mut next_load_state: ResMut<NextState<AssetLoadState>>,
 ) {
-	println!("Finalize Tex");
 	let image = images.get_mut(atlas.handle.id()).unwrap();
 
 	let array_layers = image.height() / image.width();
