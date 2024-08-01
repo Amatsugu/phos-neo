@@ -236,6 +236,7 @@ name = "asset_loader"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "ron",
  "serde",
  "serde_json",
 ]
@@ -1362,7 +1363,9 @@ version = "0.1.0"
 dependencies = [
  "asset_loader",
  "bevy",
+ "bevy_asset_loader",
  "bevy_rapier3d",
+ "ron",
  "serde",
  "serde_json",
  "shared",
@@ -3441,6 +3444,7 @@ dependencies = [
  "iyes_perf_ui",
  "noise 0.8.2",
  "rayon",
+ "ron",
  "shared",
  "world_generation",
 ]
@@ -5315,6 +5319,7 @@ dependencies = [
  "bevy_asset_loader",
  "noise 0.9.0",
  "rayon",
+ "ron",
  "serde",
  "serde_json",
 ]

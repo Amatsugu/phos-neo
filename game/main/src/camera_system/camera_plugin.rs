@@ -199,6 +199,9 @@ fn rts_camera_system(
 		cam_targets.anim_time = cam_targets.anim_time.min(1.);
 	}
 	cam_pos.y = f32::lerp(cam_pos.y, desired_height, cam_targets.anim_time);
+	if cam_pos.y < min_height {
+		cam_pos.y = min_height;
+	}
 	let t = cam_pos.y.remap(cam_cfg.min_height, cam_cfg.max_height, 0., 1.);
 
 	if cam_targets.rotate_time < 1. {

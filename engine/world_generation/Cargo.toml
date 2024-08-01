@@ -17,6 +17,7 @@ bevy_asset_loader = { version = "0.21.0", features = [
 	"standard_dynamic_assets",
 	"3d",
 ] }
+ron = "0.8.1"
 
 [features]
 tracing = ["bevy/trace_tracy"]

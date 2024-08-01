@@ -23,8 +23,7 @@ create_asset_loader!(
 	BuildingAssetPlugin,
 	BuildingAssetLoader,
 	BuildingAsset,
-	BuildingAssetLoadState,
-	&["building.json"],
+	&["building", "building.ron"],
 	prefab_path -> prefab
 	;?
 );

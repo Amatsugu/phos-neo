@@ -1,4 +1,8 @@
 use bevy::{prelude::*, window::PrimaryWindow};
+use bevy_asset_loader::loading_state::{
+	config::{ConfigureLoadingState, LoadingStateConfig},
+	LoadingStateAppExt,
+};
 use bevy_rapier3d::{pipeline::QueryFilter, plugin::RapierContext};
 use shared::{
 	despawn::Despawn,
@@ -8,10 +12,7 @@ use shared::{
 use world_generation::{hex_utils::HexCoord, map::map::Map};
 
 use crate::{
-	assets::{
-		building_asset::BuildingAssetPlugin,
-		building_database::{BuildingDatabase, BuildingDatabasePlugin},
-	},
+	assets::{building_asset::BuildingAssetPlugin, building_database::BuildingDatabase},
 	build_queue::{BuildQueue, QueueEntry},
 };
 
@@ -20,7 +21,11 @@ pub struct BuildingPugin;
 impl Plugin for BuildingPugin {
 	fn build(&self, app: &mut App) {
 		app.insert_resource(BuildQueue::default());
-		app.add_plugins(BuildingAssetPlugin).add_plugins(BuildingDatabasePlugin);
+		app.add_plugins(BuildingAssetPlugin);
+
+		app.configure_loading_state(
+			LoadingStateConfig::new(AssetLoadState::Loading).load_collection::<BuildingDatabase>(),
+		);
 
 		app.add_systems(Startup, init.run_if(in_state(AssetLoadState::Loading)));
 		app.add_systems(Update, hq_placement.run_if(in_state(GameplayState::PlaceHQ)));
@@ -32,19 +37,11 @@ impl Plugin for BuildingPugin {
 #[derive(Resource)]
 struct IndicatorCube(Handle<Mesh>, Handle<StandardMaterial>);
 
-fn init(
-	mut commands: Commands,
-	mut meshes: ResMut<Assets<Mesh>>,
-	mut materials: ResMut<Assets<StandardMaterial>>,
-	asset_server: Res<AssetServer>,
-) {
+fn init(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
 	let cube = Cuboid::from_size(Vec3::splat(1.));
 	let mesh_handle = meshes.add(cube);
 	let mat_handle = materials.add(Color::WHITE);
 	commands.insert_resource(IndicatorCube(mesh_handle, mat_handle));
-
-	let db = asset_server.load("buildings/buildings.db.json");
-	commands.insert_resource(BuildingDatabase { handle: db });
 }
 
 fn hq_placement(
@@ -56,7 +53,7 @@ fn hq_placement(
 	map: Res<Map>,
 	indicator: Res<IndicatorCube>,
 	mut build_queue: ResMut<BuildQueue>,
-	next_state: ResMut<NextState<GameplayState>>,
+	mut next_state: ResMut<NextState<GameplayState>>,
 ) {
 	let win = window.single();
 	let (cam_transform, camera) = cam_query.single();
@@ -87,6 +84,8 @@ fn hq_placement(
 				building: 0.into(),
 				pos: contact_coord,
 			});
+
+			next_state.set(GameplayState::Playing);
 		}
 	}
 }

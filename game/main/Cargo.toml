@@ -16,7 +16,11 @@ bevy_rapier3d = { version = "0.27.0", features = ["simd-stable", "parallel"] }
 rayon = "1.10.0"
 buildings = { path = "../buildings" }
 shared = { path = "../shared" }
-bevy_asset_loader = {version ="0.21.0", features = ["standard_dynamic_assets", "3d"]}
+bevy_asset_loader = { version = "0.21.0", features = [
+	"standard_dynamic_assets",
+	"3d",
+] }
+ron = "0.8.1"
 
 [features]
 tracing = ["bevy/trace_tracy", "world_generation/tracing", "buildings/tracing"]

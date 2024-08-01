@@ -6,7 +6,6 @@ pub mod macros {
 			$plugin_name: ident,
 			$loader_name: ident,
 			$asset_type: ident,
-			$asset_loadstate_name: ident,
 			$extensions: expr,
 			$($string_name: ident -> $handle_name: ident)* ;
 			$($string_array_name: ident -> $handle_array_name: ident)* ?
@@ -18,52 +17,7 @@ pub mod macros {
 			impl Plugin for $plugin_name {
 				fn build(&self, app: &mut App) {
 					app.init_asset::<$asset_type>()
-						.init_asset_loader::<$loader_name>()
-						.insert_resource($asset_loadstate_name::default())
-						.add_systems(Update, finalize);
-				}
-			}
-
-			fn finalize(
-				mut asset_events: EventReader<AssetEvent<$asset_type>>,
-				mut assets: ResMut<Assets<$asset_type>>,
-				mut load_state: ResMut<$asset_loadstate_name>,
-				 asset_server: Res<AssetServer>
-			) {
-				for event in asset_events.read() {
-					match event {
-						AssetEvent::Added { id } => load_state.added += 1,
-						AssetEvent::LoadedWithDependencies { id } => {
-							let asset = assets.get_mut(id.clone()).unwrap();
-
-							$(
-
-								asset.$handle_name = asset_server.load(&asset.$string_name);
-							)*
-							$(
-								for i in 0..asset.$string_array_name.len(){
-									asset.$handle_array_name.push(asset_server.load(&asset.$string_array_name[i]));
-								}
-							)?
-							load_state.loaded += 1;
-						},
-						_ => (),
-					}
-				}
-			}
-
-			#[derive(Resource, Debug, Default)]
-			pub struct $asset_loadstate_name{
-				pub loaded: u32,
-				pub added: u32,
-			}
-
-			impl $asset_loadstate_name{
-				pub fn is_all_loaded(&self) -> bool{
-					if self.added == 0{
-						return false;
-					}
-					return self.loaded >= self.added;
+						.init_asset_loader::<$loader_name>();
 				}
 			}
 
@@ -81,20 +35,29 @@ pub mod macros {
 					&'a self,
 					reader: &'a mut Reader<'_>,
 					_settings: &'a Self::Settings,
-					_load_context: &'a mut LoadContext<'_>,
+					load_context: &'a mut LoadContext<'_>,
 				) -> Result<Self::Asset, Self::Error> {
-					let mut data: String = String::new();
-					let read_result = reader.read_to_string(&mut data).await;
+					let mut bytes = Vec::new();
+					let read_result = reader.read_to_end(&mut bytes).await;
 					if read_result.is_err() {
 						return Err(read_result.err().unwrap().to_string());
 					}
-					let serialized: Result<Self::Asset, serde_json::Error> =
-						serde_json::from_str(&data);
+					let serialized: Result<Self::Asset, _> =
+						ron::de::from_bytes::<Self::Asset>(&bytes);
 					if serialized.is_err() {
 						return Err(serialized.err().unwrap().to_string());
 					}
-					let r = serialized.unwrap();
-					return Ok(r);
+					let mut asset = serialized.unwrap();
+					$(
+
+						asset.$handle_name = load_context.load(&asset.$string_name);
+					)*
+					$(
+						for i in 0..asset.$string_array_name.len(){
+							asset.$handle_array_name.push(load_context.load(&asset.$string_array_name[i]));
+						}
+					)?
+					return Ok(asset);
 				}
 
 				fn extensions(&self) -> &[&str] {

@@ -26,8 +26,7 @@ create_asset_loader!(
 	BiomeAssetPlugin,
 	BiomeAssetLoader,
 	BiomeAsset,
-	BiomeAssetLoadState,
-	&["bimoe.json"],
+	&["biome", "biome.ron"],
 	tile_mapper_path -> tile_mapper
 	;
 	?

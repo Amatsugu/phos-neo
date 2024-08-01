@@ -1,7 +1,6 @@
 #[cfg(feature = "tracing")]
 use bevy::log::*;
 use bevy::{
-	asset::LoadState,
 	pbr::{ExtendedMaterial, NotShadowCaster},
 	prelude::*,
 };
@@ -11,7 +10,7 @@ use bevy_inspector_egui::quick::ResourceInspectorPlugin;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use shared::states::{AssetLoadState, GameplayState, MenuState};
 use world_generation::{
-	biome_asset::{BiomeAsset, BiomeAssetLoadState, BiomeAssetPlugin},
+	biome_asset::{BiomeAsset, BiomeAssetPlugin},
 	biome_painter::*,
 	heightmap::generate_heightmap,
 	hex_utils::{offset_to_index, SHORT_DIAGONAL},
@@ -65,7 +64,7 @@ impl Plugin for MapInitPlugin {
 			LoadingStateConfig::new(AssetLoadState::Loading)
 				.with_dynamic_assets_file::<StandardDynamicAssetCollection>("phos.assets.ron")
 				.load_collection::<PhosAssets>()
-				.load_collection::<BiomePainterAsset>()
+				.load_collection::<BiomePainterAsset>(),
 		);
 
 		app.add_systems(Startup, load_textures.run_if(in_state(AssetLoadState::FinalizeAssets)));
