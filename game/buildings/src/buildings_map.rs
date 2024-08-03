@@ -1,14 +1,16 @@
 use bevy::prelude::*;
-use world_generation::hex_utils::HexCoord;
+use world_generation::{hex_utils::HexCoord, prelude::Chunk};
 
-#[derive(Resource, Default)]
+#[derive(Resource)]
 pub struct BuildingMap {
 	pub chunks: Vec<BuildingChunk>,
+	pub size: UVec2,
 }
 
 impl BuildingMap {
 	pub fn new(size: UVec2) -> Self {
 		let mut db = BuildingMap {
+			size,
 			chunks: Vec::with_capacity(size.length_squared() as usize),
 		};
 
@@ -23,19 +25,39 @@ impl BuildingMap {
 		return db;
 	}
 
-	pub fn get_buildings_in_range(&self, coord: &HexCoord, radius: usize) -> Option<Vec<&BuildingEntry>> {
+	pub fn get_buildings_in_range(&self, coord: &HexCoord, radius: usize) -> Vec<&BuildingEntry> {
 		assert!(radius != 0, "Radius cannot be zero");
-		todo!();
+
+		let w = self.size.x as usize * Chunk::SIZE;
+		let h = self.size.y as usize * Chunk::SIZE;
+		let coords = coord.hex_select_bounded(radius, true, h, w);
+		return self.get_buildings_in_coords(coords);
+	}
+
+	pub fn get_buildings_in_coords(&self, coords: Vec<HexCoord>) -> Vec<&BuildingEntry> {
+		let mut result = Vec::new();
+		for coord in &coords {
+			if let Some(buidling) = self.get_building(coord) {
+				result.push(buidling);
+			}
+		}
+
+		return result;
 	}
 
 	pub fn get_building(&self, coord: &HexCoord) -> Option<&BuildingEntry> {
-		todo!();
+		let chunk = &self.chunks[coord.to_chunk_index(self.size.x as usize)];
+		return chunk.get_building(coord);
+	}
+
+	pub fn add_building(&mut self, entry: BuildingEntry) {
+		let chunk = &mut self.chunks[entry.coord.to_chunk_index(self.size.x as usize)];
+		chunk.add_building(entry);
 	}
 }
 
-
 pub struct BuildingChunk {
-	pub entries: Vec<BuildingChunk>,
+	pub entries: Vec<BuildingEntry>,
 	pub index: usize,
 	pub offset: IVec2,
 }
@@ -50,7 +72,11 @@ impl BuildingChunk {
 	}
 
 	pub fn get_building(&self, coord: &HexCoord) -> Option<&BuildingEntry> {
-		todo!();
+		return self.entries.iter().find(|b| &b.coord == coord);
+	}
+
+	pub fn add_building(&mut self, entry: BuildingEntry) {
+		self.entries.push(entry);
 	}
 }
 

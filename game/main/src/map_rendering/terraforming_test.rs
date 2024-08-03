@@ -1,5 +1,9 @@
-use bevy::{prelude::*, window::PrimaryWindow};
+use bevy::{prelude::*, utils::hashbrown::HashSet, window::PrimaryWindow};
 use bevy_rapier3d::{pipeline::QueryFilter, plugin::RapierContext};
+use shared::{
+	events::{ChunkModifiedEvent, TileModifiedEvent},
+	states::GameplayState,
+};
 use world_generation::{hex_utils::HexCoord, prelude::Map, states::GeneratorState};
 
 use crate::{
@@ -11,7 +15,12 @@ pub struct TerraFormingTestPlugin;
 
 impl Plugin for TerraFormingTestPlugin {
 	fn build(&self, app: &mut App) {
-		app.add_systems(Update, deform.run_if(in_state(GeneratorState::Idle)));
+		app.add_systems(
+			Update,
+			deform
+				.run_if(in_state(GeneratorState::Idle))
+				.run_if(in_state(GameplayState::Playing)),
+		);
 	}
 }
 
@@ -23,6 +32,8 @@ fn deform(
 	rapier_context: Res<RapierContext>,
 	mut heightmap: ResMut<Map>,
 	chunks: Res<PhosChunkRegistry>,
+	mut chunk_modified: EventWriter<ChunkModifiedEvent>,
+	mut tile_modified: EventWriter<TileModifiedEvent>,
 ) {
 	let mut multi = 0.;
 	if mouse.just_pressed(MouseButton::Left) {
@@ -53,15 +64,22 @@ fn deform(
 		QueryFilter::only_fixed(),
 	);
 
-	if let Some((e, dist)) = collision {
+	if let Some((_, dist)) = collision {
 		#[cfg(feature = "tracing")]
 		let span = info_span!("Deform Mesh").entered();
 		let contact_point = cam_ray.get_point(dist);
 		let contact_coord = HexCoord::from_world_pos(contact_point);
-		let modified_chunks = heightmap.create_crater(&contact_coord, 5, 5. * multi);
-		for c in modified_chunks {
-			commands.entity(chunks.chunks[c]).insert(RebuildChunk);
+		let modified_tiles = heightmap.create_crater(&contact_coord, 5, 5. * multi);
+		let mut chunk_set: HashSet<usize> = HashSet::new();
+		for (tile, height) in modified_tiles {
+			let chunk = tile.to_chunk_index(heightmap.width);
+			if !chunk_set.contains(&chunk) {
+				chunk_modified.send(ChunkModifiedEvent { index: chunk });
+				chunk_set.insert(chunk);
+				commands.entity(chunks.chunks[chunk]).insert(RebuildChunk);
+			}
+			tile_modified.send(TileModifiedEvent::HeightChanged(tile, height));
 		}
-		commands.entity(e).insert(RebuildChunk);
+		// commands.entity(e).insert(RebuildChunk);
 	}
 }

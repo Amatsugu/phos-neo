@@ -87,22 +87,19 @@ impl Map {
 		self.chunks[pos.to_chunk_index(self.width)].heights[pos.to_chunk_local_index()] = height;
 	}
 
-	pub fn create_crater(&mut self, pos: &HexCoord, radius: usize, depth: f32) -> Vec<usize> {
+	pub fn create_crater(&mut self, pos: &HexCoord, radius: usize, depth: f32) -> Vec<(HexCoord, f32)> {
 		assert!(radius != 0, "Radius cannot be zero");
-		let width = self.width;
 
-		let mut chunks = self.hex_select_mut(pos, radius, true, |p, h, r| {
+		let tiles = self.hex_select_mut(pos, radius, true, |p, h, r| {
 			let d = (r as f32) / (radius as f32);
 			let cur = *h;
 			let h2 = cur - depth;
 			*h = h2.lerp(cur, d * d).max(0.);
 
-			return p.to_chunk_index(width);
+			return (*p, *h); 
 		});
 
-		chunks.dedup();
-
-		return chunks;
+		return tiles;
 	}
 
 	pub fn hex_select<OP, Ret>(&self, center: &HexCoord, radius: usize, include_center: bool, op: OP) -> Vec<Ret>
@@ -111,20 +108,25 @@ impl Map {
 	{
 		assert!(radius != 0, "Radius cannot be zero");
 
+		let mut result = if include_center {
+			Vec::with_capacity(get_tile_count(radius) + 1)
+		} else {
+			Vec::with_capacity(get_tile_count(radius))
+		};
 		if include_center {
 			let h = self.sample_height(&center);
-			(op)(&center, h, 0);
+			result.push((op)(center, h, 0));
 		}
-
-		let mut result = Vec::with_capacity(get_tile_count(radius));
 
 		for k in 0..(radius + 1) {
 			let mut p = center.scale(4, k);
 			for i in 0..6 {
 				for _j in 0..k {
 					p = p.get_neighbor(i);
-					let h = self.sample_height(&p);
-					result.push((op)(&p, h, k));
+					if self.is_in_bounds(&p) {
+						let h = self.sample_height(&p);
+						result.push((op)(&p, h, k));
+					}
 				}
 			}
 		}
@@ -144,20 +146,25 @@ impl Map {
 	{
 		assert!(radius != 0, "Radius cannot be zero");
 
+		let mut result = if include_center {
+			Vec::with_capacity(get_tile_count(radius) + 1)
+		} else {
+			Vec::with_capacity(get_tile_count(radius))
+		};
 		if include_center {
 			let h = self.sample_height_mut(&center);
-			(op)(&center, h, 0);
+			result.push((op)(center, h, 0));
 		}
-
-		let mut result = Vec::with_capacity(get_tile_count(radius));
 
 		for k in 0..(radius + 1) {
 			let mut p = center.scale(4, k);
 			for i in 0..6 {
 				for _j in 0..k {
 					p = p.get_neighbor(i);
-					let h = self.sample_height_mut(&p);
-					result.push((op)(&p, h, k));
+					if self.is_in_bounds(&p) {
+						let h = self.sample_height_mut(&p);
+						result.push((op)(&p, h, k));
+					}
 				}
 			}
 		}

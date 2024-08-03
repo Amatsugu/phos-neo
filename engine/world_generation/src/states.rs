@@ -7,5 +7,5 @@ pub enum GeneratorState {
 	SpawnMap,
 	Idle,
 	Regenerate,
+	Cleanup,
 }
-

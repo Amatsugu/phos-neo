@@ -4,6 +4,8 @@ use bevy::tasks::*;
 use bevy::utils::futures;
 use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::geometry::TriMeshFlags;
+use shared::events::ChunkModifiedEvent;
+use shared::events::TileModifiedEvent;
 use world_generation::prelude::Map;
 use world_generation::states::GeneratorState;
 
@@ -17,16 +19,12 @@ pub struct ChunkRebuildPlugin;
 
 impl Plugin for ChunkRebuildPlugin {
 	fn build(&self, app: &mut App) {
-		app.insert_resource(ChunkRebuildQueue::default());
 		app.init_resource::<PhosChunkRegistry>();
-		app.add_systems(PreUpdate, chunk_rebuilder.run_if(in_state(GeneratorState::SpawnMap)));
+		app.add_event::<ChunkModifiedEvent>();
+		app.add_event::<TileModifiedEvent>();
+		app.add_systems(PreUpdate, chunk_rebuilder.run_if(in_state(GeneratorState::Idle)));
 		app.add_systems(PostUpdate, collider_task_resolver);
 	}
-}
-
-#[derive(Resource, Default)]
-pub struct ChunkRebuildQueue {
-	pub queue: Vec<usize>,
 }
 
 fn chunk_rebuilder(
@@ -39,7 +37,7 @@ fn chunk_rebuilder(
 	for (chunk_entity, idx) in &chunk_query {
 		#[cfg(feature = "tracing")]
 		let _spawn_span = info_span!("Rebuild Chunk").entered();
-
+		println!("Rebuilding Chunk");
 		let chunk_index = idx.index;
 		let chunk_data = heightmap.get_chunk_mesh_data(chunk_index);
 		let chunk_offset = heightmap.chunks[chunk_index].chunk_offset;
