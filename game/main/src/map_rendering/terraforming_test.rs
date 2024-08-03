@@ -1,5 +1,5 @@
+use avian3d::prelude::*;
 use bevy::{prelude::*, window::PrimaryWindow};
-use bevy_rapier3d::{pipeline::QueryFilter, plugin::RapierContext};
 use world_generation::{hex_utils::HexCoord, prelude::Map, states::GeneratorState};
 
 use crate::{
@@ -20,7 +20,7 @@ fn deform(
 	mut commands: Commands,
 	window: Query<&Window, With<PrimaryWindow>>,
 	mouse: Res<ButtonInput<MouseButton>>,
-	rapier_context: Res<RapierContext>,
+	spatial_query: SpatialQuery,
 	mut heightmap: ResMut<Map>,
 	chunks: Res<PhosChunkRegistry>,
 ) {
@@ -45,17 +45,20 @@ fn deform(
 		return;
 	};
 
-	let collision = rapier_context.cast_ray(
+	let collision = spatial_query.cast_ray(
 		cam_ray.origin,
 		cam_ray.direction.into(),
 		500.,
 		true,
-		QueryFilter::only_fixed(),
+		SpatialQueryFilter::default(),
 	);
 
-	if let Some((e, dist)) = collision {
+	if let Some(hit) = collision {
 		#[cfg(feature = "tracing")]
 		let span = info_span!("Deform Mesh").entered();
+
+		let e = hit.entity;
+		let dist = hit.time_of_impact;
 		let contact_point = cam_ray.get_point(dist);
 		let contact_coord = HexCoord::from_world_pos(contact_point);
 		let modified_chunks = heightmap.create_crater(&contact_coord, 5, 5. * multi);

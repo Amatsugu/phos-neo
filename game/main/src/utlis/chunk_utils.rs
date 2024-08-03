@@ -1,3 +1,4 @@
+use avian3d::prelude::*;
 #[cfg(feature = "tracing")]
 use bevy::log::*;
 use bevy::{
@@ -6,7 +7,6 @@ use bevy::{
 	math::{IVec2, Vec3},
 	render::mesh::Mesh,
 };
-use bevy_rapier3d::geometry::{Collider, TriMeshFlags};
 use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 use world_generation::{
 	biome_painter::BiomePainter,
@@ -76,7 +76,7 @@ pub fn prepare_chunk_mesh_with_collider(
 	{
 		#[cfg(feature = "tracing")]
 		let _collider_span = info_span!("Create Collider Trimesh").entered();
-		collider = Collider::trimesh_with_flags(col_verts, col_indicies, TriMeshFlags::DELETE_DUPLICATE_TRIANGLES);
+		collider = Collider::trimesh(col_verts, col_indicies);
 	}
 	return (mesh, collider, pos, index);
 }

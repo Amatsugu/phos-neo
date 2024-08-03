@@ -1,9 +1,8 @@
+use avian3d::prelude::*;
 use bevy::ecs::world::CommandQueue;
 use bevy::prelude::*;
 use bevy::tasks::*;
 use bevy::utils::futures;
-use bevy_rapier3d::geometry::Collider;
-use bevy_rapier3d::geometry::TriMeshFlags;
 use world_generation::prelude::Map;
 use world_generation::states::GeneratorState;
 
@@ -17,16 +16,10 @@ pub struct ChunkRebuildPlugin;
 
 impl Plugin for ChunkRebuildPlugin {
 	fn build(&self, app: &mut App) {
-		app.insert_resource(ChunkRebuildQueue::default());
 		app.init_resource::<PhosChunkRegistry>();
 		app.add_systems(PreUpdate, chunk_rebuilder.run_if(in_state(GeneratorState::SpawnMap)));
 		app.add_systems(PostUpdate, collider_task_resolver);
 	}
-}
-
-#[derive(Resource, Default)]
-pub struct ChunkRebuildQueue {
-	pub queue: Vec<usize>,
 }
 
 fn chunk_rebuilder(
@@ -51,11 +44,7 @@ fn chunk_rebuilder(
 			let (mesh, collider_data, _, _) = prepare_chunk_mesh(&chunk_data, chunk_offset, chunk_index);
 			#[cfg(feature = "tracing")]
 			let trimesh_span = info_span!("Chunk Trimesh").entered();
-			let c = Collider::trimesh_with_flags(
-				collider_data.0,
-				collider_data.1,
-				TriMeshFlags::DELETE_DUPLICATE_TRIANGLES,
-			);
+			let c = Collider::trimesh(collider_data.0, collider_data.1);
 			#[cfg(feature = "tracing")]
 			drop(trimesh_span);
 			queue.push(move |world: &mut World| {
