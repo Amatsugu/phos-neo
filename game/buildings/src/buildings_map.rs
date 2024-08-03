@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use world_generation::hex_utils::HexCoord;
 
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct BuildingMap {
 	pub chunks: Vec<BuildingChunk>,
 }
@@ -32,6 +32,7 @@ impl BuildingMap {
 		todo!();
 	}
 }
+
 
 pub struct BuildingChunk {
 	pub entries: Vec<BuildingChunk>,

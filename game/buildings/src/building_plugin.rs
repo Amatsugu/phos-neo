@@ -3,17 +3,21 @@ use bevy_asset_loader::loading_state::{
 	config::{ConfigureLoadingState, LoadingStateConfig},
 	LoadingStateAppExt,
 };
-use bevy_rapier3d::{pipeline::QueryFilter, plugin::RapierContext};
+use bevy_rapier3d::{parry::transformation::utils::transform, pipeline::QueryFilter, plugin::RapierContext};
 use shared::{
 	despawn::Despawn,
 	states::{AssetLoadState, GameplayState},
 	tags::MainCamera,
 };
-use world_generation::{hex_utils::HexCoord, map::map::Map};
+use world_generation::{heightmap, hex_utils::HexCoord, map::map::Map};
 
 use crate::{
-	assets::{building_asset::BuildingAssetPlugin, building_database::BuildingDatabase},
+	assets::{
+		building_asset::{BuildingAsset, BuildingAssetPlugin},
+		building_database::BuildingDatabase,
+	},
 	build_queue::{BuildQueue, QueueEntry},
+	buildings_map::BuildingMap,
 };
 
 pub struct BuildingPugin;
@@ -21,13 +25,14 @@ pub struct BuildingPugin;
 impl Plugin for BuildingPugin {
 	fn build(&self, app: &mut App) {
 		app.insert_resource(BuildQueue::default());
+		app.init_resource::<BuildingMap>();
 		app.add_plugins(BuildingAssetPlugin);
 
 		app.configure_loading_state(
 			LoadingStateConfig::new(AssetLoadState::Loading).load_collection::<BuildingDatabase>(),
 		);
 
-		app.add_systems(Startup, init.run_if(in_state(AssetLoadState::Loading)));
+		app.add_systems(Update, init.run_if(in_state(AssetLoadState::Loading)));
 		app.add_systems(Update, hq_placement.run_if(in_state(GameplayState::PlaceHQ)));
 
 		app.add_systems(PreUpdate, process_build_queue.run_if(in_state(GameplayState::Playing)));
@@ -104,4 +109,24 @@ fn show_indicators(positions: Vec<Vec3>, commands: &mut Commands, indicator: &In
 	}
 }
 
-fn process_build_queue(mut queue: ResMut<BuildQueue>) {}
+fn process_build_queue(
+	mut queue: ResMut<BuildQueue>,
+	mut commands: Commands,
+	db: Res<BuildingDatabase>,
+	building_assets: Res<Assets<BuildingAsset>>,
+	heightmap: Res<Map>,
+) {
+	for item in &queue.queue {
+		let handle = &db.buildings[item.building.0];
+		if let Some(building) = building_assets.get(handle.id()) {
+			let h = heightmap.sample_height(&item.pos);
+			println!("Spawning {} at {}", building.name, item.pos);
+			commands.spawn(SceneBundle {
+				scene: building.prefab.clone(),
+				transform: Transform::from_translation(item.pos.to_world(h)),
+				..Default::default()
+			});
+		}
+	}
+	queue.queue.clear();
+}

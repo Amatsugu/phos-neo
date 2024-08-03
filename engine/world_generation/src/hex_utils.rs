@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::prelude::Chunk;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -60,6 +62,12 @@ pub fn get_tile_count(radius: usize) -> usize {
 #[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
 pub struct HexCoord {
 	pub hex: IVec3,
+}
+
+impl Display for HexCoord {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.write_fmt(format_args!("HexCoord{}", self.hex))
+	}
 }
 
 impl HexCoord {

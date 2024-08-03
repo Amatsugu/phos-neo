@@ -31,7 +31,7 @@ impl Plugin for PhosGamePlugin {
 			PhosCameraPlugin,
 			MapInitPlugin,
 			RenderDistancePlugin,
-			// BuildingPugin,
+			BuildingPugin,
 			DespawnPuglin,
 		));
 
