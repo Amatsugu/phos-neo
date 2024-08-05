@@ -31,7 +31,7 @@ fn create_tile_collider(pos: Vec3, verts: &mut Vec<Vec3>, indices: &mut Vec<[u32
 		verts.push(p);
 	}
 
-	//Top Surfave
+	//Top Surface
 	indices.push([idx, idx + 1, idx + 5]);
 	indices.push([idx + 1, idx + 2, idx + 5]);
 	indices.push([idx + 2, idx + 4, idx + 5]);
@@ -43,7 +43,7 @@ fn create_tile_collider(pos: Vec3, verts: &mut Vec<Vec3>, indices: &mut Vec<[u32
 			create_tile_wall_collider(
 				idx,
 				Vec3::new(pos.x, n_height.min(pos.y - OUTER_RADIUS / 2.), pos.z),
-				i,
+				(i + 1) % 6,
 				verts,
 				indices,
 			);
@@ -54,7 +54,7 @@ fn create_tile_collider(pos: Vec3, verts: &mut Vec<Vec3>, indices: &mut Vec<[u32
 fn create_tile_wall_collider(idx: u32, pos: Vec3, dir: usize, verts: &mut Vec<Vec3>, indices: &mut Vec<[u32; 3]>) {
 	let idx2 = verts.len() as u32;
 
-	verts.push(pos + HEX_CORNERS[dir]);
+	verts.push(pos + HEX_CORNERS[(dir) % 6]);
 	verts.push(pos + HEX_CORNERS[(dir + 1) % 6]);
 
 	let off = dir as u32;

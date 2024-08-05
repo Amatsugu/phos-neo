@@ -18,6 +18,7 @@ bevy_asset_loader = { version = "0.21.0", features = [
 	"3d",
 ] }
 ron = "0.8.1"
+image = "0.25.2"
 
 [features]
 tracing = ["bevy/trace_tracy"]

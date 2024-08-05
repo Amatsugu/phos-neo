@@ -90,6 +90,15 @@ fn show_tile_heights(
 				Color::WHITE,
 			);
 		}
+		let nbors = map.get_neighbors(&contact_coord);
+		for i in 0..6 {
+			if let Some(s) = nbors[i] {
+				let coord = contact_coord.get_neighbor(i);
+				let p = coord.to_world(s);
+				gizmos.arrow(p, p + Vec3::Y * (i as f32 + 1.0), Color::WHITE);
+			}
+		}
+
 		gizmos.sphere(contact_point, Quat::IDENTITY, 0.1, Srgba::rgb(1., 0., 0.5));
 	}
 }

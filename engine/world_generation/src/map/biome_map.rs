@@ -4,6 +4,7 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 use super::chunk::Chunk;
 
+#[derive(Clone)]
 pub struct BiomeMap {
 	pub height: usize,
 	pub width: usize,

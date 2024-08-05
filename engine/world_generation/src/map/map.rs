@@ -2,7 +2,11 @@ use bevy::prelude::*;
 
 use crate::hex_utils::*;
 
-use super::{chunk::Chunk, mesh_chunk::MeshChunkData};
+use super::{
+	biome_map::{BiomeData, BiomeMap},
+	chunk::Chunk,
+	mesh_chunk::MeshChunkData,
+};
 
 #[derive(Resource, Clone)]
 pub struct Map {
@@ -10,6 +14,8 @@ pub struct Map {
 	pub height: usize,
 	pub width: usize,
 	pub sea_level: f32,
+	pub min_level: f32,
+	pub max_level: f32,
 }
 
 impl Map {
@@ -43,11 +49,21 @@ impl Map {
 	}
 
 	pub fn sample_height(&self, pos: &HexCoord) -> f32 {
+		assert!(
+			self.is_in_bounds(pos),
+			"The provided coordinate is not within the map bounds"
+		);
+
 		let chunk = &self.chunks[pos.to_chunk_index(self.width)];
 		return chunk.heights[pos.to_chunk_local_index()];
 	}
 
 	pub fn sample_height_mut(&mut self, pos: &HexCoord) -> &mut f32 {
+		assert!(
+			self.is_in_bounds(pos),
+			"The provided coordinate is not within the map bounds"
+		);
+
 		let chunk = &mut self.chunks[pos.to_chunk_index(self.width)];
 		return &mut chunk.heights[pos.to_chunk_local_index()];
 	}
@@ -56,14 +72,44 @@ impl Map {
 		return pos.is_in_bounds(self.height * Chunk::SIZE, self.width * Chunk::SIZE);
 	}
 
+	pub fn get_biome(&self, pos: &HexCoord) -> &BiomeData {
+		assert!(
+			self.is_in_bounds(pos),
+			"The provided coordinate is not within the map bounds"
+		);
+
+		let chunk = &self.chunks[pos.to_chunk_index(self.width)];
+		return &chunk.biome_data[pos.to_chunk_local_index()];
+	}
+
 	pub fn get_moisture(&self, pos: &HexCoord) -> f32 {
+		assert!(
+			self.is_in_bounds(pos),
+			"The provided coordinate is not within the map bounds"
+		);
+
 		let chunk = &self.chunks[pos.to_chunk_index(self.width)];
 		return chunk.biome_data[pos.to_chunk_local_index()].moisture;
 	}
 
 	pub fn get_tempurature(&self, pos: &HexCoord) -> f32 {
+		assert!(
+			self.is_in_bounds(pos),
+			"The provided coordinate is not within the map bounds"
+		);
+
 		let chunk = &self.chunks[pos.to_chunk_index(self.width)];
 		return chunk.biome_data[pos.to_chunk_local_index()].temperature;
+	}
+
+	pub fn get_continentality(&self, pos: &HexCoord) -> f32 {
+		assert!(
+			self.is_in_bounds(pos),
+			"The provided coordinate is not within the map bounds"
+		);
+
+		let chunk = &self.chunks[pos.to_chunk_index(self.width)];
+		return chunk.biome_data[pos.to_chunk_local_index()].continentality;
 	}
 
 	pub fn get_center(&self) -> Vec3 {
@@ -96,7 +142,7 @@ impl Map {
 			let h2 = cur - depth;
 			*h = h2.lerp(cur, d * d).max(0.);
 
-			return (*p, *h); 
+			return (*p, *h);
 		});
 
 		return tiles;

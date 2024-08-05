@@ -10,6 +10,8 @@ pub struct Chunk {
 	pub biome_data: [BiomeData; Chunk::AREA],
 	pub biome_id: [usize; Chunk::AREA],
 	pub chunk_offset: IVec2,
+	pub min_level: f32,
+	pub max_level: f32,
 }
 
 impl Default for Chunk {
@@ -20,6 +22,8 @@ impl Default for Chunk {
 			biome_data: [BiomeData::default(); Chunk::AREA],
 			biome_id: [0; Chunk::AREA],
 			chunk_offset: Default::default(),
+			min_level: 0.0,
+			max_level: 0.0,
 		}
 	}
 }

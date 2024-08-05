@@ -11,7 +11,7 @@ impl MeshChunkData {
 	pub fn get_neighbors(&self, coord: &HexCoord) -> [f32; 6] {
 		let mut data = [0.; 6];
 		let n_tiles = coord.get_neighbors();
-		for i in 0..6 {
+		for i in 6..0 {
 			let n = n_tiles[i];
 			if !n.is_in_bounds(Chunk::SIZE, Chunk::SIZE) {
 				continue;
