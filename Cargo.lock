@@ -3662,6 +3662,7 @@ dependencies = [
  "bevy_asset_loader",
  "bevy_rapier3d",
  "buildings",
+ "image 0.25.2",
  "iyes_perf_ui",
  "noise 0.8.2",
  "rayon",

@@ -11,7 +11,7 @@ pub fn render_image(
 	data: &Vec<f32>,
 	color1: LinearRgba,
 	color2: LinearRgba,
-) -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
+) -> ImageBuffer<image::Rgba<u8>, Vec<u8>> {
 	let mut image = ImageBuffer::new(size.x * Chunk::SIZE as u32, size.y * Chunk::SIZE as u32);
 	update_image(size, data, color1, color2, &mut image);
 
@@ -23,7 +23,7 @@ pub fn update_image(
 	data: &Vec<f32>,
 	color1: LinearRgba,
 	color2: LinearRgba,
-	image: &mut ImageBuffer<image::Rgb<u8>, Vec<u8>>,
+	image: &mut ImageBuffer<image::Rgba<u8>, Vec<u8>>,
 ) {
 	let min = *data.iter().min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap_or(&0.0);
 	let max = *data.iter().min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap_or(&1.0);
@@ -39,14 +39,15 @@ pub fn update_image(
 	});
 }
 
-fn to_pixel(col: &LinearRgba) -> image::Rgb<u8> {
-	return image::Rgb([
+fn to_pixel(col: &LinearRgba) -> image::Rgba<u8> {
+	return image::Rgba([
 		(col.red * 255.0) as u8,
 		(col.green * 255.0) as u8,
 		(col.blue * 255.0) as u8,
+		255,
 	]);
 }
-pub fn render_map(map: &Map, smooth: f32) -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
+pub fn render_map(map: &Map, smooth: f32) -> ImageBuffer<image::Rgba<u8>, Vec<u8>> {
 	let mut image = ImageBuffer::new(
 		map.width as u32 * Chunk::SIZE as u32,
 		map.height as u32 * Chunk::SIZE as u32,
@@ -54,7 +55,7 @@ pub fn render_map(map: &Map, smooth: f32) -> ImageBuffer<image::Rgb<u8>, Vec<u8>
 	update_map(map, smooth, &mut image);
 	return image;
 }
-pub fn update_map(map: &Map, smooth: f32, image: &mut ImageBuffer<image::Rgb<u8>, Vec<u8>>) {
+pub fn update_map(map: &Map, smooth: f32, image: &mut ImageBuffer<image::Rgba<u8>, Vec<u8>>) {
 	image.par_enumerate_pixels_mut().for_each(|(x, y, pixel)| {
 		let coord = HexCoord::from_grid_pos(x as usize, y as usize);
 		let right = coord.get_neighbor(1);
@@ -91,7 +92,7 @@ pub fn update_map(map: &Map, smooth: f32, image: &mut ImageBuffer<image::Rgb<u8>
 	});
 }
 
-pub fn render_biome_map(map: &Map) -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
+pub fn render_biome_map(map: &Map) -> ImageBuffer<image::Rgba<u8>, Vec<u8>> {
 	let mut image = ImageBuffer::new(
 		map.width as u32 * Chunk::SIZE as u32,
 		map.height as u32 * Chunk::SIZE as u32,
@@ -100,7 +101,7 @@ pub fn render_biome_map(map: &Map) -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
 	return image;
 }
 
-pub fn update_biome_map(map: &Map, image: &mut ImageBuffer<image::Rgb<u8>, Vec<u8>>) {
+pub fn update_biome_map(map: &Map, image: &mut ImageBuffer<image::Rgba<u8>, Vec<u8>>) {
 	image.par_enumerate_pixels_mut().for_each(|(x, y, pixel)| {
 		let coord = HexCoord::from_grid_pos(x as usize, y as usize);
 		let tile = map.get_biome(&coord);

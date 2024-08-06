@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use super::chunk::Chunk;
 
-#[derive(Resource, Reflect, Default)]
+#[derive(Resource, Reflect, Default, Clone)]
 #[reflect(Resource)]
 pub struct GenerationConfig {
 	pub sea_level: f64,

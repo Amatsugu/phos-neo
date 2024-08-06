@@ -1,5 +1,6 @@
 use crate::camera_system::components::PhosCamera;
 use crate::map_rendering::map_init::MapInitPlugin;
+use crate::utlis::editor_plugin::EditorPlugin;
 use crate::utlis::render_distance_system::RenderDistancePlugin;
 use crate::{camera_system::camera_plugin::PhosCameraPlugin, utlis::debug_plugin::DebugPlugin};
 use bevy::{
@@ -33,6 +34,8 @@ impl Plugin for PhosGamePlugin {
 			RenderDistancePlugin,
 			BuildingPugin,
 			DespawnPuglin,
+			#[cfg(debug_assertions)]
+			EditorPlugin,
 			#[cfg(debug_assertions)]
 			DebugPlugin,
 		));

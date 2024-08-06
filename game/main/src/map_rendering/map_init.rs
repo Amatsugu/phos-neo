@@ -3,10 +3,12 @@ use bevy::log::*;
 use bevy::{
 	pbr::{ExtendedMaterial, NotShadowCaster},
 	prelude::*,
+	render::texture::ImageFormat,
 };
 use bevy_asset_loader::prelude::*;
 
 use bevy_inspector_egui::quick::ResourceInspectorPlugin;
+use image::DynamicImage;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use shared::states::{AssetLoadState, GameplayState, MenuState};
 use world_generation::{
@@ -212,11 +214,6 @@ fn create_heightmap(
 		// size: UVec2::splat(1),
 	};
 	let heightmap = generate_heightmap(&config, 42069, &biome_painter);
-
-	let game_map = render_map(&heightmap, 1.5);
-	let biome_map = render_biome_map(&heightmap);
-	_ = biome_map.save("Biomes.png");
-	_ = game_map.save("Test.png");
 
 	let (mut cam_t, cam_entity) = cam.single_mut();
 	cam_t.translation = heightmap.get_center();
