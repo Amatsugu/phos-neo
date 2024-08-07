@@ -135,3 +135,60 @@ fn create_tile_wall(
 	uvs.push((Vec2::new(0., pos.y - height) / TEX_MULTI) + tex_off);
 	uvs.push((Vec2::new(1., pos.y - height) / TEX_MULTI) + tex_off);
 }
+
+#[cfg(test)]
+mod tests {
+
+	use super::*;
+
+	#[test]
+	fn generate_tile_wall() {
+		let mut verts = Vec::new();
+		let mut uvs = Vec::new();
+		let mut normals = Vec::new();
+		let mut indices = Vec::new();
+
+		create_tile_wall(
+			Vec3::ZERO,
+			3,
+			5.0,
+			&mut verts,
+			&mut uvs,
+			&mut indices,
+			&mut normals,
+			Vec2::new(3.0, 0.0),
+		);
+
+		assert!(verts.len() == 4, "Number of verts don't match");
+		assert!(uvs.len() == 4, "Number of uvs don't match");
+		assert!(normals.len() == 4, "Number of normals don't match");
+		assert!(indices.len() == 6, "Number of normals don't match");
+
+		let index = uvs[0].x.floor();
+		assert!(index == 3.0, "Texture Index could not be decoded");
+	}
+
+	#[test]
+	fn generate_tile() {
+		let mut verts = Vec::new();
+		let mut uvs = Vec::new();
+		let mut normals = Vec::new();
+		let mut indices = Vec::new();
+
+		//4 side faces
+		let nbors = [2.0, 2.0, 0.0, 0.0, 0.0, 0.0];
+
+		create_tile(Vec3::Y, &nbors, &mut verts, &mut uvs, &mut indices, &mut normals, 3, 7);
+
+		assert!(verts.len() == (6 + 4 * 4), "Number of verts don't match");
+		assert!(uvs.len() == (6 + 4 * 4), "Number of uvs don't match");
+		assert!(normals.len() == (6 + 4 * 4), "Number of normals don't match");
+		//12 tris for surface, 6 tris per side
+		assert!(indices.len() == (12 + 4 * 6), "Number of indicies don't match");
+
+		let top_index = uvs[0].x.floor();
+		assert!(top_index == 3.0, "Top Texture Index could not be decoded");
+		let side_index = uvs[6].x.floor();
+		assert!(side_index == 7.0, "Top Texture Index could not be decoded");
+	}
+}
