@@ -55,7 +55,7 @@ impl Plugin for MapInitPlugin {
 		app.register_asset_reflect::<ExtendedMaterial<StandardMaterial, WaterMaterial>>();
 		app.add_plugins((
 			ChunkRebuildPlugin,
-			TerraFormingTestPlugin,
+			// TerraFormingTestPlugin,
 			MaterialPlugin::<ExtendedMaterial<StandardMaterial, ChunkMaterial>>::default(),
 			MaterialPlugin::<ExtendedMaterial<StandardMaterial, WaterMaterial>> {
 				prepass_enabled: false,

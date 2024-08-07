@@ -81,25 +81,34 @@ fn show_tile_heights(
 	if let Some((_e, dist)) = collision {
 		let contact_point = cam_ray.get_point(dist);
 		let contact_coord = HexCoord::from_world_pos(contact_point);
-		if map.is_in_bounds(&contact_coord) {
-			let height = map.sample_height(&contact_coord);
-			gizmos.primitive_3d(
-				&shape.0,
-				contact_coord.to_world(height + 0.01),
-				Quat::IDENTITY,
-				Color::WHITE,
-			);
+		if !map.is_in_bounds(&contact_coord) {
+			return;
 		}
+		let height = map.sample_height(&contact_coord);
+		gizmos.primitive_3d(
+			&shape.0,
+			contact_coord.to_world(height + 0.01),
+			Quat::IDENTITY,
+			Color::WHITE,
+		);
 		let nbors = map.get_neighbors(&contact_coord);
+		let contact_tile_pos = contact_coord.to_world(map.sample_height(&contact_coord));
+
 		for i in 0..6 {
 			if let Some(s) = nbors[i] {
 				let coord = contact_coord.get_neighbor(i);
 				let p = coord.to_world(s);
 				gizmos.arrow(p, p + Vec3::Y * (i as f32 + 1.0), Color::WHITE);
 			}
+
+			let p = HEX_CORNERS[i] + contact_tile_pos;
+			gizmos.arrow(p, p + Vec3::Y * (i as f32 + 1.0), LinearRgba::rgb(1.0, 0.0, 0.5));
 		}
 
-		gizmos.sphere(contact_point, Quat::IDENTITY, 0.1, Srgba::rgb(1., 0., 0.5));
+		gizmos.line(contact_point, contact_point + Vec3::X, LinearRgba::RED);
+		gizmos.line(contact_point, contact_point + Vec3::Y, LinearRgba::GREEN);
+		gizmos.line(contact_point, contact_point + Vec3::Z, LinearRgba::BLUE);
+		//gizmos.sphere(contact_point, Quat::IDENTITY, 0.1, LinearRgba::rgb(1., 0., 0.5));
 	}
 }
 

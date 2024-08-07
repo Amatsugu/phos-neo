@@ -69,6 +69,9 @@ fn deform(
 		let span = info_span!("Deform Mesh").entered();
 		let contact_point = cam_ray.get_point(dist);
 		let contact_coord = HexCoord::from_world_pos(contact_point);
+		if !heightmap.is_in_bounds(&contact_coord) {
+			return;
+		}
 		let modified_tiles = heightmap.create_crater(&contact_coord, 5, 5. * multi);
 		let mut chunk_set: HashSet<usize> = HashSet::new();
 		for (tile, height) in modified_tiles {

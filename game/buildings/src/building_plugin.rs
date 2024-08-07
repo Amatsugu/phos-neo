@@ -106,6 +106,9 @@ fn hq_placement(
 	if let Some((_e, dist)) = collision {
 		let contact_point = cam_ray.get_point(dist);
 		let contact_coord = HexCoord::from_world_pos(contact_point);
+		if !map.is_in_bounds(&contact_coord) {
+			return;
+		}
 		let positions = map.hex_select(&contact_coord, 3, true, |pos, h, _| pos.to_world(h));
 		show_indicators(positions, &mut commands, &indicator);
 

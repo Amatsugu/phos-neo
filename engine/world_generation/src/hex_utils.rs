@@ -72,12 +72,12 @@ impl Display for HexCoord {
 
 impl HexCoord {
 	pub const DIRECTIONS: [IVec3; 6] = [
-		IVec3::new(1, -1, 0),
-		IVec3::new(1, 0, -1),
 		IVec3::new(0, 1, -1),
-		IVec3::new(-1, 1, 0),
-		IVec3::new(-1, 0, 1),
+		IVec3::new(1, 0, -1),
+		IVec3::new(1, -1, 0),
 		IVec3::new(0, -1, 1),
+		IVec3::new(-1, 0, 1),
+		IVec3::new(-1, 1, 0),
 	];
 
 	pub const ZERO: HexCoord = HexCoord { hex: IVec3::ZERO };

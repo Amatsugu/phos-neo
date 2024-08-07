@@ -31,7 +31,7 @@ fn setup(mut commands: Commands, mut msaa: ResMut<Msaa>) {
 	commands
 		.spawn((
 			Camera3dBundle {
-				transform: Transform::from_xyz(0., 30., 0.).looking_to(Vec3::Z, Vec3::Y),
+				transform: Transform::from_xyz(0., 30., 0.).looking_to(Vec3::NEG_Z, Vec3::Y),
 				..default()
 			},
 			PhosCamera::default(),
@@ -138,15 +138,15 @@ fn rts_camera_system(
 	let mut cam_pos = cam.translation;
 
 	if key.pressed(KeyCode::KeyA) {
-		cam_move.x = 1.;
-	} else if key.pressed(KeyCode::KeyD) {
 		cam_move.x = -1.;
+	} else if key.pressed(KeyCode::KeyD) {
+		cam_move.x = 1.;
 	}
 
 	if key.pressed(KeyCode::KeyW) {
-		cam_move.z = 1.;
-	} else if key.pressed(KeyCode::KeyS) {
 		cam_move.z = -1.;
+	} else if key.pressed(KeyCode::KeyS) {
+		cam_move.z = 1.;
 	}
 
 	let move_speed = if key.pressed(KeyCode::ShiftLeft) {
@@ -156,7 +156,7 @@ fn rts_camera_system(
 	};
 
 	cam_move = cam_move.normalize_or_zero() * move_speed * time.delta_seconds();
-	cam_pos -= cam_move;
+	cam_pos += cam_move;
 
 	let mut scroll = 0.0;
 	for e in wheel.read() {
@@ -209,8 +209,11 @@ fn rts_camera_system(
 		cam_targets.rotate_time = cam_targets.rotate_time.min(1.);
 	}
 	let angle = cam_cfg.min_angle.lerp(cam_cfg.max_angle, t);
-	let rot = Quat::from_axis_angle(Vec3::X, -angle);
-	cam.rotation = rot;
+	let mut rot = cam.rotation.to_euler(EulerRot::XYZ);
+	rot.0 = -angle;
+	cam.rotation = Quat::from_euler(EulerRot::XYZ, rot.0, rot.1, rot.2);
+	// let rot = Quat::from_axis_angle(Vec3::X, -angle);
+	// cam.rotation = rot;
 
 	cam.translation = cam_pos;
 }

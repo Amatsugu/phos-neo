@@ -2,7 +2,6 @@ use core::f32;
 
 use bevy::math::{IVec2, UVec2};
 use bevy::prelude::{FloatExt, Vec2};
-use bevy::render::render_resource::encase::internal::BufferMut;
 use bevy::utils::default;
 use noise::{NoiseFn, SuperSimplex};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
