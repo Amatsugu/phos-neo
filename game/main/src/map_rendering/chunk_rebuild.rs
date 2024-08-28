@@ -37,7 +37,7 @@ fn chunk_rebuilder(
 	for (chunk_entity, idx) in &chunk_query {
 		#[cfg(feature = "tracing")]
 		let _spawn_span = info_span!("Rebuild Chunk").entered();
-		println!("Rebuilding Chunk");
+		info!("Rebuilding Chunk");
 		let chunk_index = idx.index;
 		let chunk_data = heightmap.get_chunk_mesh_data(chunk_index);
 		let chunk_offset = heightmap.chunks[chunk_index].chunk_offset;

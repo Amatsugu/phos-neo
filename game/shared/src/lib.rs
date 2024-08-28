@@ -4,3 +4,4 @@ pub mod resource;
 pub mod states;
 pub mod tags;
 pub mod events;
+pub mod sets;

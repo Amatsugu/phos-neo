@@ -1,8 +1,10 @@
 use bevy::{prelude::*, window::PrimaryWindow};
-use bevy_inspector_egui::bevy_egui::EguiContexts;
+use bevy_inspector_egui::bevy_egui::{systems::InputEvents, EguiContexts};
 use bevy_inspector_egui::egui;
 use bevy_rapier3d::prelude::*;
+use shared::states::GameplayState;
 use shared::tags::MainCamera;
+use units::units_debug_plugin::UnitsDebugPlugin;
 use world_generation::{
 	consts::HEX_CORNERS,
 	hex_utils::{HexCoord, INNER_RADIUS},
@@ -14,6 +16,7 @@ pub struct DebugPlugin;
 
 impl Plugin for DebugPlugin {
 	fn build(&self, app: &mut App) {
+		app.add_plugins(UnitsDebugPlugin);
 		app.insert_state(DebugState::Base);
 
 		app.add_systems(
@@ -29,6 +32,8 @@ impl Plugin for DebugPlugin {
 				.run_if(in_state(GeneratorState::Idle))
 				.run_if(in_state(DebugState::Verbose)),
 		);
+
+		app.add_systems(Update, regenerate_map.run_if(in_state(GeneratorState::Idle)));
 
 		app.insert_resource(Shape(Polyline3d::new([
 			HEX_CORNERS[0],
@@ -50,6 +55,17 @@ pub enum DebugState {
 	Base,
 	None,
 	Verbose,
+}
+
+fn regenerate_map(
+	mut generator_state: ResMut<NextState<GeneratorState>>,
+	mut gameplay_state: ResMut<NextState<GameplayState>>,
+	input: Res<ButtonInput<KeyCode>>,
+) {
+	if input.just_pressed(KeyCode::KeyR) {
+		generator_state.set(GeneratorState::Regenerate);
+		gameplay_state.set(GameplayState::PlaceHQ);
+	}
 }
 
 fn show_tile_heights(

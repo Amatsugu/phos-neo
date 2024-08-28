@@ -15,6 +15,7 @@ world_generation = { path = "../../engine/world_generation" }
 bevy_rapier3d = { version = "0.27.0", features = ["simd-stable", "parallel"] }
 rayon = "1.10.0"
 buildings = { path = "../buildings" }
+units = { path = "../units" }
 shared = { path = "../shared" }
 bevy_asset_loader = { version = "0.21.0", features = [
 	"standard_dynamic_assets",

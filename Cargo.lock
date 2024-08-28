@@ -3668,6 +3668,7 @@ dependencies = [
  "rayon",
  "ron",
  "shared",
+ "units",
  "world_generation",
 ]
 
@@ -4835,6 +4836,21 @@ name = "unicode-xid"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f962df74c8c05a667b5ee8bcf162993134c104e96440b663c8daa176dc772d8c"
+
+[[package]]
+name = "units"
+version = "0.1.0"
+dependencies = [
+ "asset_loader",
+ "bevy",
+ "bevy_asset_loader",
+ "bevy_rapier3d",
+ "ron",
+ "serde",
+ "serde_json",
+ "shared",
+ "world_generation",
+]
 
 [[package]]
 name = "url"

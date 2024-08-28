@@ -84,9 +84,7 @@ impl Plugin for MapInitPlugin {
 		app.add_systems(Update, despawn_map.run_if(in_state(GeneratorState::Regenerate)));
 		app.add_systems(
 			Update,
-			spawn_map
-				.run_if(in_state(AssetLoadState::LoadComplete))
-				.run_if(in_state(GeneratorState::SpawnMap)),
+			spawn_map.run_if(in_state(AssetLoadState::LoadComplete).and_then(in_state(GeneratorState::SpawnMap))),
 		);
 
 		app.insert_resource(TileManager::default());
