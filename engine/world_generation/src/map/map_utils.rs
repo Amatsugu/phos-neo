@@ -106,20 +106,20 @@ fn get_height_color_blend(base_color: Hsla, height: f32, height2: f32, smooth: f
 	return color;
 }
 
-pub fn render_biome_noise_map(map: &BiomeMap) -> ImageBuffer<image::Rgba<u8>, Vec<u8>> {
+pub fn render_biome_noise_map(map: &BiomeMap, multi: Vec3) -> ImageBuffer<image::Rgba<u8>, Vec<u8>> {
 	let mut image = ImageBuffer::new(map.width as u32, map.height as u32);
-	update_biome_noise_map(map, &mut image);
+	update_biome_noise_map(map, multi, &mut image);
 	return image;
 }
 
-pub fn update_biome_noise_map(map: &BiomeMap, image: &mut ImageBuffer<image::Rgba<u8>, Vec<u8>>) {
+pub fn update_biome_noise_map(map: &BiomeMap, multi: Vec3, image: &mut ImageBuffer<image::Rgba<u8>, Vec<u8>>) {
 	image.par_enumerate_pixels_mut().for_each(|(x, y, pixel)| {
 		let tile = map.get_biome_data(x as usize, y as usize);
 
 		let color = LinearRgba::rgb(
-			tile.temperature / 100.0,
-			tile.continentality / 100.0,
-			tile.moisture / 100.0,
+			(tile.temperature / 100.0) * multi.x,
+			(tile.continentality / 100.0) * multi.y,
+			(tile.moisture / 100.0) * multi.z,
 		);
 		*pixel = to_pixel(&color);
 	});
