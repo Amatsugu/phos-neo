@@ -16,7 +16,10 @@ use world_generation::{
 	biome_painter::*,
 	heightmap::generate_heightmap,
 	hex_utils::{offset_to_index, SHORT_DIAGONAL},
-	map::map_utils::{render_biome_map, render_map},
+	map::{
+		biome_map::{self, BiomeMap},
+		map_utils::{render_biome_noise_map, render_map},
+	},
 	prelude::*,
 	tile_manager::*,
 	tile_mapper::*,
@@ -211,13 +214,14 @@ fn create_heightmap(
 		size: UVec2::splat(16),
 		// size: UVec2::splat(1),
 	};
-	let heightmap = generate_heightmap(&config, 42069, &biome_painter);
+	let (heightmap, biome_map) = generate_heightmap(&config, 42069, &biome_painter);
 
 	let (mut cam_t, cam_entity) = cam.single_mut();
 	cam_t.translation = heightmap.get_center();
 
 	commands.entity(cam_entity).insert(CameraBounds::from_size(config.size));
 	commands.insert_resource(heightmap);
+	commands.insert_resource(biome_map);
 	commands.insert_resource(config);
 	next_state.set(GeneratorState::SpawnMap);
 }
@@ -297,6 +301,7 @@ fn spawn_map(
 fn despawn_map(
 	mut commands: Commands,
 	mut heightmap: ResMut<Map>,
+	mut biome_map: ResMut<BiomeMap>,
 	cfg: Res<GenerationConfig>,
 	chunks: Query<Entity, With<PhosChunk>>,
 	mut next_state: ResMut<NextState<GeneratorState>>,
@@ -306,6 +311,6 @@ fn despawn_map(
 		commands.entity(chunk).despawn();
 	}
 
-	*heightmap = generate_heightmap(&cfg, 4, &biome_painter);
+	(*heightmap, *biome_map) = generate_heightmap(&cfg, 4, &biome_painter);
 	next_state.set(GeneratorState::SpawnMap);
 }

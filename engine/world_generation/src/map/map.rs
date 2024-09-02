@@ -16,6 +16,7 @@ pub struct Map {
 	pub sea_level: f32,
 	pub min_level: f32,
 	pub max_level: f32,
+	pub biome_count: usize,
 }
 
 impl Map {
@@ -72,7 +73,18 @@ impl Map {
 		return pos.is_in_bounds(self.height * Chunk::SIZE, self.width * Chunk::SIZE);
 	}
 
-	pub fn get_biome(&self, pos: &HexCoord) -> &BiomeData {
+	
+	pub fn get_biome_id(&self, pos: &HexCoord) -> usize {
+		assert!(
+			self.is_in_bounds(pos),
+			"The provided coordinate is not within the map bounds"
+		);
+		
+		let chunk = &self.chunks[pos.to_chunk_index(self.width)];
+		return chunk.biome_id[pos.to_chunk_local_index()];
+	}
+	/* 
+	pub fn get_biome_noise(&self, pos: &HexCoord) -> &BiomeData {
 		assert!(
 			self.is_in_bounds(pos),
 			"The provided coordinate is not within the map bounds"
@@ -111,6 +123,7 @@ impl Map {
 		let chunk = &self.chunks[pos.to_chunk_index(self.width)];
 		return chunk.biome_data[pos.to_chunk_local_index()].continentality;
 	}
+	*/
 
 	pub fn get_center(&self) -> Vec3 {
 		let w = self.get_world_width();

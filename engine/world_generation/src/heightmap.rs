@@ -10,14 +10,15 @@ use crate::biome_painter::BiomePainter;
 use crate::map::biome_map::{BiomeChunk, BiomeData, BiomeMap};
 use crate::prelude::*;
 
-pub fn generate_heightmap(cfg: &GenerationConfig, seed: u32, painter: &BiomePainter) -> Map {
-	let biomes = &generate_biomes(cfg, seed, painter);
+pub fn generate_heightmap(cfg: &GenerationConfig, seed: u32, painter: &BiomePainter) -> (Map, BiomeMap) {
+	let biomes = generate_biomes(cfg, seed, painter);
+	let biomes_borrow = &biomes;
 	// let mut chunks: Vec<Chunk> = Vec::with_capacity(cfg.size.length_squared() as usize);
 	let chunks: Vec<Chunk> = (0..cfg.size.y)
 		.into_par_iter()
 		.flat_map(|z| {
 			(0..cfg.size.x).into_par_iter().map(move |x| {
-				let biome_chunk = &biomes.chunks[x as usize + z as usize * cfg.size.x as usize];
+				let biome_chunk = &biomes_borrow.chunks[x as usize + z as usize * cfg.size.x as usize];
 				return generate_chunk(x, z, cfg, seed, &biome_chunk, painter);
 			})
 		})
@@ -33,14 +34,18 @@ pub fn generate_heightmap(cfg: &GenerationConfig, seed: u32, painter: &BiomePain
 		}
 	}
 
-	return Map {
-		chunks,
-		height: cfg.size.y as usize,
-		width: cfg.size.x as usize,
-		sea_level: cfg.sea_level as f32,
-		min_level: min,
-		max_level: max,
-	};
+	return (
+		Map {
+			chunks,
+			height: cfg.size.y as usize,
+			width: cfg.size.x as usize,
+			sea_level: cfg.sea_level as f32,
+			min_level: min,
+			max_level: max,
+			biome_count: painter.biomes.len(),
+		},
+		biomes,
+	);
 }
 
 pub fn generate_biomes(cfg: &GenerationConfig, seed: u32, biome_painter: &BiomePainter) -> BiomeMap {
@@ -186,7 +191,6 @@ pub fn generate_chunk(
 	}
 	return Chunk {
 		heights: result,
-		biome_data: data,
 		biome_id: biome_ids,
 		chunk_offset: IVec2::new(chunk_x as i32, chunk_z as i32),
 		max_level: max,

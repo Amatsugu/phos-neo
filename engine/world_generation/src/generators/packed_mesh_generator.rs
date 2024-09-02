@@ -1,4 +1,5 @@
 use crate::hex_utils::HexCoord;
+use crate::map::biome_map::{self, BiomeChunk, BiomeMap};
 use crate::prelude::*;
 use crate::tile_manager::TileAsset;
 use crate::tile_mapper::TileMapperAsset;
@@ -14,6 +15,7 @@ use bevy::{
 pub fn generate_packed_chunk_mesh(
 	chunk: &Chunk,
 	map: &Map,
+	biome_chunk: &BiomeChunk,
 	painter: &BiomePainterAsset,
 	tiles: &Res<Assets<TileAsset>>,
 	biomes: &Res<Assets<BiomeAsset>>,
@@ -27,7 +29,7 @@ pub fn generate_packed_chunk_mesh(
 	for z in 0..Chunk::SIZE {
 		for x in 0..Chunk::SIZE {
 			let height = chunk.heights[x + z * Chunk::SIZE];
-			let data = chunk.biome_data[x + z * Chunk::SIZE];
+			let data = biome_chunk.data[x + z * Chunk::SIZE];
 			let coord =
 				HexCoord::from_offset(IVec2::new(x as i32, z as i32) + (chunk.chunk_offset * Chunk::SIZE as i32));
 			let n = map.get_neighbors(&coord);

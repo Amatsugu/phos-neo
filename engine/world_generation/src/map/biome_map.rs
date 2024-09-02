@@ -1,10 +1,13 @@
-use bevy::math::{UVec2, Vec3};
+use bevy::{
+	math::{UVec2, Vec3},
+	prelude::Resource,
+};
 use noise::NoiseFn;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 use super::chunk::Chunk;
 
-#[derive(Clone)]
+#[derive(Clone, Resource)]
 pub struct BiomeMap {
 	pub height: usize,
 	pub width: usize,
