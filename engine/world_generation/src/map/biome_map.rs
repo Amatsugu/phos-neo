@@ -153,7 +153,7 @@ pub struct BiomeChunk {
 
 impl BiomeChunk {
 	pub fn get_biome(&self, x: usize, y: usize) -> &Vec<f32> {
-		return &self.tiles[x as usize + y as usize * Chunk::SIZE];
+		return &self.tiles[x + y * Chunk::SIZE];
 	}
 
 	pub fn get_biome_data(&self, x: usize, y: usize) -> &BiomeData {

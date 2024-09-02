@@ -165,7 +165,7 @@ fn create_heightmap(
 		biome_blend: 16,
 		biome_dither: 16.,
 		continent_noise: NoiseConfig {
-			scale: 500.,
+			scale: 1000.,
 			layers: vec![GeneratorLayer {
 				base_roughness: 2.14,
 				roughness: 0.87,
@@ -195,7 +195,7 @@ fn create_heightmap(
 			}],
 		},
 		temperature_noise: NoiseConfig {
-			scale: 500.,
+			scale: 900.,
 			layers: vec![GeneratorLayer {
 				base_roughness: 2.14,
 				roughness: 0.87,

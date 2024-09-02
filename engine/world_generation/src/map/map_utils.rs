@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use bevy::{math::VectorSpace, prelude::*};
 use image::ImageBuffer;
 use rayon::prelude::*;
@@ -105,10 +107,7 @@ fn get_height_color_blend(base_color: Hsla, height: f32, height2: f32, smooth: f
 }
 
 pub fn render_biome_noise_map(map: &BiomeMap) -> ImageBuffer<image::Rgba<u8>, Vec<u8>> {
-	let mut image = ImageBuffer::new(
-		map.width as u32 * Chunk::SIZE as u32,
-		map.height as u32 * Chunk::SIZE as u32,
-	);
+	let mut image = ImageBuffer::new(map.width as u32, map.height as u32);
 	update_biome_noise_map(map, &mut image);
 	return image;
 }
@@ -139,15 +138,18 @@ pub fn update_biome_map(map: &Map, biome_map: &BiomeMap, image: &mut ImageBuffer
 	let map_biome_count = map.biome_count as f32;
 	image.par_enumerate_pixels_mut().for_each(|(x, y, pixel)| {
 		let coord = HexCoord::from_grid_pos(x as usize, y as usize);
-		let biome_blend = biome_map.get_biome(x as i32, y as i32);
+		let biome_blend = biome_map.get_biome(x as i32, y as i32).unwrap();
 		let right = coord.get_neighbor(1);
-		let biome_id = map.get_biome_id(&coord) as f32;
-		let hue = (biome_id / map_biome_count) * 360.0;
-		let mut color = Hsla::hsl(hue, 0.8, 0.9);
+		let mut color = Oklaba::BLACK;
+		for i in 0..biome_blend.len() {
+			let mut c: Oklaba = Hsla::hsl((i as f32 / map_biome_count) * 360.0, 0.8, 0.7).into();
+			c *= biome_blend[i];
+			color = Oklaba::add(c, color.into()).into();
+		}
 		if map.is_in_bounds(&right) {
 			let h1 = map.sample_height(&coord);
 			let h2 = map.sample_height(&right);
-			color = get_height_color_blend(color, h1, h2, 0.5);
+			color = get_height_color_blend(color.into(), h1, h2, 0.5).into();
 		}
 
 		*pixel = to_pixel(&color.into());
