@@ -44,5 +44,4 @@ pub struct GeneratorLayer {
 	pub weight: f64,
 	pub weight_multi: f64,
 	pub layers: usize,
-	pub first_layer_mask: bool,
 }

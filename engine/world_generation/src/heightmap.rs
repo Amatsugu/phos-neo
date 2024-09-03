@@ -217,7 +217,6 @@ fn sample_point(
 	let z_s = z / cfg.scale;
 
 	let mut elevation: f64 = 0.;
-	let mut first_layer: f64 = 0.;
 	for i in 0..cfg.layers.len() {
 		let value: f64;
 		let layer = &cfg.layers[i];
@@ -226,15 +225,8 @@ fn sample_point(
 		} else {
 			value = sample_simple(x_s, z_s, layer, noise);
 		}
-		if i == 0 {
-			first_layer = value;
-		}
-		if layer.first_layer_mask {
-			elevation += mask(first_layer, value);
-		} else {
-			elevation += value;
-		}
-	} 
+		elevation += value;
+	}
 
 	if border_size == 0.0 {
 		return elevation as f32;
@@ -249,10 +241,6 @@ fn sample_point(
 	let d = d1.min(d2).min(border_size).remap(0., border_size, 0., 1.);
 
 	return border_value.lerp(elevation as f32, d);
-}
-
-fn mask(mask: f64, value: f64) -> f64 {
-	return value * mask;
 }
 
 fn sample_simple(x: f64, z: f64, cfg: &GeneratorLayer, noise: &impl NoiseFn<f64, 2>) -> f64 {

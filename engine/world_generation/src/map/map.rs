@@ -26,6 +26,7 @@ impl Map {
 		let chunk = &self.chunks[chunk_index];
 
 		return MeshChunkData {
+			min_height: self.min_level,
 			heights: chunk.heights.clone(),
 			textures: chunk.textures.clone(),
 		};
@@ -73,17 +74,16 @@ impl Map {
 		return pos.is_in_bounds(self.height * Chunk::SIZE, self.width * Chunk::SIZE);
 	}
 
-	
 	pub fn get_biome_id(&self, pos: &HexCoord) -> usize {
 		assert!(
 			self.is_in_bounds(pos),
 			"The provided coordinate is not within the map bounds"
 		);
-		
+
 		let chunk = &self.chunks[pos.to_chunk_index(self.width)];
 		return chunk.biome_id[pos.to_chunk_local_index()];
 	}
-	/* 
+	/*
 	pub fn get_biome_noise(&self, pos: &HexCoord) -> &BiomeData {
 		assert!(
 			self.is_in_bounds(pos),

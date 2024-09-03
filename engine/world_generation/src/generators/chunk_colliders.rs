@@ -43,7 +43,7 @@ fn create_tile_collider(pos: Vec3, verts: &mut Vec<Vec3>, indices: &mut Vec<[u32
 			create_tile_wall_collider(
 				idx,
 				Vec3::new(pos.x, n_height.min(pos.y - OUTER_RADIUS / 2.), pos.z),
-				(i + 1) % 6,
+				i,
 				verts,
 				indices,
 			);

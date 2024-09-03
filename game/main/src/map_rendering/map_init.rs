@@ -163,7 +163,7 @@ fn create_heightmap(
 ) {
 	let config = GenerationConfig {
 		biome_blend: 32,
-		biome_dither: 16.,
+		biome_dither: 10.,
 		continent_noise: NoiseConfig {
 			scale: 800.,
 			layers: vec![GeneratorLayer {
@@ -176,7 +176,6 @@ fn create_heightmap(
 				weight: 0.,
 				weight_multi: 0.,
 				layers: 1,
-				first_layer_mask: false,
 			}],
 		},
 		moisture_noise: NoiseConfig {
@@ -191,7 +190,6 @@ fn create_heightmap(
 				weight: 0.,
 				weight_multi: 0.,
 				layers: 1,
-				first_layer_mask: false,
 			}],
 		},
 		temperature_noise: NoiseConfig {
@@ -206,7 +204,6 @@ fn create_heightmap(
 				weight: 0.,
 				weight_multi: 0.,
 				layers: 1,
-				first_layer_mask: false,
 			}],
 		},
 		sea_level: 8.5,
