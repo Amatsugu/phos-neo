@@ -12,7 +12,7 @@
 			"name": "Debug",
 			"program": "${workspaceRoot}/target/debug/phos.exe",
 			"args": [],
-			"cwd": "${workspaceRoot}/target/debug",
+			"cwd": "${workspaceRoot}/game/main",
 			"preLaunchTask": "Build",
 			// "environment": [
 			// 	{

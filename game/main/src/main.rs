@@ -36,6 +36,11 @@ fn main() {
 						mag_filter: ImageFilterMode::Nearest,
 						..default()
 					},
+				})
+				.set(AssetPlugin {
+					#[cfg(not(debug_assertions))]
+					watch_for_changes_override: Some(true),
+					..Default::default()
 				}),
 			WorldInspectorPlugin::new(),
 			WireframePlugin,

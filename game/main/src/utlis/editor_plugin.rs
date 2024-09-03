@@ -1,10 +1,11 @@
 use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
 use bevy_inspector_egui::bevy_egui::EguiContexts;
 use bevy_inspector_egui::egui::{self};
-use bevy_rapier3d::rapier::crossbeam::deque::Steal;
 use image::{ImageBuffer, Rgba};
-use world_generation::map::biome_map::{self, BiomeMap};
-use world_generation::map::map_utils::{render_biome_map, render_biome_noise_map, update_map};
+use world_generation::biome_asset::BiomeAsset;
+use world_generation::biome_painter::BiomePainterAsset;
+use world_generation::map::biome_map::BiomeMap;
+use world_generation::map::map_utils::{render_biome_map, render_biome_noise_map};
 use world_generation::{map::map_utils::render_map, prelude::Map, states::GeneratorState};
 
 pub struct EditorPlugin;
@@ -16,7 +17,7 @@ impl Plugin for EditorPlugin {
 		app.add_systems(PostUpdate, prepare_image.run_if(in_state(GeneratorState::SpawnMap)));
 		app.add_systems(
 			Update,
-			(render_map_ui, update_map_render).run_if(in_state(GeneratorState::Idle)),
+			(render_map_ui, update_map_render, asset_reloaded).run_if(in_state(GeneratorState::Idle)),
 		);
 	}
 }
@@ -59,7 +60,32 @@ enum MapDisplayType {
 	BiomeNoiseMoisture,
 }
 
-fn render_map_ui(image: Res<MapImage>, heightmap: Res<Map>, biome_map: Res<BiomeMap>, mut contexts: EguiContexts, mut state: ResMut<UIState>) {
+fn asset_reloaded(
+	mut asset_events: EventReader<AssetEvent<BiomeAsset>>,
+	mut biomes: ResMut<Assets<BiomeAsset>>,
+	biome_painter: Res<BiomePainterAsset>,
+	mut commands: Commands,
+) {
+	let mut rebuild = false;
+	for event in asset_events.read() {
+		match event {
+			AssetEvent::Modified { id } => rebuild = true,
+			_ => todo!(),
+		}
+	}
+	if rebuild {
+		let painter = biome_painter.build(&biomes);
+		commands.insert_resource(painter);
+	}
+}
+
+fn render_map_ui(
+	image: Res<MapImage>,
+	heightmap: Res<Map>,
+	biome_map: Res<BiomeMap>,
+	mut contexts: EguiContexts,
+	mut state: ResMut<UIState>,
+) {
 	let id = contexts.add_image(image.0.clone_weak());
 
 	let mut map_type = state.target_map_type;

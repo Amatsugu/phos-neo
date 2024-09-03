@@ -128,8 +128,8 @@ fn finalize_biome_painter(
 	biome_painter: Res<BiomePainterAsset>,
 	biomes: Res<Assets<BiomeAsset>>,
 ) {
-	let biome_painter = biome_painter.build(&biomes);
-	commands.insert_resource(biome_painter);
+	let painter = biome_painter.build(&biomes);
+	commands.insert_resource(painter);
 	next_generator_state.set(GeneratorState::GenerateHeightmap);
 }
 
