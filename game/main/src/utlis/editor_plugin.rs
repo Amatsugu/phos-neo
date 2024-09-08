@@ -69,8 +69,8 @@ fn asset_reloaded(
 	let mut rebuild = false;
 	for event in asset_events.read() {
 		match event {
-			AssetEvent::Modified { id } => rebuild = true,
-			_ => todo!(),
+			AssetEvent::Modified {..}=>	rebuild = true,
+			_ => (),
 		}
 	}
 	if rebuild {

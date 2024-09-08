@@ -105,14 +105,15 @@ fn setup_materials(
 ) {
 	let water_material = water_materials.add(ExtendedMaterial {
 		base: StandardMaterial {
-			base_color: Color::srgba(0., 0.5, 1., 0.8),
+			base_color: Color::srgb(0., 0.878, 1.),
 			alpha_mode: AlphaMode::Blend,
 			..Default::default()
 		},
 		extension: WaterMaterial {
 			settings: WaterSettings {
-				offset: 0.5,
-				scale: 100.,
+				offset: -4.97,
+				scale: 1.,
+				deep_color: LinearRgba::rgb(0.0, 0.04, 0.085).into(),
 				..Default::default()
 			},
 			..default()

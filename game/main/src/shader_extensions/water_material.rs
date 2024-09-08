@@ -15,7 +15,8 @@ pub struct WaterMaterial {
 pub struct WaterSettings {
 	pub offset: f32,
 	pub scale: f32,
-	pub deep_color: Vec3,
+	pub f_power: f32,
+	pub deep_color: LinearRgba,
 }
 
 impl Default for WaterSettings {
@@ -23,7 +24,8 @@ impl Default for WaterSettings {
 		Self {
 			offset: 0.0,
 			scale: 1.0,
-			deep_color: Vec3::ZERO,
+			f_power: 2.0,
+			deep_color: default(),
 		}
 	}
 }
