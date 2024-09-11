@@ -9,6 +9,7 @@ use bevy_rapier3d::{parry::transformation::utils::transform, pipeline::QueryFilt
 use shared::{
 	despawn::Despawn,
 	events::TileModifiedEvent,
+	resources::TileUnderCursor,
 	states::{AssetLoadState, GameplayState},
 	tags::MainCamera,
 };
@@ -78,47 +79,23 @@ fn init(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials:
 }
 
 fn hq_placement(
-	cam_query: Query<(&GlobalTransform, &Camera), With<MainCamera>>,
 	mut commands: Commands,
-	window: Query<&Window, With<PrimaryWindow>>,
 	mouse: Res<ButtonInput<MouseButton>>,
-	rapier_context: Res<RapierContext>,
+	tile_under_cursor: Res<TileUnderCursor>,
 	map: Res<Map>,
 	indicator: Res<IndicatorCube>,
 	mut build_queue: ResMut<BuildQueue>,
 	mut next_state: ResMut<NextState<GameplayState>>,
 ) {
-	let win = window.single();
-	let (cam_transform, camera) = cam_query.single();
-	let Some(cursor_pos) = win.cursor_position() else {
-		return;
-	};
 
-	let Some(cam_ray) = camera.viewport_to_world(cam_transform, cursor_pos) else {
-		return;
-	};
-
-	let collision = rapier_context.cast_ray(
-		cam_ray.origin,
-		cam_ray.direction.into(),
-		500.,
-		true,
-		QueryFilter::only_fixed(),
-	);
-
-	if let Some((_e, dist)) = collision {
-		let contact_point = cam_ray.get_point(dist);
-		let contact_coord = HexCoord::from_world_pos(contact_point);
-		if !map.is_in_bounds(&contact_coord) {
-			return;
-		}
-		let positions = map.hex_select(&contact_coord, 3, true, |pos, h, _| pos.to_world(h));
+	if let Some(contact) = tile_under_cursor.0 {
+		let positions = map.hex_select(&contact.tile, 3, true, |pos, h, _| pos.to_world(h));
 		show_indicators(positions, &mut commands, &indicator);
 
 		if mouse.just_pressed(MouseButton::Left) {
 			build_queue.queue.push(QueueEntry {
 				building: 0.into(),
-				pos: contact_coord,
+				pos: contact.tile,
 			});
 
 			next_state.set(GameplayState::Playing);

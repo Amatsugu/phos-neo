@@ -1,7 +1,7 @@
 use asset_loader::create_asset_loader;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
-use shared::resource::ResourceIdentifier;
+use shared::identifiers::ResourceIdentifier;
 
 use crate::footprint::BuildingFootprint;
 

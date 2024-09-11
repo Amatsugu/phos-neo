@@ -2,7 +2,7 @@ use asset_loader::create_asset_loader;
 use bevy::{ecs::world::CommandQueue, prelude::*};
 use serde::{Deserialize, Serialize};
 
-use crate::components::{Unit, UnitDomain};
+use crate::components::{AirUnit, LandUnit, NavalUnit, Unit, UnitDomain};
 
 #[derive(Asset, TypePath, Debug, Serialize, Deserialize)]
 pub struct UnitAsset {
@@ -26,10 +26,15 @@ impl UnitAsset {
 				..default()
 			},
 			Unit,
-			self.domain.clone(),
 		);
+		let domain = self.domain.clone();
 		commands.push(move |world: &mut World| {
-			world.spawn(bundle);
+			let mut e = world.spawn(bundle);
+			match domain {
+				UnitDomain::Land => e.insert(LandUnit),
+				UnitDomain::Air => e.insert(AirUnit),
+				UnitDomain::Naval => e.insert(NavalUnit),
+			};
 		});
 
 		todo!();

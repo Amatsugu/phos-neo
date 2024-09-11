@@ -2,6 +2,7 @@ use crate::camera_system::components::PhosCamera;
 use crate::map_rendering::map_init::MapInitPlugin;
 use crate::utlis::editor_plugin::EditorPlugin;
 use crate::utlis::render_distance_system::RenderDistancePlugin;
+use crate::utlis::tile_selection_plugin::TileSelectionPlugin;
 use crate::{camera_system::camera_plugin::PhosCameraPlugin, utlis::debug_plugin::DebugPlugin};
 use bevy::{
 	pbr::{wireframe::WireframeConfig, CascadeShadowConfig},
@@ -13,8 +14,11 @@ use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
 use buildings::BuildingPugin;
 use iyes_perf_ui::prelude::*;
+use shared::sets::GameplaySet;
 use shared::states::{GameplayState, MenuState};
 use shared::{despawn::DespawnPuglin, states::AssetLoadState};
+use units::units_plugin::UnitsPlugin;
+use world_generation::states::GeneratorState;
 
 pub struct PhosGamePlugin;
 
@@ -33,12 +37,16 @@ impl Plugin for PhosGamePlugin {
 			MapInitPlugin,
 			RenderDistancePlugin,
 			BuildingPugin,
+			UnitsPlugin,
 			DespawnPuglin,
+			TileSelectionPlugin,
 			#[cfg(debug_assertions)]
 			EditorPlugin,
 			#[cfg(debug_assertions)]
 			DebugPlugin,
 		));
+
+		configure_gameplay_set(app);
 
 		//Systems - Startup
 		app.add_systems(Startup, init_game);
@@ -61,6 +69,34 @@ impl Plugin for PhosGamePlugin {
 			default_color: Srgba::hex("FF0064").unwrap().into(),
 		});
 	}
+}
+
+fn configure_gameplay_set(app: &mut App) {
+	app.configure_sets(
+		Update,
+		GameplaySet.run_if(in_state(GeneratorState::Idle).and_then(in_state(MenuState::InGame))),
+	);
+	app.configure_sets(
+		PreUpdate,
+		GameplaySet.run_if(in_state(GeneratorState::Idle).and_then(in_state(MenuState::InGame))),
+	);
+	app.configure_sets(
+		PostUpdate,
+		GameplaySet.run_if(in_state(GeneratorState::Idle).and_then(in_state(MenuState::InGame))),
+	);
+
+	app.configure_sets(
+		FixedUpdate,
+		GameplaySet.run_if(in_state(GeneratorState::Idle).and_then(in_state(MenuState::InGame))),
+	);
+	app.configure_sets(
+		FixedPreUpdate,
+		GameplaySet.run_if(in_state(GeneratorState::Idle).and_then(in_state(MenuState::InGame))),
+	);
+	app.configure_sets(
+		FixedPostUpdate,
+		GameplaySet.run_if(in_state(GeneratorState::Idle).and_then(in_state(MenuState::InGame))),
+	);
 }
 
 fn init_game(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>) {

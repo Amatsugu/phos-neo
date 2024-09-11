@@ -107,6 +107,7 @@ fn setup_materials(
 		base: StandardMaterial {
 			base_color: Color::srgb(0., 0.878, 1.),
 			alpha_mode: AlphaMode::Blend,
+			metallic: 1.0,
 			..Default::default()
 		},
 		extension: WaterMaterial {

@@ -2,6 +2,7 @@ use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_inspector_egui::bevy_egui::{systems::InputEvents, EguiContexts};
 use bevy_inspector_egui::egui;
 use bevy_rapier3d::prelude::*;
+use shared::resources::TileUnderCursor;
 use shared::states::GameplayState;
 use shared::tags::MainCamera;
 use world_generation::{
@@ -66,62 +67,32 @@ fn regenerate_map(
 	}
 }
 
-fn show_tile_heights(
-	cam_query: Query<(&GlobalTransform, &Camera), With<MainCamera>>,
-	window: Query<&Window, With<PrimaryWindow>>,
-	rapier_context: Res<RapierContext>,
-	map: Res<Map>,
-	mut gizmos: Gizmos,
-	shape: Res<Shape>,
-) {
-	let win = window.single();
-	let (cam_transform, camera) = cam_query.single();
-	let Some(cursor_pos) = win.cursor_position() else {
-		return;
-	};
-
-	let Some(cam_ray) = camera.viewport_to_world(cam_transform, cursor_pos) else {
-		return;
-	};
-
-	let collision = rapier_context.cast_ray(
-		cam_ray.origin,
-		cam_ray.direction.into(),
-		500.,
-		true,
-		QueryFilter::only_fixed(),
-	);
-
-	if let Some((_e, dist)) = collision {
-		let contact_point = cam_ray.get_point(dist);
-		let contact_coord = HexCoord::from_world_pos(contact_point);
-		if !map.is_in_bounds(&contact_coord) {
-			return;
-		}
-		let height = map.sample_height(&contact_coord);
+fn show_tile_heights(map: Res<Map>, mut gizmos: Gizmos, shape: Res<Shape>, tile_under_cursor: Res<TileUnderCursor>) {
+	if let Some(contact) = tile_under_cursor.0 {
+		let height = map.sample_height(&contact.tile);
 		gizmos.primitive_3d(
 			&shape.0,
-			contact_coord.to_world(height + 0.01),
+			contact.tile.to_world(height + 0.01),
 			Quat::IDENTITY,
 			Color::WHITE,
 		);
-		let nbors = map.get_neighbors(&contact_coord);
-		let contact_tile_pos = contact_coord.to_world(map.sample_height(&contact_coord));
+		let nbors = map.get_neighbors(&contact.tile);
+		let contact_tile_pos = contact.tile.to_world(map.sample_height(&contact.tile));
 
-		for i in 0..6 {
-			if let Some(s) = nbors[i] {
-				let coord = contact_coord.get_neighbor(i);
-				let p = coord.to_world(s);
-				gizmos.arrow(p, p + Vec3::Y * (i as f32 + 1.0), Color::WHITE);
-			}
+		// for i in 0..6 {
+		// 	if let Some(s) = nbors[i] {
+		// 		let coord = contact.tile.get_neighbor(i);
+		// 		let p = coord.to_world(s);
+		// 		gizmos.arrow(p, p + Vec3::Y * (i as f32 + 1.0), Color::WHITE);
+		// 	}
 
-			let p = HEX_CORNERS[i] + contact_tile_pos;
-			gizmos.arrow(p, p + Vec3::Y * (i as f32 + 1.0), LinearRgba::rgb(1.0, 0.0, 0.5));
-		}
+		// 	let p = HEX_CORNERS[i] + contact_tile_pos;
+		// 	gizmos.arrow(p, p + Vec3::Y * (i as f32 + 1.0), LinearRgba::rgb(1.0, 0.0, 0.5));
+		// }
 
-		gizmos.line(contact_point, contact_point + Vec3::X, LinearRgba::RED);
-		gizmos.line(contact_point, contact_point + Vec3::Y, LinearRgba::GREEN);
-		gizmos.line(contact_point, contact_point + Vec3::Z, LinearRgba::BLUE);
+		gizmos.line(contact.point, contact.point + Vec3::X, LinearRgba::RED);
+		gizmos.line(contact.point, contact.point + Vec3::Y, LinearRgba::GREEN);
+		gizmos.line(contact.point, contact.point + Vec3::Z, LinearRgba::BLUE);
 		//gizmos.sphere(contact_point, Quat::IDENTITY, 0.1, LinearRgba::rgb(1., 0., 0.5));
 	}
 }

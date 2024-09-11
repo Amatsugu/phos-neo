@@ -4,9 +4,19 @@ use serde::{Deserialize, Serialize};
 #[derive(Component, Debug)]
 pub struct Unit;
 
-#[derive(Component, Serialize, Deserialize, Debug, Clone, Copy)]
+#[derive(Component, Debug)]
+pub struct AirUnit;
+#[derive(Component, Debug)]
+pub struct LandUnit;
+#[derive(Component, Debug)]
+pub struct NavalUnit;
+
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub enum UnitDomain {
 	Land,
 	Air,
-	Navy,
+	Naval,
 }
+
+#[derive(Component, Debug)]
+pub struct Target(pub Vec3);
