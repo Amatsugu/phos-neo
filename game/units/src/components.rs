@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::world::CommandQueue, prelude::*, tasks::Task};
 use serde::{Deserialize, Serialize};
 
 #[derive(Component, Debug)]
@@ -20,3 +20,9 @@ pub enum UnitDomain {
 
 #[derive(Component, Debug)]
 pub struct Target(pub Vec3);
+
+#[derive(Component, Debug)]
+pub struct Path(pub Vec<Vec3>, pub usize);
+
+#[derive(Component, Debug)]
+pub struct PathTask(pub Task<CommandQueue>);
