@@ -3,8 +3,6 @@ use bevy::ecs::world::CommandQueue;
 use bevy::prelude::*;
 use bevy::tasks::*;
 use bevy::utils::futures;
-use bevy_rapier3d::geometry::Collider;
-use bevy_rapier3d::geometry::TriMeshFlags;
 use shared::events::ChunkModifiedEvent;
 use shared::events::TileModifiedEvent;
 use world_generation::prelude::Map;

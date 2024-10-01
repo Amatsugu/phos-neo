@@ -1,5 +1,5 @@
+use avian3d::prelude::{SpatialQuery, SpatialQueryFilter};
 use bevy::{prelude::*, window::PrimaryWindow};
-use bevy_rapier3d::{plugin::RapierContext, prelude::QueryFilter};
 use shared::{
 	resources::{TileContact, TileUnderCursor},
 	tags::MainCamera,
@@ -20,7 +20,7 @@ impl Plugin for TileSelectionPlugin {
 fn update_tile_under_cursor(
 	cam_query: Query<(&GlobalTransform, &Camera), With<MainCamera>>,
 	window: Query<&Window, With<PrimaryWindow>>,
-	rapier_context: Res<RapierContext>,
+	spatial_query: SpatialQuery,
 	map: Res<Map>,
 	mut tile_under_cursor: ResMut<TileUnderCursor>,
 ) {
@@ -34,15 +34,16 @@ fn update_tile_under_cursor(
 		return;
 	};
 
-	let collision = rapier_context.cast_ray(
+	let collision = spatial_query.cast_ray(
 		cam_ray.origin,
 		cam_ray.direction.into(),
 		500.,
 		true,
-		QueryFilter::only_fixed(),
+		SpatialQueryFilter::default(),
 	);
 
-	if let Some((_e, dist)) = collision {
+	if let Some(data) = collision {
+		let dist = data.time_of_impact;
 		let contact_point = cam_ray.get_point(dist);
 		let contact_coord = HexCoord::from_world_pos(contact_point);
 		//todo: handle correct tile detection when contacting a tile from the side

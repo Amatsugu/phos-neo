@@ -4,14 +4,12 @@ use crate::utlis::editor_plugin::EditorPlugin;
 use crate::utlis::render_distance_system::RenderDistancePlugin;
 use crate::utlis::tile_selection_plugin::TileSelectionPlugin;
 use crate::{camera_system::camera_plugin::PhosCameraPlugin, utlis::debug_plugin::DebugPlugin};
+use avian3d::{math::*, prelude::*};
 use bevy::{
 	pbr::{wireframe::WireframeConfig, CascadeShadowConfig},
 	prelude::*,
 };
 use bevy_asset_loader::prelude::*;
-use bevy_rapier3d::dynamics::{Ccd, RigidBody, Velocity};
-use bevy_rapier3d::geometry::Collider;
-use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
 use buildings::BuildingPugin;
 use iyes_perf_ui::prelude::*;
 use shared::sets::GameplaySet;
@@ -61,7 +59,7 @@ impl Plugin for PhosGamePlugin {
 			.add_plugins(PerfUiPlugin);
 
 		//Physics
-		app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
+		app.add_plugins(PhysicsPlugins::default());
 		// app.add_plugins(RapierDebugRenderPlugin::default());
 
 		app.insert_resource(WireframeConfig {
@@ -148,10 +146,9 @@ fn spawn_sphere(
 				transform: Transform::from_translation(cam_transform.translation),
 				..default()
 			},
-			Collider::ball(0.3),
+			Collider::sphere(0.3),
 			RigidBody::Dynamic,
-			Ccd::enabled(),
-			Velocity::linear(cam_transform.forward() * 50.),
+			LinearVelocity(cam_transform.forward() * 50.),
 		));
 	}
 }

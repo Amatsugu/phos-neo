@@ -354,6 +354,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "avian3d"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "263f406c08c5ec296039ba06d7aa50e54f9ecd996f682aaa63eae25709e8935b"
+dependencies = [
+ "avian_derive",
+ "bevy",
+ "bevy_math",
+ "bitflags 2.6.0",
+ "derive_more",
+ "fxhash",
+ "indexmap",
+ "itertools 0.13.0",
+ "nalgebra 0.32.6",
+ "parry3d 0.15.1",
+ "parry3d-f64",
+]
+
+[[package]]
+name = "avian_derive"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b4adeeecb6d4628d3ca11836ce9af8309f9552d4bd3e3f6e4368440d8163260c"
+dependencies = [
+ "proc-macro2 1.0.86",
+ "quote 1.0.36",
+ "syn 2.0.70",
+]
+
+[[package]]
 name = "avif-serialize"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1954,6 +1984,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive_more"
+version = "0.99.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5f33878137e4dafd7fa914ad4e259e18a4e8e532b9617a2d0150262bf53abfce"
+dependencies = [
+ "convert_case",
+ "proc-macro2 1.0.86",
+ "quote 1.0.36",
+ "rustc_version",
+ "syn 2.0.70",
+]
+
+[[package]]
 name = "dispatch"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3227,8 +3270,8 @@ dependencies = [
  "glam",
  "matrixmultiply",
  "nalgebra-macros",
- "num-complex",
- "num-rational",
+ "num-complex 0.4.6",
+ "num-rational 0.4.2",
  "num-traits",
  "simba 0.8.1",
  "typenum",
@@ -4354,7 +4397,7 @@ dependencies = [
  "built",
  "cfg-if",
  "interpolate_name",
- "itertools",
+ "itertools 0.12.1",
  "libc",
  "libfuzzer-sys",
  "log",
@@ -4715,7 +4758,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "061507c94fc6ab4ba1c9a0305018408e312e17c041eb63bef8aa726fa33aceae"
 dependencies = [
  "approx",
- "num-complex",
+ "num-complex 0.4.6",
  "num-traits",
  "paste",
  "wide",

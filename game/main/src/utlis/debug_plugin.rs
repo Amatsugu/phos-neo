@@ -1,7 +1,6 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_inspector_egui::bevy_egui::{systems::InputEvents, EguiContexts};
 use bevy_inspector_egui::egui;
-use bevy_rapier3d::prelude::*;
 use shared::resources::TileUnderCursor;
 use shared::states::GameplayState;
 use shared::tags::MainCamera;

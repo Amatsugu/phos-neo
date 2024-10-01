@@ -21,7 +21,7 @@ bevy_asset_loader = { version = "0.21.0", features = [
 	"3d",
 ] }
 ron = "0.8.1"
-avian3d = { version = "0.1.1" }
+avian3d = { version = "0.1.2" }
 image = "0.25.2"
 
 [features]
