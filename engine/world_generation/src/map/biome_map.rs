@@ -1,9 +1,13 @@
-use bevy::math::{UVec2, Vec3};
+use bevy::{
+	math::{UVec2, Vec3},
+	prelude::Resource,
+};
 use noise::NoiseFn;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 use super::chunk::Chunk;
 
+#[derive(Clone, Resource)]
 pub struct BiomeMap {
 	pub height: usize,
 	pub width: usize,
@@ -130,6 +134,15 @@ impl BiomeMap {
 		return chunk.get_biome_id(x - (cx * Chunk::SIZE), y - (cy * Chunk::SIZE));
 	}
 
+	pub fn get_biome_id_dithered(&self, x: usize, y: usize, noise: &impl NoiseFn<f64, 2>, scale: f64) -> usize {
+		let cx = (x as f32 / Chunk::SIZE as f32).floor() as usize;
+		let cy = (y as f32 / Chunk::SIZE as f32).floor() as usize;
+
+		let chunk = &self.chunks[cx + cy * self.size.x as usize];
+
+		return chunk.get_biome_id_dithered(x - (cx * Chunk::SIZE), y - (cy * Chunk::SIZE), noise, scale);
+	}
+
 	pub fn get_biome_data(&self, x: usize, y: usize) -> &BiomeData {
 		let cx = (x as f32 / Chunk::SIZE as f32).floor() as usize;
 		let cy = (y as f32 / Chunk::SIZE as f32).floor() as usize;
@@ -149,7 +162,7 @@ pub struct BiomeChunk {
 
 impl BiomeChunk {
 	pub fn get_biome(&self, x: usize, y: usize) -> &Vec<f32> {
-		return &self.tiles[x as usize + y as usize * Chunk::SIZE];
+		return &self.tiles[x + y * Chunk::SIZE];
 	}
 
 	pub fn get_biome_data(&self, x: usize, y: usize) -> &BiomeData {
@@ -171,16 +184,18 @@ impl BiomeChunk {
 	}
 
 	pub fn get_biome_id_dithered(&self, x: usize, y: usize, noise: &impl NoiseFn<f64, 2>, scale: f64) -> usize {
-		let cur_id = self.get_biome_id(x, y);
+		let mut cur_id = self.get_biome_id(x, y);
 		let b = self.get_biome(x, y);
-		let n = (noise.get([x as f64 / scale, y as f64 / scale]) as f32) * b[cur_id];
+		let n = (noise.get([x as f64 / scale, y as f64 / scale]) as f32 - 0.5)/ 2.0;
+		let mut max = b[cur_id] + n;
 		for i in 0..b.len() {
 			let blend = b[i];
 			if blend == 0. {
 				continue;
 			}
-			if n < blend {
-				return i;
+			if blend > max {
+				max = blend + n;
+				cur_id = i;
 			}
 		}
 

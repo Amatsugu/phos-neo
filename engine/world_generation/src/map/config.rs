@@ -1,10 +1,11 @@
 use bevy::prelude::*;
+use bevy_asset_loader::asset_collection::AssetCollection;
 use bevy_inspector_egui::InspectorOptions;
 use serde::{Deserialize, Serialize};
 
 use super::chunk::Chunk;
 
-#[derive(Resource, Reflect, Default)]
+#[derive(Resource, Reflect, Default, Clone)]
 #[reflect(Resource)]
 pub struct GenerationConfig {
 	pub sea_level: f64,
@@ -43,5 +44,4 @@ pub struct GeneratorLayer {
 	pub weight: f64,
 	pub weight_multi: f64,
 	pub layers: usize,
-	pub first_layer_mask: bool,
 }

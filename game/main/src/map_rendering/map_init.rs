@@ -3,10 +3,12 @@ use bevy::log::*;
 use bevy::{
 	pbr::{ExtendedMaterial, NotShadowCaster},
 	prelude::*,
+	render::texture::ImageFormat,
 };
 use bevy_asset_loader::prelude::*;
 
 use bevy_inspector_egui::quick::ResourceInspectorPlugin;
+use image::DynamicImage;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use shared::states::{AssetLoadState, GameplayState, MenuState};
 use world_generation::{
@@ -14,6 +16,10 @@ use world_generation::{
 	biome_painter::*,
 	heightmap::generate_heightmap,
 	hex_utils::{offset_to_index, SHORT_DIAGONAL},
+	map::{
+		biome_map::{self, BiomeMap},
+		map_utils::{render_biome_noise_map, render_map},
+	},
 	prelude::*,
 	tile_manager::*,
 	tile_mapper::*,
@@ -52,7 +58,7 @@ impl Plugin for MapInitPlugin {
 		app.register_asset_reflect::<ExtendedMaterial<StandardMaterial, WaterMaterial>>();
 		app.add_plugins((
 			ChunkRebuildPlugin,
-			TerraFormingTestPlugin,
+			// TerraFormingTestPlugin,
 			MaterialPlugin::<ExtendedMaterial<StandardMaterial, ChunkMaterial>>::default(),
 			MaterialPlugin::<ExtendedMaterial<StandardMaterial, WaterMaterial>> {
 				prepass_enabled: false,
@@ -81,9 +87,7 @@ impl Plugin for MapInitPlugin {
 		app.add_systems(Update, despawn_map.run_if(in_state(GeneratorState::Regenerate)));
 		app.add_systems(
 			Update,
-			spawn_map
-				.run_if(in_state(AssetLoadState::LoadComplete))
-				.run_if(in_state(GeneratorState::SpawnMap)),
+			spawn_map.run_if(in_state(AssetLoadState::LoadComplete).and_then(in_state(GeneratorState::SpawnMap))),
 		);
 
 		app.insert_resource(TileManager::default());
@@ -101,14 +105,16 @@ fn setup_materials(
 ) {
 	let water_material = water_materials.add(ExtendedMaterial {
 		base: StandardMaterial {
-			base_color: Color::srgba(0., 0.5, 1., 0.8),
+			base_color: Color::srgb(0., 0.878, 1.),
 			alpha_mode: AlphaMode::Blend,
+			metallic: 1.0,
 			..Default::default()
 		},
 		extension: WaterMaterial {
 			settings: WaterSettings {
-				offset: 0.5,
-				scale: 100.,
+				offset: -4.97,
+				scale: 1.,
+				deep_color: LinearRgba::rgb(0.0, 0.04, 0.085).into(),
 				..Default::default()
 			},
 			..default()
@@ -124,8 +130,8 @@ fn finalize_biome_painter(
 	biome_painter: Res<BiomePainterAsset>,
 	biomes: Res<Assets<BiomeAsset>>,
 ) {
-	let biome_painter = biome_painter.build(&biomes);
-	commands.insert_resource(biome_painter);
+	let painter = biome_painter.build(&biomes);
+	commands.insert_resource(painter);
 	next_generator_state.set(GeneratorState::GenerateHeightmap);
 }
 
@@ -158,10 +164,10 @@ fn create_heightmap(
 	biome_painter: Res<BiomePainter>,
 ) {
 	let config = GenerationConfig {
-		biome_blend: 16,
-		biome_dither: 16.,
+		biome_blend: 32,
+		biome_dither: 10.,
 		continent_noise: NoiseConfig {
-			scale: 500.,
+			scale: 800.,
 			layers: vec![GeneratorLayer {
 				base_roughness: 2.14,
 				roughness: 0.87,
@@ -172,11 +178,10 @@ fn create_heightmap(
 				weight: 0.,
 				weight_multi: 0.,
 				layers: 1,
-				first_layer_mask: false,
 			}],
 		},
 		moisture_noise: NoiseConfig {
-			scale: 500.,
+			scale: 900.,
 			layers: vec![GeneratorLayer {
 				base_roughness: 2.14,
 				roughness: 0.87,
@@ -187,11 +192,10 @@ fn create_heightmap(
 				weight: 0.,
 				weight_multi: 0.,
 				layers: 1,
-				first_layer_mask: false,
 			}],
 		},
 		temperature_noise: NoiseConfig {
-			scale: 500.,
+			scale: 700.,
 			layers: vec![GeneratorLayer {
 				base_roughness: 2.14,
 				roughness: 0.87,
@@ -202,7 +206,6 @@ fn create_heightmap(
 				weight: 0.,
 				weight_multi: 0.,
 				layers: 1,
-				first_layer_mask: false,
 			}],
 		},
 		sea_level: 8.5,
@@ -210,13 +213,14 @@ fn create_heightmap(
 		size: UVec2::splat(16),
 		// size: UVec2::splat(1),
 	};
-	let heightmap = generate_heightmap(&config, 42069, &biome_painter);
+	let (heightmap, biome_map) = generate_heightmap(&config, 42069, &biome_painter);
 
 	let (mut cam_t, cam_entity) = cam.single_mut();
 	cam_t.translation = heightmap.get_center();
 
 	commands.entity(cam_entity).insert(CameraBounds::from_size(config.size));
 	commands.insert_resource(heightmap);
+	commands.insert_resource(biome_map);
 	commands.insert_resource(config);
 	next_state.set(GeneratorState::SpawnMap);
 }
@@ -296,6 +300,7 @@ fn spawn_map(
 fn despawn_map(
 	mut commands: Commands,
 	mut heightmap: ResMut<Map>,
+	mut biome_map: ResMut<BiomeMap>,
 	cfg: Res<GenerationConfig>,
 	chunks: Query<Entity, With<PhosChunk>>,
 	mut next_state: ResMut<NextState<GeneratorState>>,
@@ -305,6 +310,6 @@ fn despawn_map(
 		commands.entity(chunk).despawn();
 	}
 
-	*heightmap = generate_heightmap(&cfg, 4, &biome_painter);
+	(*heightmap, *biome_map) = generate_heightmap(&cfg, 4, &biome_painter);
 	next_state.set(GeneratorState::SpawnMap);
 }

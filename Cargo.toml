@@ -5,7 +5,7 @@ members = [
 	"game/buildings",
 	"game/shared",
     "engine/world_generation",
-	"engine/asset_loader", "game/buildings", "game/shared"]
+	"engine/asset_loader", "game/buildings", "game/shared", "game/units", "engine/data"]
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]

@@ -38,7 +38,7 @@ impl BiomePainterAsset {
 	}
 }
 
-#[derive(Resource)]
+#[derive(Resource, Clone)]
 pub struct BiomePainter {
 	pub biomes: Vec<BiomeAsset>,
 }

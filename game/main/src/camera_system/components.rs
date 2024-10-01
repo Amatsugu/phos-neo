@@ -38,7 +38,7 @@ impl Default for PhosCameraTargets {
 	fn default() -> Self {
 		Self {
 			height: Default::default(),
-			forward: Vec3::Z,
+			forward: Vec3::NEG_Z,
 			last_height: Default::default(),
 			anim_time: Default::default(),
 			rotate_time: Default::default(),

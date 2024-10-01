@@ -1,3 +1,6 @@
+use num::{PrimInt, Saturating};
+use std::fmt::Display;
+
 use crate::prelude::Chunk;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -60,6 +63,12 @@ pub fn get_tile_count(radius: usize) -> usize {
 #[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
 pub struct HexCoord {
 	pub hex: IVec3,
+}
+
+impl Display for HexCoord {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.write_fmt(format_args!("HexCoord{}", self.hex))
+	}
 }
 
 impl HexCoord {
@@ -136,6 +145,7 @@ impl HexCoord {
 		};
 	}
 
+	/// Converts this coordinate to it's chunk local equivalent
 	pub fn to_chunk(&self) -> HexCoord {
 		let c_pos = self.to_chunk_pos();
 		let off = self.to_offset();
@@ -156,14 +166,20 @@ impl HexCoord {
 		return IVec2::new(self.hex.x + (self.hex.y / 2), self.hex.y);
 	}
 
+	/// Convert the current coordiante to an index
 	pub fn to_index(&self, width: usize) -> usize {
 		return ((self.hex.x + self.hex.y * width as i32) + (self.hex.y / 2)) as usize;
 	}
+
+	/// Gets the index of this coord in the chunk array.
+	///
+	/// [`width`] is in number of chunks
 	pub fn to_chunk_index(&self, width: usize) -> usize {
 		let pos = self.to_chunk_pos();
 		return (pos.x + pos.y * width as i32) as usize;
 	}
 
+	/// Gets the index of this tile in the chunk
 	pub fn to_chunk_local_index(&self) -> usize {
 		return self.to_chunk().to_index(Chunk::SIZE);
 	}
@@ -236,6 +252,37 @@ impl HexCoord {
 				for _j in 0..k {
 					p = p.get_neighbor(i);
 					result.push(p);
+				}
+			}
+		}
+
+		return result;
+	}
+
+	pub fn hex_select_bounded(
+		&self,
+		radius: usize,
+		include_center: bool,
+		height: usize,
+		width: usize,
+	) -> Vec<HexCoord> {
+		assert!(radius != 0, "Radius cannot be zero");
+		let mut result = Vec::with_capacity(get_tile_count(radius));
+
+		if include_center {
+			if self.is_in_bounds(height, width) {
+				result.push(*self);
+			}
+		}
+
+		for k in 0..(radius + 1) {
+			let mut p = self.scale(4, k);
+			for i in 0..6 {
+				for _j in 0..k {
+					p = p.get_neighbor(i);
+					if p.is_in_bounds(height, width) {
+						result.push(p);
+					}
 				}
 			}
 		}
