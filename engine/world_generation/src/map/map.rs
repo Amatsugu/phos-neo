@@ -20,6 +20,18 @@ pub struct Map {
 }
 
 impl Map {
+	pub fn get_tile_count(&self) -> usize {
+		return self.get_tile_width() * self.get_tile_height();
+	}
+
+	pub fn get_tile_width(&self) -> usize {
+		return self.width * Chunk::SIZE;
+	}
+
+	pub fn get_tile_height(&self) -> usize {
+		return self.height * Chunk::SIZE;
+	}
+
 	pub fn get_chunk_mesh_data(&self, chunk_index: usize) -> MeshChunkData {
 		#[cfg(feature = "tracing")]
 		let _spawn_span = info_span!("Chunk Mesh Data").entered();

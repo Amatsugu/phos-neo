@@ -60,7 +60,7 @@ pub fn get_tile_count(radius: usize) -> usize {
 	return 1 + 3 * (radius + 1) * radius;
 }
 
-#[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize, Hash)]
 pub struct HexCoord {
 	pub hex: IVec3,
 }

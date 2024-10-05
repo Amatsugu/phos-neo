@@ -1,5 +1,6 @@
 use bevy::{ecs::world::CommandQueue, prelude::*, tasks::Task};
 use serde::{Deserialize, Serialize};
+use world_generation::hex_utils::HexCoord;
 
 #[derive(Component, Debug)]
 pub struct Unit;
@@ -19,7 +20,7 @@ pub enum UnitDomain {
 }
 
 #[derive(Component, Debug)]
-pub struct Target(pub Vec3);
+pub struct Target(pub HexCoord);
 
 #[derive(Component, Debug)]
 pub struct Path(pub Vec<Vec3>, pub usize);

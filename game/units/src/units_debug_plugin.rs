@@ -60,7 +60,7 @@ fn set_unit_target(
 		for e in units.iter() {
 			info!("Setting Target");
 			let mut e = commands.entity(e);
-			e.insert(Target(contact.surface));
+			e.insert(Target(contact.tile));
 		}
 	}
 }

@@ -1,17 +1,14 @@
-use bevy::{
-	ecs::world::CommandQueue, prelude::*, tasks::AsyncComputeTaskPool, transform::commands, utils::futures,
-	window::PrimaryWindow,
-};
-use bevy_asset_loader::loading_state::{
-	config::{ConfigureLoadingState, LoadingStateConfig},
-	LoadingStateAppExt,
-};
-use shared::{resources::TileUnderCursor, sets::GameplaySet, states::AssetLoadState};
+use std::collections::HashMap;
+
+use bevy::{ecs::world::CommandQueue, prelude::*, tasks::AsyncComputeTaskPool, utils::futures};
+use pathfinding::prelude::astar;
+use shared::{resources::TileUnderCursor, sets::GameplaySet};
 use world_generation::{hex_utils::HexCoord, prelude::Map};
 
 use crate::{
-	assets::{unit_asset::UnitAssetPlugin, unit_database::UnitDatabase},
+	assets::unit_asset::UnitAssetPlugin,
 	components::{Path, PathTask, Target, Unit},
+	nav_data::{self, NavData},
 	units_debug_plugin::UnitsDebugPlugin,
 };
 
@@ -28,7 +25,10 @@ impl Plugin for UnitsPlugin {
 
 		app.add_systems(Update, units_control.in_set(GameplaySet));
 		app.add_systems(Update, move_unit.in_set(GameplaySet));
-		app.add_systems(FixedPreUpdate, (calculate_path, resolve_path_task).in_set(GameplaySet));
+		app.add_systems(
+			FixedPreUpdate,
+			(dispatch_path_requests, resolve_path_task).in_set(GameplaySet),
+		);
 	}
 }
 
@@ -60,27 +60,41 @@ fn move_unit(
 	}
 }
 
-fn calculate_path(
+fn dispatch_path_requests(
 	units: Query<(&Transform, &Target, Entity), (With<Unit>, Without<PathTask>)>,
 	map: Res<Map>,
 	mut commands: Commands,
 ) {
-	let pool = AsyncComputeTaskPool::get();
+	let mut groups: HashMap<HexCoord, Vec<PathRequest>> = HashMap::new();
+
 	for (transform, target, entity) in units.iter() {
-		let from = transform.translation;
-		let to = target.0;
+		let req = PathRequest {
+			entity,
+			to: HexCoord::from_world_pos(transform.translation),
+		};
+		if let Some(group) = groups.get_mut(&target.0) {
+			group.push(req);
+		} else {
+			groups.insert(target.0, vec![req]);
+		}
+	}
 
-		let task = pool.spawn(async move {
-			let mut queue = CommandQueue::default();
+	let nav_data = NavData::build(&map);
 
-			queue.push(move |world: &mut World| {
-				//todo: calculate path
-				world.entity_mut(entity).insert(Path(vec![from, to], 0));
+	let pool = AsyncComputeTaskPool::get();
+	for (from, units) in groups {
+		for req in units {
+			let d = nav_data.clone();
+			let task = pool.spawn(async move {
+				let path = calculate_path(&from, &req.to, d);
+				let mut queue = CommandQueue::default();
+				queue.push(move |world: &mut World| {
+					world.entity_mut(req.entity).insert(path);
+				});
+				return queue;
 			});
-			return queue;
-		});
-
-		commands.entity(entity).insert(PathTask(task)).remove::<Target>();
+			commands.entity(req.entity).insert(PathTask(task)).remove::<Target>();
+		}
 	}
 }
 
@@ -91,4 +105,19 @@ fn resolve_path_task(mut tasks: Query<(&mut PathTask, Entity), With<Unit>>, mut 
 			commands.entity(entity).remove::<PathTask>();
 		}
 	}
+}
+
+fn calculate_path(from: &HexCoord, to: &HexCoord, nav: NavData) -> Path {
+	let path = astar(
+		from,
+		|n| nav.get_neighbors(n),
+		|n| nav.get(n).calculate_heuristic(to),
+		|n| n == to,
+	);
+	todo!("Convert path");
+}
+
+struct PathRequest {
+	pub entity: Entity,
+	pub to: HexCoord,
 }

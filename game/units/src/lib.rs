@@ -1,5 +1,8 @@
+
 pub mod assets;
 pub mod components;
+pub mod nav_data;
+pub mod resources;
 #[cfg(debug_assertions)]
 pub mod units_debug_plugin;
 pub mod units_plugin;
