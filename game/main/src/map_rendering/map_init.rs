@@ -34,11 +34,10 @@ use crate::{
 	},
 	utlis::{
 		chunk_utils::{paint_map, prepare_chunk_mesh_with_collider},
-		render_distance_system::RenderDistanceVisibility,
 	},
 };
 
-use super::{chunk_rebuild::ChunkRebuildPlugin, terraforming_test::TerraFormingTestPlugin};
+use super::{chunk_rebuild::ChunkRebuildPlugin, render_distance_system::RenderDistanceVisibility, terraforming_test::TerraFormingTestPlugin};
 
 pub struct MapInitPlugin;
 

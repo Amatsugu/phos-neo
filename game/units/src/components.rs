@@ -26,4 +26,4 @@ pub struct Target(pub HexCoord);
 pub struct Path(pub Vec<Vec3>, pub usize);
 
 #[derive(Component, Debug)]
-pub struct PathTask(pub Task<CommandQueue>);
+pub struct PathTask(pub Task<Option<CommandQueue>>);

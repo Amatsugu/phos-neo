@@ -1,10 +1,7 @@
-use std::f32::consts::E;
-
 use bevy::prelude::*;
 use shared::{resources::TileUnderCursor, sets::GameplaySet, states::AssetLoadState};
-use world_generation::{heightmap, prelude::Map};
 
-use crate::components::{LandUnit, Target, Unit};
+use crate::components::{LandUnit, Path, Target, Unit};
 
 pub struct UnitsDebugPlugin;
 
@@ -13,6 +10,7 @@ impl Plugin for UnitsDebugPlugin {
 		app.add_systems(Update, init.run_if(in_state(AssetLoadState::Loading)));
 
 		app.add_systems(Update, (spawn_test_unit, set_unit_target).in_set(GameplaySet));
+		app.add_systems(FixedUpdate, (visualize_paths).in_set(GameplaySet));
 	}
 }
 
@@ -61,6 +59,24 @@ fn set_unit_target(
 			info!("Setting Target");
 			let mut e = commands.entity(e);
 			e.insert(Target(contact.tile));
+		}
+	}
+}
+
+fn visualize_paths(units: Query<&Path, With<Unit>>, mut gizmos: Gizmos) {
+	for path in units.iter() {
+		if path.1 > path.0.len() {
+			continue;
+		}
+		for node in 1..path.0.len() {
+			let from = path.0[node];
+			let to = path.0[node - 1];
+			let color = if node > path.1 {
+				LinearRgba::rgb(1.0, 0.5, 0.0)
+			} else {
+				LinearRgba::rgb(1.0, 0.5, 1.5)
+			};
+			gizmos.line(from + Vec3::Y * 0.1, to + Vec3::Y * 0.1, color);
 		}
 	}
 }

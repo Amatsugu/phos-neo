@@ -1,16 +1,7 @@
-use bevy::{prelude::*, window::PrimaryWindow};
-use bevy_inspector_egui::bevy_egui::{systems::InputEvents, EguiContexts};
-use bevy_inspector_egui::egui;
-use bevy_rapier3d::prelude::*;
+use bevy::prelude::*;
 use shared::resources::TileUnderCursor;
 use shared::states::GameplayState;
-use shared::tags::MainCamera;
-use world_generation::{
-	consts::HEX_CORNERS,
-	hex_utils::{HexCoord, INNER_RADIUS},
-	prelude::Map,
-	states::GeneratorState,
-};
+use world_generation::{consts::HEX_CORNERS, prelude::Map, states::GeneratorState};
 
 pub struct DebugPlugin;
 
@@ -76,24 +67,10 @@ fn show_tile_heights(map: Res<Map>, mut gizmos: Gizmos, shape: Res<Shape>, tile_
 			Quat::IDENTITY,
 			Color::WHITE,
 		);
-		let nbors = map.get_neighbors(&contact.tile);
-		let contact_tile_pos = contact.tile.to_world(map.sample_height(&contact.tile));
-
-		// for i in 0..6 {
-		// 	if let Some(s) = nbors[i] {
-		// 		let coord = contact.tile.get_neighbor(i);
-		// 		let p = coord.to_world(s);
-		// 		gizmos.arrow(p, p + Vec3::Y * (i as f32 + 1.0), Color::WHITE);
-		// 	}
-
-		// 	let p = HEX_CORNERS[i] + contact_tile_pos;
-		// 	gizmos.arrow(p, p + Vec3::Y * (i as f32 + 1.0), LinearRgba::rgb(1.0, 0.0, 0.5));
-		// }
 
 		gizmos.line(contact.point, contact.point + Vec3::X, LinearRgba::RED);
 		gizmos.line(contact.point, contact.point + Vec3::Y, LinearRgba::GREEN);
 		gizmos.line(contact.point, contact.point + Vec3::Z, LinearRgba::BLUE);
-		//gizmos.sphere(contact_point, Quat::IDENTITY, 0.1, LinearRgba::rgb(1., 0., 0.5));
 	}
 }
 

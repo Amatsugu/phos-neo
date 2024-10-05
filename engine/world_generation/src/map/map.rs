@@ -180,9 +180,9 @@ impl Map {
 		assert!(radius != 0, "Radius cannot be zero");
 
 		let mut result = if include_center {
-			Vec::with_capacity(get_tile_count(radius) + 1)
+			Vec::with_capacity(get_tile_count_in_range(radius) + 1)
 		} else {
-			Vec::with_capacity(get_tile_count(radius))
+			Vec::with_capacity(get_tile_count_in_range(radius))
 		};
 		if include_center {
 			let h = self.sample_height(&center);
@@ -218,9 +218,9 @@ impl Map {
 		assert!(radius != 0, "Radius cannot be zero");
 
 		let mut result = if include_center {
-			Vec::with_capacity(get_tile_count(radius) + 1)
+			Vec::with_capacity(get_tile_count_in_range(radius) + 1)
 		} else {
-			Vec::with_capacity(get_tile_count(radius))
+			Vec::with_capacity(get_tile_count_in_range(radius))
 		};
 		if include_center {
 			let h = self.sample_height_mut(&center);

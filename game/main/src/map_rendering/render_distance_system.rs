@@ -9,9 +9,6 @@ impl Plugin for RenderDistancePlugin {
 		app.register_type::<RenderDistanceSettings>();
 		app.add_systems(PostUpdate, render_distance_system)
 			.insert_resource(RenderDistanceSettings::default());
-
-		#[cfg(debug_assertions)]
-		app.insert_resource(RenderDistanceSettings::new(f32::MAX));
 	}
 }
 
