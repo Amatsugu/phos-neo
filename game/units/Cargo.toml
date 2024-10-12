@@ -21,4 +21,4 @@ pathfinding = "4.11.0"
 ordered-float = "4.3.0"
 
 [features]
-tracing = []
+tracing = ["bevy/trace_tracy"]

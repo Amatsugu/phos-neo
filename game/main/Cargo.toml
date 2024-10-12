@@ -29,4 +29,10 @@ ron = "0.8.1"
 image = "0.25.2"
 
 [features]
-tracing = ["bevy/trace_tracy", "world_generation/tracing", "buildings/tracing"]
+tracing = [
+	"bevy/trace_tracy",
+	"world_generation/tracing",
+	"buildings/tracing",
+	"units/tracing",
+	"shared/tracing",
+]

@@ -1,4 +1,4 @@
-use bevy::prelude::Resource;
+use bevy::prelude::*;
 use ordered_float::OrderedFloat;
 use world_generation::{hex_utils::HexCoord, prelude::Map};
 
@@ -78,6 +78,11 @@ impl NavData {
 				self.tiles[y * w + x] = tile;
 			}
 		}
+	}
+	pub fn update_tile(&mut self, coord: &HexCoord, height: f32, move_cost: f32) {
+		let tile = &mut self.tiles[coord.to_index(self.map_width)];
+		tile.move_cost = move_cost;
+		tile.height = height;
 	}
 }
 

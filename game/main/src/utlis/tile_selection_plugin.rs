@@ -24,7 +24,12 @@ fn update_tile_under_cursor(
 	map: Res<Map>,
 	mut tile_under_cursor: ResMut<TileUnderCursor>,
 ) {
-	let win = window.single();
+	let win_r = window.get_single();
+	if win_r.is_err() {
+		return;
+	}
+	let win = win_r.unwrap();
+
 	let (cam_transform, camera) = cam_query.single();
 	let Some(cursor_pos) = win.cursor_position() else {
 		return;
