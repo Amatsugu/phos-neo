@@ -4447,6 +4447,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "19b30a45b0cd0bcca8037f3d0dc3421eaf95327a17cad11964fb8179b4fc4832"
 
 [[package]]
+name = "resources"
+version = "0.1.0"
+dependencies = [
+ "asset_loader",
+ "bevy",
+ "bevy_asset_loader",
+ "ron",
+ "serde",
+ "serde_json",
+ "shared",
+ "world_generation",
+]
+
+[[package]]
 name = "rgb"
 version = "0.8.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
