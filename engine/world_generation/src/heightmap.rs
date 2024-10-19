@@ -39,7 +39,7 @@ pub fn generate_heightmap(cfg: &GenerationConfig, seed: u32, painter: &BiomePain
 			chunks,
 			height: cfg.size.y as usize,
 			width: cfg.size.x as usize,
-			sea_level: cfg.sea_level as f32,
+			sealevel: cfg.sea_level as f32,
 			min_level: min,
 			max_level: max,
 			biome_count: painter.biomes.len(),

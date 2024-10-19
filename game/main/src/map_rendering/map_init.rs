@@ -32,12 +32,13 @@ use crate::{
 		chunk_material::ChunkMaterial,
 		water_material::{WaterMaterial, WaterSettings},
 	},
-	utlis::{
-		chunk_utils::{paint_map, prepare_chunk_mesh_with_collider},
-	},
+	utlis::chunk_utils::{paint_map, prepare_chunk_mesh_with_collider},
 };
 
-use super::{chunk_rebuild::ChunkRebuildPlugin, render_distance_system::RenderDistanceVisibility, terraforming_test::TerraFormingTestPlugin};
+use super::{
+	chunk_rebuild::ChunkRebuildPlugin, render_distance_system::RenderDistanceVisibility,
+	terraforming_test::TerraFormingTestPlugin,
+};
 
 pub struct MapInitPlugin;
 
@@ -52,7 +53,6 @@ impl Plugin for MapInitPlugin {
 		app.add_plugins(BiomeAssetPlugin);
 
 		app.add_plugins(ResourceInspectorPlugin::<GenerationConfig>::default());
-		app.add_plugins(ResourceInspectorPlugin::<WaterInspect>::default());
 		app.register_type::<ExtendedMaterial<StandardMaterial, WaterMaterial>>();
 		app.register_asset_reflect::<ExtendedMaterial<StandardMaterial, WaterMaterial>>();
 		app.add_plugins((
@@ -93,12 +93,7 @@ impl Plugin for MapInitPlugin {
 	}
 }
 
-#[derive(Resource, Reflect, Default)]
-#[reflect(Resource)]
-struct WaterInspect(Handle<ExtendedMaterial<StandardMaterial, WaterMaterial>>);
-
 fn setup_materials(
-	mut commands: Commands,
 	mut phos_assets: ResMut<PhosAssets>,
 	mut water_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, WaterMaterial>>>,
 ) {
@@ -119,7 +114,6 @@ fn setup_materials(
 			..default()
 		},
 	});
-	commands.insert_resource(WaterInspect(water_material.clone()));
 	phos_assets.water_material = water_material;
 }
 
@@ -239,12 +233,19 @@ fn spawn_map(
 ) {
 	paint_map(&mut heightmap, &biome_painter, &tile_assets, &tile_mappers);
 
+	let map_size = UVec2::new(heightmap.width as u32, heightmap.height as u32);
 	let chunk_meshes: Vec<_> = heightmap
 		.chunks
 		.par_iter()
 		.map(|chunk: &Chunk| {
 			let index = offset_to_index(chunk.chunk_offset, heightmap.width);
-			return prepare_chunk_mesh_with_collider(&heightmap.get_chunk_mesh_data(index), chunk.chunk_offset, index);
+			return prepare_chunk_mesh_with_collider(
+				&heightmap.get_chunk_mesh_data(index),
+				heightmap.sealevel,
+				chunk.chunk_offset,
+				index,
+				map_size,
+			);
 		})
 		.collect();
 
@@ -257,36 +258,52 @@ fn spawn_map(
 			0.,
 			(Chunk::SIZE / 2) as f32 * 1.5,
 		);
-		for (mesh, collider, pos, index) in chunk_meshes {
+		for (chunk_mesh, water_mesh, collider, pos, index) in chunk_meshes {
 			// let mesh_handle = meshes.a
-			let chunk = commands.spawn((
-				MaterialMeshBundle {
-					mesh: meshes.add(mesh),
-					material: atlas.chunk_material_handle.clone(),
-					transform: Transform::from_translation(pos),
-					..default()
-				},
-				PhosChunk::new(index),
-				RenderDistanceVisibility::default().with_offset(visibility_offset),
-				collider,
-			));
-			registry.chunks.push(chunk.id());
+			let chunk = commands
+				.spawn((
+					MaterialMeshBundle {
+						mesh: meshes.add(chunk_mesh),
+						material: atlas.chunk_material_handle.clone(),
+						transform: Transform::from_translation(pos),
+						..default()
+					},
+					PhosChunk::new(index),
+					RenderDistanceVisibility::default().with_offset(visibility_offset),
+					collider,
+				))
+				.id();
+			let water = commands
+				.spawn((
+					MaterialMeshBundle {
+						mesh: meshes.add(water_mesh),
+						material: atlas.water_material.clone(),
+						transform: Transform::from_translation(pos),
+						..default()
+					},
+					PhosChunk::new(index),
+					NotShadowCaster,
+					RenderDistanceVisibility::default().with_offset(visibility_offset),
+				))
+				.id();
+			registry.chunks.push(chunk);
+			registry.waters.push(water);
 		}
 	}
 
-	commands.spawn((
-		MaterialMeshBundle {
-			transform: Transform::from_translation(heightmap.get_center()),
-			mesh: meshes.add(
-				Plane3d::default()
-					.mesh()
-					.size(heightmap.get_world_width(), heightmap.get_world_height()),
-			),
-			material: atlas.water_material.clone(),
-			..default()
-		},
-		NotShadowCaster,
-	));
+	// commands.spawn((
+	// 	MaterialMeshBundle {
+	// 		transform: Transform::from_translation(heightmap.get_center()),
+	// 		mesh: meshes.add(
+	// 			Plane3d::default()
+	// 				.mesh()
+	// 				.size(heightmap.get_world_width(), heightmap.get_world_height()),
+	// 		),
+	// 		material: atlas.water_material.clone(),
+	// 		..default()
+	// 	},
+	// 	NotShadowCaster,
+	// ));
 
 	commands.insert_resource(registry);
 	generator_state.set(GeneratorState::Idle);

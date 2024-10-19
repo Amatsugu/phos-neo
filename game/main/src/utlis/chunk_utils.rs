@@ -3,14 +3,17 @@ use bevy::log::*;
 use bevy::{
 	asset::Assets,
 	ecs::system::Res,
-	math::{IVec2, Vec3},
+	math::{IVec2, UVec2, Vec3},
 	render::mesh::Mesh,
 };
 use bevy_rapier3d::geometry::{Collider, TriMeshFlags};
 use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 use world_generation::{
 	biome_painter::BiomePainter,
-	generators::{chunk_colliders::generate_chunk_collider, mesh_generator::generate_chunk_mesh},
+	generators::{
+		chunk_colliders::generate_chunk_collider,
+		mesh_generator::{generate_chunk_mesh, generate_chunk_water_mesh},
+	},
 	hex_utils::offset_to_world,
 	prelude::{Chunk, Map, MeshChunkData},
 	tile_manager::TileAsset,
@@ -50,16 +53,20 @@ pub fn paint_chunk(
 
 pub fn prepare_chunk_mesh(
 	chunk: &MeshChunkData,
+	sealevel: f32,
 	chunk_offset: IVec2,
 	chunk_index: usize,
-) -> (Mesh, (Vec<Vec3>, Vec<[u32; 3]>), Vec3, usize) {
+	map_size: UVec2,
+) -> (Mesh, Mesh, (Vec<Vec3>, Vec<[u32; 3]>), Vec3, usize) {
 	#[cfg(feature = "tracing")]
 	let _gen_mesh = info_span!("Generate Chunk").entered();
-	let mesh = generate_chunk_mesh(chunk);
+	let chunk_mesh = generate_chunk_mesh(chunk);
+	let water_mesh = generate_chunk_water_mesh(chunk, sealevel, map_size.x as usize, map_size.y as usize);
 	let col_data = generate_chunk_collider(chunk);
 
 	return (
-		mesh,
+		chunk_mesh,
+		water_mesh,
 		col_data,
 		offset_to_world(chunk_offset * Chunk::SIZE as i32, 0.),
 		chunk_index,
@@ -68,15 +75,18 @@ pub fn prepare_chunk_mesh(
 
 pub fn prepare_chunk_mesh_with_collider(
 	chunk: &MeshChunkData,
+	sealevel: f32,
 	chunk_offset: IVec2,
 	chunk_index: usize,
-) -> (Mesh, Collider, Vec3, usize) {
-	let (mesh, (col_verts, col_indicies), pos, index) = prepare_chunk_mesh(chunk, chunk_offset, chunk_index);
+	map_size: UVec2,
+) -> (Mesh, Mesh, Collider, Vec3, usize) {
+	let (chunk_mesh, water_mesh, (col_verts, col_indicies), pos, index) =
+		prepare_chunk_mesh(chunk, sealevel, chunk_offset, chunk_index, map_size);
 	let collider: Collider;
 	{
 		#[cfg(feature = "tracing")]
 		let _collider_span = info_span!("Create Collider Trimesh").entered();
 		collider = Collider::trimesh_with_flags(col_verts, col_indicies, TriMeshFlags::DELETE_DUPLICATE_TRIANGLES);
 	}
-	return (mesh, collider, pos, index);
+	return (chunk_mesh, water_mesh, collider, pos, index);
 }

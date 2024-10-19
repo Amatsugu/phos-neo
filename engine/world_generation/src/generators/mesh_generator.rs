@@ -2,6 +2,7 @@ use crate::hex_utils::HexCoord;
 use crate::{hex_utils::offset3d_to_world, prelude::*};
 #[cfg(feature = "tracing")]
 use bevy::log::*;
+use bevy::math::VectorSpace;
 use bevy::{
 	prelude::*,
 	render::{
@@ -91,6 +92,74 @@ fn create_tile(
 		if n_height < pos.y {
 			create_tile_wall(pos, i, n_height, verts, uvs, indices, normals, side_tex_off);
 		}
+	}
+}
+
+pub fn generate_chunk_water_mesh(chunk: &MeshChunkData, sealevel: f32, map_width: usize, map_height: usize) -> Mesh {
+	#[cfg(feature = "tracing")]
+	let _gen_mesh = info_span!("Generate Water Surface Mesh").entered();
+	let vertex_count: usize = Chunk::SIZE * Chunk::SIZE * 7;
+	let mut verts = Vec::with_capacity(vertex_count);
+	let mut uvs = Vec::with_capacity(vertex_count);
+	let mut indices = Vec::with_capacity(vertex_count);
+	let mut normals = Vec::with_capacity(vertex_count);
+
+	for z in 0..Chunk::SIZE {
+		for x in 0..Chunk::SIZE {
+			let idx = x + z * Chunk::SIZE;
+			let height = chunk.heights[idx];
+			if height > sealevel {
+				continue;
+			}
+			let off_pos = Vec3::new(x as f32, sealevel, z as f32);
+			let tile_pos = offset3d_to_world(off_pos);
+			let coord = HexCoord::from_grid_pos(x, z);
+			let n = chunk.get_neighbors(&coord);
+
+			create_tile_water_surface(tile_pos, &n, &mut verts, &mut uvs, &mut indices, &mut normals);
+		}
+	}
+	let mesh = Mesh::new(
+		PrimitiveTopology::TriangleList,
+		RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
+	)
+	.with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, verts)
+	.with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uvs)
+	.with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, normals)
+	.with_inserted_indices(Indices::U32(indices));
+	return mesh;
+}
+
+fn create_tile_water_surface(
+	pos: Vec3,
+	neighbors: &[f32; 6],
+	verts: &mut Vec<Vec3>,
+	uvs: &mut Vec<Vec2>,
+	indices: &mut Vec<u32>,
+	normals: &mut Vec<Vec3>,
+) {
+	let idx = verts.len() as u32;
+	//todo: only use triangle fan when on shoreline
+	verts.push(pos);
+	uvs.push(Vec2::ZERO);
+	normals.push(Vec3::Y);
+	for i in 0..6 {
+		let p = pos + HEX_CORNERS[i];
+		verts.push(p);
+		let mut uv = Vec2::ZERO;
+		let n = neighbors[i];
+		let nn = neighbors[(i + 5) % 6];
+
+		if nn > pos.y || n > pos.y {
+			uv = Vec2::ONE;
+		}
+
+		indices.push(idx);
+		indices.push(idx + 1 + i as u32);
+		indices.push(idx + 1 + ((i as u32 + 1) % 6));
+
+		uvs.push(uv);
+		normals.push(Vec3::Y);
 	}
 }
 

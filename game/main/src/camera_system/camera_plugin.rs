@@ -224,7 +224,7 @@ fn sample_ground(pos: Vec3, heightmap: &Map) -> f32 {
 	let mut ground_height = if heightmap.is_in_bounds(&tile_under) {
 		heightmap.sample_height(&tile_under)
 	} else {
-		heightmap.sea_level
+		heightmap.sealevel
 	};
 
 	for n in neighbors {
@@ -234,8 +234,8 @@ fn sample_ground(pos: Vec3, heightmap: &Map) -> f32 {
 			}
 		}
 	}
-	if ground_height < heightmap.sea_level {
-		ground_height = heightmap.sea_level;
+	if ground_height < heightmap.sealevel {
+		ground_height = heightmap.sealevel;
 	}
 	return ground_height;
 }

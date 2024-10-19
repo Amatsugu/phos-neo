@@ -13,7 +13,7 @@ pub struct Map {
 	pub chunks: Vec<Chunk>,
 	pub height: usize,
 	pub width: usize,
-	pub sea_level: f32,
+	pub sealevel: f32,
 	pub min_level: f32,
 	pub max_level: f32,
 	pub biome_count: usize,
@@ -39,6 +39,7 @@ impl Map {
 
 		return MeshChunkData {
 			min_height: self.min_level,
+			sealevel: self.sealevel,
 			heights: chunk.heights.clone(),
 			textures: chunk.textures.clone(),
 		};
@@ -140,7 +141,7 @@ impl Map {
 	pub fn get_center(&self) -> Vec3 {
 		let w = self.get_world_width();
 		let h = self.get_world_height();
-		return Vec3::new(w / 2., self.sea_level, h / 2.);
+		return Vec3::new(w / 2., self.sealevel, h / 2.);
 	}
 
 	pub fn get_world_width(&self) -> f32 {

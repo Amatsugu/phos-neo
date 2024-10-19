@@ -30,12 +30,14 @@ impl PhosChunk {
 #[derive(Resource, Default)]
 pub struct PhosChunkRegistry {
 	pub chunks: Vec<Entity>,
+	pub waters: Vec<Entity>,
 }
 
 impl PhosChunkRegistry {
 	pub fn new(size: usize) -> Self {
 		return Self {
 			chunks: Vec::with_capacity(size),
+			waters: Vec::with_capacity(size),
 		};
 	}
 }

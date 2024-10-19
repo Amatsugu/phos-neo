@@ -33,6 +33,7 @@ fn chunk_rebuilder(
 	heightmap: Res<Map>,
 ) {
 	let pool = AsyncComputeTaskPool::get();
+	let map_size = UVec2::new(heightmap.width as u32, heightmap.height as u32);
 
 	for (chunk_entity, idx) in &chunk_query {
 		#[cfg(feature = "tracing")]
@@ -46,7 +47,8 @@ fn chunk_rebuilder(
 			#[cfg(feature = "tracing")]
 			let _spawn_span = info_span!("Rebuild Task").entered();
 			let mut queue = CommandQueue::default();
-			let (mesh, collider_data, _, _) = prepare_chunk_mesh(&chunk_data, chunk_offset, chunk_index);
+			let (mesh, water_mesh, collider_data, _, _) =
+				prepare_chunk_mesh(&chunk_data, chunk_data.sealevel, chunk_offset, chunk_index, map_size);
 			#[cfg(feature = "tracing")]
 			let trimesh_span = info_span!("Chunk Trimesh").entered();
 			let c = Collider::trimesh_with_flags(

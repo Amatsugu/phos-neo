@@ -68,7 +68,7 @@ pub fn update_map(map: &Map, smooth: f32, image: &mut ImageBuffer<image::Rgba<u8
 		let height = map.sample_height(&coord);
 
 		let mut color = Hsla::hsl(138.0, 1.0, 0.4);
-		if height < map.sea_level {
+		if height < map.sealevel {
 			color.hue = 217.0;
 		}
 
