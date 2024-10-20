@@ -3,12 +3,10 @@ use bevy::log::*;
 use bevy::{
 	pbr::{ExtendedMaterial, NotShadowCaster},
 	prelude::*,
-	render::texture::ImageFormat,
 };
 use bevy_asset_loader::prelude::*;
 
 use bevy_inspector_egui::quick::ResourceInspectorPlugin;
-use image::DynamicImage;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use shared::states::{AssetLoadState, GameplayState, MenuState};
 use world_generation::{
@@ -16,10 +14,7 @@ use world_generation::{
 	biome_painter::*,
 	heightmap::generate_heightmap,
 	hex_utils::{offset_to_index, SHORT_DIAGONAL},
-	map::{
-		biome_map::{self, BiomeMap},
-		map_utils::{render_biome_noise_map, render_map},
-	},
+	map::biome_map::BiomeMap,
 	prelude::*,
 	tile_manager::*,
 	tile_mapper::*,
@@ -35,10 +30,7 @@ use crate::{
 	utlis::chunk_utils::{paint_map, prepare_chunk_mesh_with_collider},
 };
 
-use super::{
-	chunk_rebuild::ChunkRebuildPlugin, render_distance_system::RenderDistanceVisibility,
-	terraforming_test::TerraFormingTestPlugin,
-};
+use super::{chunk_rebuild::ChunkRebuildPlugin, render_distance_system::RenderDistanceVisibility};
 
 pub struct MapInitPlugin;
 
