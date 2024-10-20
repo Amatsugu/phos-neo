@@ -1,4 +1,4 @@
-use crate::hex_utils::HexCoord;
+use crate::hex_utils::{HexCoord, INNER_RADIUS};
 use crate::{hex_utils::offset3d_to_world, prelude::*};
 #[cfg(feature = "tracing")]
 use bevy::log::*;
@@ -114,9 +114,17 @@ pub fn generate_chunk_water_mesh(chunk: &MeshChunkData, sealevel: f32, map_width
 			let off_pos = Vec3::new(x as f32, sealevel, z as f32);
 			let tile_pos = offset3d_to_world(off_pos);
 			let coord = HexCoord::from_grid_pos(x, z);
-			let n = chunk.get_neighbors(&coord);
+			let (n, neighbor_has_land) = chunk.get_neighbors_with_water_info(&coord);
 
-			create_tile_water_surface(tile_pos, &n, &mut verts, &mut uvs, &mut indices, &mut normals);
+			create_tile_water_surface(
+				tile_pos,
+				&n,
+				neighbor_has_land,
+				&mut verts,
+				&mut uvs,
+				&mut indices,
+				&mut normals,
+			);
 		}
 	}
 	let mesh = Mesh::new(
@@ -133,6 +141,48 @@ pub fn generate_chunk_water_mesh(chunk: &MeshChunkData, sealevel: f32, map_width
 fn create_tile_water_surface(
 	pos: Vec3,
 	neighbors: &[f32; 6],
+	neighbor_has_land: bool,
+	verts: &mut Vec<Vec3>,
+	uvs: &mut Vec<Vec2>,
+	indices: &mut Vec<u32>,
+	normals: &mut Vec<Vec3>,
+) {
+	if !neighbor_has_land {
+		crate_tile_water_inner_surface(pos, verts, uvs, indices, normals);
+		return;
+	}
+	crate_tile_water_shore_surface(pos, neighbors, verts, uvs, indices, normals);
+}
+
+fn crate_tile_water_inner_surface(
+	pos: Vec3,
+	verts: &mut Vec<Vec3>,
+	uvs: &mut Vec<Vec2>,
+	indices: &mut Vec<u32>,
+	normals: &mut Vec<Vec3>,
+) {
+	//todo: share verts
+	let idx = verts.len() as u32;
+	for i in 0..6 {
+		let p = pos + HEX_CORNERS[i];
+		verts.push(p);
+		uvs.push(Vec2::ZERO);
+		normals.push(Vec3::Y);
+	}
+	for i in 0..3 {
+		let off = i * 2;
+		indices.push(off + idx);
+		indices.push(((off + 1) % 6) + idx);
+		indices.push(((off + 2) % 6) + idx);
+	}
+	indices.push(idx);
+	indices.push(idx + 2);
+	indices.push(idx + 4);
+}
+
+fn crate_tile_water_shore_surface(
+	pos: Vec3,
+	neighbors: &[f32; 6],
 	verts: &mut Vec<Vec3>,
 	uvs: &mut Vec<Vec2>,
 	indices: &mut Vec<u32>,
@@ -143,20 +193,26 @@ fn create_tile_water_surface(
 	verts.push(pos);
 	uvs.push(Vec2::ZERO);
 	normals.push(Vec3::Y);
-	for i in 0..6 {
-		let p = pos + HEX_CORNERS[i];
+	for i in 0..12 {
+		let p = pos + WATER_HEX_CORNERS[i];
 		verts.push(p);
 		let mut uv = Vec2::ZERO;
-		let n = neighbors[i];
-		let nn = neighbors[(i + 5) % 6];
+		let ni = i / 2;
+		let n = neighbors[ni];
+		let nn = neighbors[(ni + 5) % 6];
 
 		if nn > pos.y || n > pos.y {
 			uv = Vec2::ONE;
 		}
+		if ni * 2 != i {
+			if n <= pos.y {
+				uv = Vec2::ZERO;
+			}
+		}
 
 		indices.push(idx);
 		indices.push(idx + 1 + i as u32);
-		indices.push(idx + 1 + ((i as u32 + 1) % 6));
+		indices.push(idx + 1 + ((i as u32 + 1) % 12));
 
 		uvs.push(uv);
 		normals.push(Vec3::Y);

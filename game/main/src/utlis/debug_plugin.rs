@@ -1,7 +1,11 @@
-use bevy::prelude::*;
+use bevy::{gizmos::gizmos, prelude::*};
 use shared::resources::TileUnderCursor;
 use shared::states::GameplayState;
-use world_generation::{consts::HEX_CORNERS, prelude::Map, states::GeneratorState};
+use world_generation::{
+	consts::{HEX_CORNERS, WATER_HEX_CORNERS},
+	prelude::Map,
+	states::GeneratorState,
+};
 
 pub struct DebugPlugin;
 
@@ -71,6 +75,17 @@ fn show_tile_heights(map: Res<Map>, mut gizmos: Gizmos, shape: Res<Shape>, tile_
 		gizmos.line(contact.point, contact.point + Vec3::X, LinearRgba::RED);
 		gizmos.line(contact.point, contact.point + Vec3::Y, LinearRgba::GREEN);
 		gizmos.line(contact.point, contact.point + Vec3::Z, LinearRgba::BLUE);
+
+		// show_water_corners(contact.tile.to_world(height + 1.0), &mut gizmos);
+	}
+}
+
+fn show_water_corners(pos: Vec3, gizmos: &mut Gizmos) {
+	for i in 0..WATER_HEX_CORNERS.len() {
+		let p = pos + WATER_HEX_CORNERS[i];
+		let p2 = pos + WATER_HEX_CORNERS[(i + 1) % WATER_HEX_CORNERS.len()];
+
+		gizmos.line(p, p2, LinearRgba::RED);
 	}
 }
 

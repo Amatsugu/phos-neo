@@ -16,6 +16,21 @@ pub const HEX_CORNERS: [Vec3; 6] = [
 	Vec3::new(-INNER_RADIUS, 0., 0.5 * OUTER_RADIUS),
 ];
 
+pub const WATER_HEX_CORNERS: [Vec3; 12] = [
+	Vec3::new(0., 0., OUTER_RADIUS),
+	Vec3::new(INNER_RADIUS / 2.0, 0., 0.75 * OUTER_RADIUS),
+	Vec3::new(INNER_RADIUS, 0., 0.5 * OUTER_RADIUS),
+	Vec3::new(INNER_RADIUS, 0., 0.),
+	Vec3::new(INNER_RADIUS, 0., -0.5 * OUTER_RADIUS),
+	Vec3::new(INNER_RADIUS / 2.0, 0., -0.75 * OUTER_RADIUS),
+	Vec3::new(0., 0., -OUTER_RADIUS),
+	Vec3::new(-INNER_RADIUS / 2.0, 0., -0.75 * OUTER_RADIUS),
+	Vec3::new(-INNER_RADIUS, 0., -0.5 * OUTER_RADIUS),
+	Vec3::new(-INNER_RADIUS, 0., 0.),
+	Vec3::new(-INNER_RADIUS, 0., 0.5 * OUTER_RADIUS),
+	Vec3::new(-INNER_RADIUS / 2.0, 0., 0.75 * OUTER_RADIUS),
+];
+
 pub const HEX_NORMALS: [Vec3; 6] = [
 	Vec3::new(INNER_RADIUS / 2., 0., (OUTER_RADIUS + 0.5 * OUTER_RADIUS) / 2.),
 	Vec3::Z,

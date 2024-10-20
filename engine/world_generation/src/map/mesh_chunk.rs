@@ -24,17 +24,20 @@ impl MeshChunkData {
 		return data;
 	}
 
-	pub fn get_neighbors_map_bounded(&self, coord: &HexCoord, width: usize, height: usize) -> [f32; 6] {
+	pub fn get_neighbors_with_water_info(&self, coord: &HexCoord) -> ([f32; 6], bool) {
+		let mut has_land = false;
 		let mut data = [self.min_height; 6];
 		let n_tiles = coord.get_neighbors();
 		for i in 0..6 {
 			let n = n_tiles[i];
-			if !n.is_in_bounds(Chunk::SIZE * width, Chunk::SIZE * height) {
+			if !n.is_in_bounds(Chunk::SIZE, Chunk::SIZE) {
 				continue;
 			}
 			data[i] = self.heights[n.to_index(Chunk::SIZE)];
+			if data[i] > self.sealevel {
+				has_land = true;
+			}
 		}
-
-		return data;
+		return (data, has_land);
 	}
 }
