@@ -118,8 +118,7 @@ pub fn generate_chunk_water_mesh(chunk: &MeshChunkData, sealevel: f32, map_width
 
 			create_tile_water_surface(
 				tile_pos,
-				height,
-				chunk.min_height,
+				chunk.distance_to_land[idx],
 				&n,
 				neighbor_has_land,
 				&mut verts,
@@ -142,9 +141,8 @@ pub fn generate_chunk_water_mesh(chunk: &MeshChunkData, sealevel: f32, map_width
 
 fn create_tile_water_surface(
 	pos: Vec3,
-	height: f32,
-	min_height: f32,
-	neighbors: &[f32; 6],
+	dist_to_land: f32,
+	neighbors: &[(f32, Option<f32>); 6],
 	neighbor_has_land: bool,
 	verts: &mut Vec<Vec3>,
 	uvs: &mut Vec<Vec2>,
@@ -152,16 +150,16 @@ fn create_tile_water_surface(
 	normals: &mut Vec<Vec3>,
 ) {
 	if !neighbor_has_land {
-		crate_tile_water_inner_surface(pos, height, min_height, verts, uvs, indices, normals);
+		crate_tile_water_inner_surface(pos, dist_to_land, neighbors, verts, uvs, indices, normals);
 		return;
 	}
-	crate_tile_water_shore_surface(pos, height, min_height, neighbors, verts, uvs, indices, normals);
+	crate_tile_water_shore_surface(pos, dist_to_land, neighbors, verts, uvs, indices, normals);
 }
 
 fn crate_tile_water_inner_surface(
 	pos: Vec3,
-	height: f32,
-	min_height: f32,
+	dist_to_land: f32,
+	neighbors: &[(f32, Option<f32>); 6],
 	verts: &mut Vec<Vec3>,
 	uvs: &mut Vec<Vec2>,
 	indices: &mut Vec<u32>,
@@ -172,7 +170,14 @@ fn crate_tile_water_inner_surface(
 	for i in 0..6 {
 		let p = pos + HEX_CORNERS[i];
 		verts.push(p);
-		uvs.push(Vec2::new(0.0, height.remap(min_height, pos.y, 0.0, 1.0)));
+		let n1 = if let Some(v) = neighbors[i].1 { v } else { dist_to_land };
+		let n2 = if let Some(v) = neighbors[(i + 5) % 6].1 {
+			v
+		} else {
+			dist_to_land
+		};
+		let d = (n1 + n2 + dist_to_land) / 3.0;
+		uvs.push(Vec2::new(0.0, d.remap(0., 4., 1.0, 0.0)));
 		normals.push(Vec3::Y);
 	}
 	for i in 0..3 {
@@ -188,9 +193,8 @@ fn crate_tile_water_inner_surface(
 
 fn crate_tile_water_shore_surface(
 	pos: Vec3,
-	height: f32,
-	min_height: f32,
-	neighbors: &[f32; 6],
+	dist_to_land: f32,
+	neighbors: &[(f32, Option<f32>); 6],
 	verts: &mut Vec<Vec3>,
 	uvs: &mut Vec<Vec2>,
 	indices: &mut Vec<u32>,
@@ -199,23 +203,29 @@ fn crate_tile_water_shore_surface(
 	let idx = verts.len() as u32;
 	//todo: only use triangle fan when on shoreline
 	verts.push(pos);
-	uvs.push(Vec2::new(0.0, height.remap(min_height, pos.y, 0.0, 1.0)));
+	uvs.push(Vec2::new(0.0, dist_to_land.remap(0., 4., 1.0, 0.0)));
 	normals.push(Vec3::Y);
 	for i in 0..12 {
 		let p = pos + WATER_HEX_CORNERS[i];
 		verts.push(p);
-		let mut uv = Vec2::new(0.0, height.remap(min_height, pos.y, 0.0, 1.0));
 		let ni = i / 2;
 		let n = neighbors[ni];
 		let nn = neighbors[(ni + 5) % 6];
+		let mut uv = Vec2::new(0.0, dist_to_land.remap(0., 4., 1.0, 0.0));
 
-		if nn > pos.y || n > pos.y {
+		if nn.0 > pos.y || n.0 > pos.y {
 			uv.x = 1.0;
 		}
 		if ni * 2 != i {
-			if n <= pos.y {
+			if n.0 <= pos.y {
 				uv.x = 0.0;
 			}
+			let d = if let Some(v) = n.1 { v } else { dist_to_land };
+			uv.y = ((d + dist_to_land) / 2.0).remap(0., 4., 1.0, 0.0);
+		} else {
+			let d = if let Some(v) = n.1 { v } else { dist_to_land };
+			let d2 = if let Some(v) = nn.1 { v } else { dist_to_land };
+			uv.y = ((d + d2 + dist_to_land) / 3.0).remap(0., 4., 1.0, 0.0);
 		}
 
 		indices.push(idx);
