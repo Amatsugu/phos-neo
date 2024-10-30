@@ -1,3 +1,7 @@
+use std::collections::VecDeque;
+
+use bevy::math::IVec2;
+
 use crate::hex_utils::HexCoord;
 
 use super::chunk::Chunk;
@@ -41,5 +45,41 @@ impl MeshChunkData {
 			}
 		}
 		return (data, has_land);
+	}
+
+	pub fn caluclate_water_distances(data: &mut Vec<MeshChunkData>, height: usize, width: usize, range: usize) {
+		let mut open: VecDeque<(HexCoord, f32, usize)> = VecDeque::new();
+		let mut closed: Vec<(HexCoord, f32)> = Vec::new();
+		for z in 0..height {
+			for x in 0..width {
+				let chunk = &mut data[z * height + x];
+				chunk.prepare_chunk_open(x * Chunk::SIZE, z * Chunk::SIZE, &mut open);
+			}
+		}
+	}
+
+	fn prepare_chunk_open(&mut self, offset_x: usize, offset_z: usize, open: &mut VecDeque<(HexCoord, f32, usize)>) {
+		for z in 0..Chunk::SIZE {
+			for x in 0..Chunk::SIZE {
+				let coord = HexCoord::from_grid_pos(x + offset_x, z + offset_z);
+				let idx = coord.to_chunk_local_index();
+				let h = self.heights[idx];
+				self.distance_to_land[idx] = if h > self.sealevel { 0.0 } else { 4.0 };
+				if h > self.sealevel {
+					open.push_back((coord, h, 0));
+				}
+			}
+		}
+	}
+
+	fn fill_chunk_borders(
+		&mut self,
+		chunks: &Vec<MeshChunkData>,
+		offset: IVec2,
+		open: &mut VecDeque<(HexCoord, f32, usize)>,
+		closed: &mut Vec<(HexCoord, f32)>,
+	) {
+		self.prepare_chunk_open(offset.x as usize * Chunk::SIZE, offset.y as usize * Chunk::SIZE, open);
+		todo!("Fill closed list with bordering tiles")
 	}
 }

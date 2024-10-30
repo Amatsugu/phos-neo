@@ -141,6 +141,14 @@ impl Map {
 		return Vec3::new(w / 2., self.sealevel, h / 2.);
 	}
 
+	pub fn get_center_with_height(&self) -> Vec3 {
+		let w = self.get_world_width();
+		let h = self.get_world_height();
+		let mut pos = Vec3::new(w / 2., self.sealevel, h / 2.);
+		pos.y = self.sample_height(&HexCoord::from_world_pos(pos));
+		return pos;
+	}
+
 	pub fn get_world_width(&self) -> f32 {
 		return (self.width * Chunk::SIZE) as f32 * SHORT_DIAGONAL;
 	}

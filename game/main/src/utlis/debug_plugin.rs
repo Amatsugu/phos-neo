@@ -1,11 +1,13 @@
 use bevy::{gizmos::gizmos, prelude::*};
-use shared::resources::TileUnderCursor;
 use shared::states::GameplayState;
+use shared::{resources::TileUnderCursor, sets::GameplaySet};
 use world_generation::{
 	consts::{HEX_CORNERS, WATER_HEX_CORNERS},
 	prelude::Map,
 	states::GeneratorState,
 };
+
+use crate::camera_system::components::{PhosCamera, PhosOrbitCamera};
 
 pub struct DebugPlugin;
 
@@ -27,6 +29,7 @@ impl Plugin for DebugPlugin {
 				.run_if(in_state(DebugState::Verbose)),
 		);
 
+		app.add_systems(Update, camera_debug.in_set(GameplaySet));
 		app.add_systems(Update, regenerate_map.run_if(in_state(GeneratorState::Idle)));
 
 		app.insert_resource(Shape(Polyline3d::new([
@@ -87,6 +90,16 @@ fn show_water_corners(pos: Vec3, gizmos: &mut Gizmos) {
 
 		gizmos.line(p, p2, LinearRgba::RED);
 	}
+}
+
+fn camera_debug(mut cam_query: Query<(&PhosCamera, &PhosOrbitCamera)>, mut gizmos: Gizmos) {
+	let (config, orbit) = cam_query.single();
+
+	gizmos.sphere(orbit.target, Quat::IDENTITY, 0.3, LinearRgba::RED);
+	let cam_proxy = orbit.target - (orbit.forward * 10.0);
+	gizmos.ray(orbit.target, orbit.forward * 10.0, LinearRgba::rgb(1.0, 0.0, 1.0));
+
+	gizmos.circle(cam_proxy, Dir3::Y, 0.3, LinearRgba::rgb(1.0, 1.0, 0.0));
 }
 
 fn verbose_data() {}

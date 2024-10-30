@@ -2,11 +2,11 @@ use bevy::core_pipeline::experimental::taa::{TemporalAntiAliasBundle, TemporalAn
 use bevy::core_pipeline::prepass::DepthPrepass;
 use bevy::input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
-use bevy::window::CursorGrabMode;
-use shared::states::MenuState;
+use shared::sets::GameplaySet;
 use shared::tags::MainCamera;
 use world_generation::hex_utils::HexCoord;
 use world_generation::prelude::Map;
+use world_generation::states::GeneratorState;
 
 use super::components::*;
 
@@ -15,16 +15,36 @@ pub struct PhosCameraPlugin;
 impl Plugin for PhosCameraPlugin {
 	fn build(&self, app: &mut App) {
 		app.register_type::<PhosCamera>();
+		app.register_type::<PhosOrbitCamera>();
 
 		app.add_systems(PreStartup, setup);
 
-		app.add_systems(Update, rts_camera_system.run_if(in_state(MenuState::InGame)));
-		app.add_systems(PostUpdate, limit_camera_bounds.run_if(in_state(MenuState::InGame)));
+		// app.add_systems(Update, rts_camera_system.in_set(GameplaySet));
+		// app.add_systems(PostUpdate, limit_camera_bounds.in_set(GameplaySet));
+		app.add_systems(Update, orbit_camera_upate.in_set(GameplaySet));
+
+		app.add_systems(Update, init_bounds.run_if(in_state(GeneratorState::SpawnMap)));
 		//Free Cam
 		//app.add_systems(Update, (grab_mouse, (update_camera, update_camera_mouse).chain()));
 
 		app.add_plugins(TemporalAntiAliasPlugin);
 	}
+}
+
+fn init_bounds(
+	mut commands: Commands,
+	mut cam: Query<(&mut Transform, Entity), With<PhosCamera>>,
+	heightmap: Res<Map>,
+) {
+	let (mut cam_t, cam_entity) = cam.single_mut();
+	cam_t.translation = heightmap.get_center();
+	commands
+		.entity(cam_entity)
+		.insert(CameraBounds::from_size(heightmap.get_world_size()))
+		.insert(PhosOrbitCamera {
+			target: heightmap.get_center_with_height(),
+			..Default::default()
+		});
 }
 
 fn setup(mut commands: Commands, mut msaa: ResMut<Msaa>) {
@@ -37,93 +57,108 @@ fn setup(mut commands: Commands, mut msaa: ResMut<Msaa>) {
 			PhosCamera::default(),
 			MainCamera,
 			DepthPrepass,
-			PhosCameraTargets::default(),
+			PhosOrbitCamera::default(),
 		))
 		.insert(TemporalAntiAliasBundle::default());
 
 	*msaa = Msaa::Off;
 }
-fn update_camera(
-	mut cam_query: Query<(&PhosCamera, &mut Transform)>,
-	keyboard_input: Res<ButtonInput<KeyCode>>,
+
+fn orbit_camera_upate(
+	mut cam_query: Query<(&mut Transform, &PhosCamera, &mut PhosOrbitCamera, &CameraBounds)>,
+	mut wheel: EventReader<MouseWheel>,
+	mut mouse_motion: EventReader<MouseMotion>,
+	mouse: Res<ButtonInput<MouseButton>>,
+	key: Res<ButtonInput<KeyCode>>,
 	time: Res<Time>,
-	windows: Query<&Window>,
+	map: Res<Map>,
+	#[cfg(debug_assertions)] mut gizmos: Gizmos,
 ) {
-	let window = windows.single();
-	if window.cursor.grab_mode != CursorGrabMode::Locked {
-		return;
-	}
-	let (cam, mut transform) = cam_query.single_mut();
+	let (mut transform, config, mut orbit, bounds) = cam_query.single_mut();
 
-	let mut move_vec = Vec3::ZERO;
-	if keyboard_input.pressed(KeyCode::KeyA) {
-		move_vec += Vec3::NEG_X;
-	}
-	if keyboard_input.pressed(KeyCode::KeyD) {
-		move_vec += Vec3::X;
-	}
-	if keyboard_input.pressed(KeyCode::KeyW) {
-		move_vec += Vec3::NEG_Z;
-	}
-	if keyboard_input.pressed(KeyCode::KeyS) {
-		move_vec += Vec3::Z;
-	}
+	let target = orbit.target;
+	let mut cam_pos = target;
 
-	let rot = transform.rotation;
-	move_vec = (rot * move_vec.normalize_or_zero()) * cam.speed * time.delta_seconds();
+	//Apply Camera Dist
+	cam_pos -= orbit.forward * orbit.distance;
 
-	if keyboard_input.pressed(KeyCode::ShiftLeft) {
-		move_vec += Vec3::from(transform.down());
-	}
-	if keyboard_input.pressed(KeyCode::Space) {
-		move_vec += Vec3::from(transform.up());
-	}
-
-	transform.translation += move_vec.normalize_or_zero() * cam.speed * time.delta_seconds();
-}
-
-fn update_camera_mouse(
-	mut cam_query: Query<&mut Transform, With<PhosCamera>>,
-	mut mouse_move: EventReader<MouseMotion>,
-	time: Res<Time>,
-	windows: Query<&Window>,
-) {
-	let window = windows.single();
-	if window.cursor.grab_mode != CursorGrabMode::Locked {
-		return;
-	}
-	let mut transform = cam_query.single_mut();
-
-	for ev in mouse_move.read() {
-		let (mut yaw, mut pitch, _) = transform.rotation.to_euler(EulerRot::YXZ);
-		match window.cursor.grab_mode {
-			CursorGrabMode::None => (),
-			_ => {
-				// Using smallest of height or width ensures equal vertical and horizontal sensitivity
-				pitch -= ev.delta.y.to_radians() * time.delta_seconds() * 5.;
-				yaw -= ev.delta.x.to_radians() * time.delta_seconds() * 5.;
-			}
+	if mouse.pressed(MouseButton::Middle) {
+		let mut orbit_move = Vec2::ZERO;
+		for e in mouse_motion.read() {
+			orbit_move += e.delta;
 		}
-
-		pitch = pitch.clamp(-1.54, 1.54);
-
-		// Order is important to prevent unintended roll
-		transform.rotation = Quat::from_axis_angle(Vec3::Y, yaw) * Quat::from_axis_angle(Vec3::X, pitch);
+		orbit_move *= f32::to_radians(config.speed) * time.delta_seconds();
+		let rot_y = Quat::from_axis_angle(Vec3::Y, orbit_move.x);
+		let right = orbit.forward.cross(Vec3::Y).normalize();
+		let rot_x = Quat::from_axis_angle(right, orbit_move.y);
+		orbit.forward = rot_x * rot_y * orbit.forward;
+		orbit.forward.y = orbit.forward.y.clamp(-1.0, 0.0);
+		orbit.forward = orbit.forward.normalize();
 	}
-}
-
-fn grab_mouse(mut windows: Query<&mut Window>, mouse: Res<ButtonInput<MouseButton>>, key: Res<ButtonInput<KeyCode>>) {
-	let mut window = windows.single_mut();
-
-	if mouse.just_pressed(MouseButton::Middle) {
-		window.cursor.visible = false;
-		window.cursor.grab_mode = CursorGrabMode::Locked;
+	if key.pressed(KeyCode::KeyE) {
+		let rot = Quat::from_axis_angle(Vec3::Y, f32::to_radians(config.speed) * time.delta_seconds());
+		orbit.forward = rot * orbit.forward;
+	} else if key.pressed(KeyCode::KeyQ) {
+		let rot = Quat::from_axis_angle(Vec3::Y, f32::to_radians(-config.speed) * time.delta_seconds());
+		orbit.forward = rot * orbit.forward;
 	}
 
-	if key.just_pressed(KeyCode::Escape) {
-		window.cursor.visible = true;
-		window.cursor.grab_mode = CursorGrabMode::None;
+	let mut cam_move = Vec3::ZERO;
+
+	if key.pressed(KeyCode::KeyA) {
+		cam_move.x = 1.;
+	} else if key.pressed(KeyCode::KeyD) {
+		cam_move.x = -1.;
 	}
+
+	if key.pressed(KeyCode::KeyW) {
+		cam_move.z = 1.;
+	} else if key.pressed(KeyCode::KeyS) {
+		cam_move.z = -1.;
+	}
+
+	if key.pressed(KeyCode::ShiftLeft) {
+		cam_move *= 2.0;
+	}
+
+	if cam_move != Vec3::ZERO {
+		cam_move = cam_move.normalize();
+		let move_fwd = Vec3::new(orbit.forward.x, 0., orbit.forward.z).normalize();
+		let move_rot = Quat::from_rotation_arc(Vec3::NEG_Z, move_fwd);
+		#[cfg(debug_assertions)]
+		{
+			gizmos.arrow(orbit.target, orbit.target + move_fwd, LinearRgba::WHITE.with_alpha(0.5));
+			gizmos.arrow(orbit.target, orbit.target - (move_rot * cam_move), LinearRgba::BLUE);
+		}
+		orbit.target -= (move_rot * cam_move) * config.speed * time.delta_seconds();
+		orbit.target.y = sample_ground(orbit.target, &map);
+
+		orbit.target.x = orbit.target.x.clamp(bounds.min.x, bounds.max.x);
+		orbit.target.z = orbit.target.z.clamp(bounds.min.y, bounds.max.y);
+	}
+
+	let mut scroll = 0.0;
+	for e in wheel.read() {
+		match e.unit {
+			MouseScrollUnit::Line => scroll += e.y * 5.,
+			MouseScrollUnit::Pixel => scroll += e.y,
+		}
+	}
+
+	orbit.distance -= scroll * time.delta_seconds() * config.zoom_speed;
+	orbit.distance = orbit.distance.clamp(config.min_height, config.max_height);
+
+	// let ground_below_cam = sample_ground(cam_pos, &map) + config.min_height;
+	// if cam_pos.y <= ground_below_cam {
+	// 	cam_pos.y = ground_below_cam;
+	// }
+
+	// if cam_pos.y < target.y {
+	// 	cam_pos.y = target.y;
+	// }
+
+	transform.translation = cam_pos;
+	transform.look_at(target, Vec3::Y);
 }
 
 fn rts_camera_system(

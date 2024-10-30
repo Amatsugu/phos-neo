@@ -21,7 +21,6 @@ use world_generation::{
 };
 
 use crate::{
-	camera_system::components::*,
 	prelude::{PhosAssets, PhosChunk, PhosChunkRegistry},
 	shader_extensions::{
 		chunk_material::ChunkMaterial,
@@ -144,7 +143,6 @@ fn finalize_texture(
 
 fn create_heightmap(
 	mut commands: Commands,
-	mut cam: Query<(&mut Transform, Entity), With<PhosCamera>>,
 	mut next_state: ResMut<NextState<GeneratorState>>,
 	biome_painter: Res<BiomePainter>,
 ) {
@@ -200,10 +198,6 @@ fn create_heightmap(
 	};
 	let (heightmap, biome_map) = generate_heightmap(&config, 42069, &biome_painter);
 
-	let (mut cam_t, cam_entity) = cam.single_mut();
-	cam_t.translation = heightmap.get_center();
-
-	commands.entity(cam_entity).insert(CameraBounds::from_size(config.size));
 	commands.insert_resource(heightmap);
 	commands.insert_resource(biome_map);
 	commands.insert_resource(config);
