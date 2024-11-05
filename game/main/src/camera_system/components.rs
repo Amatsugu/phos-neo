@@ -9,6 +9,7 @@ pub struct PhosCamera {
 	pub max_height: f32,
 	pub speed: f32,
 	pub zoom_speed: f32,
+	pub pan_speed: Vec2,
 	pub min_angle: f32,
 	pub max_angle: f32,
 }
@@ -19,6 +20,7 @@ impl Default for PhosCamera {
 			min_height: 10.,
 			max_height: 420.,
 			speed: 100.,
+			pan_speed: Vec2::new(0.8, 0.5),
 			zoom_speed: 20.,
 			min_angle: (20. as f32).to_radians(),
 			max_angle: 1.,
@@ -38,27 +40,6 @@ impl Default for PhosOrbitCamera {
 			target: Default::default(),
 			distance: 40.0,
 			forward: Vec3::new(0.0, -0.5, 0.5).normalize(),
-		}
-	}
-}
-
-#[derive(Component)]
-pub struct PhosCameraTargets {
-	pub height: f32,
-	pub forward: Vec3,
-	pub last_height: f32,
-	pub anim_time: f32,
-	pub rotate_time: f32,
-}
-
-impl Default for PhosCameraTargets {
-	fn default() -> Self {
-		Self {
-			height: Default::default(),
-			forward: Vec3::NEG_Z,
-			last_height: Default::default(),
-			anim_time: Default::default(),
-			rotate_time: Default::default(),
 		}
 	}
 }

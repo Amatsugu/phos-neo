@@ -2,6 +2,7 @@ use bevy::core_pipeline::experimental::taa::{TemporalAntiAliasBundle, TemporalAn
 use bevy::core_pipeline::prepass::DepthPrepass;
 use bevy::input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
+use bevy::window::{CursorGrabMode, PrimaryWindow};
 use shared::sets::GameplaySet;
 use shared::tags::MainCamera;
 use world_generation::hex_utils::HexCoord;
@@ -69,12 +70,14 @@ fn orbit_camera_upate(
 	mut wheel: EventReader<MouseWheel>,
 	mut mouse_motion: EventReader<MouseMotion>,
 	mouse: Res<ButtonInput<MouseButton>>,
+	mut window_query: Query<&mut Window, With<PrimaryWindow>>,
 	key: Res<ButtonInput<KeyCode>>,
 	time: Res<Time>,
 	map: Res<Map>,
 	#[cfg(debug_assertions)] mut gizmos: Gizmos,
 ) {
 	let (mut transform, config, mut orbit, bounds) = cam_query.single_mut();
+	let mut window = window_query.single_mut();
 
 	let target = orbit.target;
 	let mut cam_pos = target;
@@ -87,13 +90,18 @@ fn orbit_camera_upate(
 		for e in mouse_motion.read() {
 			orbit_move += e.delta;
 		}
-		orbit_move *= f32::to_radians(config.speed) * time.delta_seconds();
+		orbit_move *= config.pan_speed * time.delta_seconds() * -1.0;
 		let rot_y = Quat::from_axis_angle(Vec3::Y, orbit_move.x);
 		let right = orbit.forward.cross(Vec3::Y).normalize();
 		let rot_x = Quat::from_axis_angle(right, orbit_move.y);
 		orbit.forward = rot_x * rot_y * orbit.forward;
-		orbit.forward.y = orbit.forward.y.clamp(-1.0, 0.0);
+		// orbit.forward.y = orbit.forward.y.clamp(-0.9, 0.0);
 		orbit.forward = orbit.forward.normalize();
+		window.cursor.grab_mode = CursorGrabMode::Locked;
+		window.cursor.visible = false;
+	} else {
+		window.cursor.grab_mode = CursorGrabMode::None;
+		window.cursor.visible = true;
 	}
 	if key.pressed(KeyCode::KeyE) {
 		let rot = Quat::from_axis_angle(Vec3::Y, f32::to_radians(config.speed) * time.delta_seconds());
@@ -117,9 +125,11 @@ fn orbit_camera_upate(
 		cam_move.z = -1.;
 	}
 
-	if key.pressed(KeyCode::ShiftLeft) {
-		cam_move *= 2.0;
-	}
+	let move_speed = if key.pressed(KeyCode::ShiftLeft) {
+		config.speed * 2.0
+	} else {
+		config.speed
+	};
 
 	if cam_move != Vec3::ZERO {
 		cam_move = cam_move.normalize();
@@ -130,7 +140,7 @@ fn orbit_camera_upate(
 			gizmos.arrow(orbit.target, orbit.target + move_fwd, LinearRgba::WHITE.with_alpha(0.5));
 			gizmos.arrow(orbit.target, orbit.target - (move_rot * cam_move), LinearRgba::BLUE);
 		}
-		orbit.target -= (move_rot * cam_move) * config.speed * time.delta_seconds();
+		orbit.target -= (move_rot * cam_move) * move_speed * time.delta_seconds();
 		orbit.target.y = sample_ground(orbit.target, &map);
 
 		orbit.target.x = orbit.target.x.clamp(bounds.min.x, bounds.max.x);
@@ -161,98 +171,6 @@ fn orbit_camera_upate(
 	transform.look_at(target, Vec3::Y);
 }
 
-fn rts_camera_system(
-	mut cam_query: Query<(&mut Transform, &PhosCamera, &mut PhosCameraTargets)>,
-	mut wheel: EventReader<MouseWheel>,
-	key: Res<ButtonInput<KeyCode>>,
-	time: Res<Time>,
-	heightmap: Res<Map>,
-) {
-	let (mut cam, cam_cfg, mut cam_targets) = cam_query.single_mut();
-	let mut cam_move = Vec3::ZERO;
-	let mut cam_pos = cam.translation;
-
-	if key.pressed(KeyCode::KeyA) {
-		cam_move.x = -1.;
-	} else if key.pressed(KeyCode::KeyD) {
-		cam_move.x = 1.;
-	}
-
-	if key.pressed(KeyCode::KeyW) {
-		cam_move.z = -1.;
-	} else if key.pressed(KeyCode::KeyS) {
-		cam_move.z = 1.;
-	}
-
-	let move_speed = if key.pressed(KeyCode::ShiftLeft) {
-		cam_cfg.speed * 2.
-	} else {
-		cam_cfg.speed
-	};
-
-	cam_move = cam_move.normalize_or_zero() * move_speed * time.delta_seconds();
-	cam_pos += cam_move;
-
-	let mut scroll = 0.0;
-	for e in wheel.read() {
-		match e.unit {
-			MouseScrollUnit::Line => scroll += e.y * 5.,
-			MouseScrollUnit::Pixel => scroll += e.y,
-		}
-	}
-
-	let ground_height = sample_ground(cam.translation, &heightmap);
-
-	cam_targets.height -= scroll;
-	if cam_targets.height > cam_cfg.max_height {
-		cam_targets.height = cam_cfg.max_height;
-	}
-
-	let min_height = ground_height + cam_cfg.min_height;
-
-	if min_height != cam_targets.last_height {
-		cam_targets.last_height = min_height;
-		cam_targets.anim_time = 0.;
-		cam_targets.rotate_time = 0.;
-	}
-
-	if scroll != 0. {
-		cam_targets.anim_time = 0.;
-		cam_targets.rotate_time = 0.;
-		if cam_targets.height < min_height {
-			cam_targets.height = min_height;
-		}
-	}
-
-	let desired_height = if cam_targets.height < min_height {
-		min_height
-	} else {
-		cam_targets.height
-	};
-	if cam_targets.anim_time < 1. {
-		cam_targets.anim_time += time.delta_seconds() * cam_cfg.zoom_speed;
-		cam_targets.anim_time = cam_targets.anim_time.min(1.);
-	}
-	cam_pos.y = f32::lerp(cam_pos.y, desired_height, cam_targets.anim_time);
-	if cam_pos.y < min_height {
-		cam_pos.y = min_height;
-	}
-	let t = cam_pos.y.remap(cam_cfg.min_height, cam_cfg.max_height, 0., 1.);
-
-	if cam_targets.rotate_time < 1. {
-		cam_targets.rotate_time += time.delta_seconds();
-		cam_targets.rotate_time = cam_targets.rotate_time.min(1.);
-	}
-	let angle = cam_cfg.min_angle.lerp(cam_cfg.max_angle, t);
-	let mut rot = cam.rotation.to_euler(EulerRot::XYZ);
-	rot.0 = -angle;
-	cam.rotation = Quat::from_euler(EulerRot::XYZ, rot.0, rot.1, rot.2);
-	// let rot = Quat::from_axis_angle(Vec3::X, -angle);
-	// cam.rotation = rot;
-
-	cam.translation = cam_pos;
-}
-
 fn sample_ground(pos: Vec3, heightmap: &Map) -> f32 {
 	let tile_under = HexCoord::from_world_pos(pos);
 	let neighbors = heightmap.get_neighbors(&tile_under);
@@ -273,15 +191,4 @@ fn sample_ground(pos: Vec3, heightmap: &Map) -> f32 {
 		ground_height = heightmap.sealevel;
 	}
 	return ground_height;
-}
-
-fn limit_camera_bounds(mut cam_query: Query<(&mut Transform, &CameraBounds)>) {
-	let (mut tranform, bounds) = cam_query.single_mut();
-
-	let mut pos = tranform.translation;
-
-	pos.x = pos.x.clamp(bounds.min.x, bounds.max.x);
-	pos.z = pos.z.clamp(bounds.min.y, bounds.max.y);
-
-	tranform.translation = pos;
 }
