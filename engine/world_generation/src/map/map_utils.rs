@@ -4,10 +4,10 @@ use bevy::{math::VectorSpace, prelude::*};
 use image::ImageBuffer;
 use rayon::prelude::*;
 
-use crate::{biome_painter::BiomePainter, hex_utils::HexCoord};
+use crate::hex_utils::HexCoord;
 
 use super::{
-	biome_map::{self, BiomeMap},
+	biome_map::BiomeMap,
 	chunk::Chunk,
 	map::Map,
 };

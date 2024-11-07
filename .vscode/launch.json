@@ -14,12 +14,17 @@
 			"args": [],
 			"cwd": "${workspaceRoot}/game/main",
 			"preLaunchTask": "Build",
-			// "environment": [
-			// 	{
-			// 		"name": "RUST_BACKTRACE",
-			// 		"value": "1"
-			// 	}
-			// ]
+			"environment": [
+				// {
+				// 	"name": "RUST_BACKTRACE",
+				// 	"value": "1"
+				// },
+				{
+					//Set Asset Folder
+					"name": "CARGO_MANIFEST_DIR",
+					"value": "${workspaceRoot}\\game\\main"
+				}
+			]
 		}
 	]
 }

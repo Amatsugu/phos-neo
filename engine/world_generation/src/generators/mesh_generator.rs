@@ -1,8 +1,7 @@
-use crate::hex_utils::{HexCoord, INNER_RADIUS};
+use crate::hex_utils::HexCoord;
 use crate::{hex_utils::offset3d_to_world, prelude::*};
 #[cfg(feature = "tracing")]
 use bevy::log::*;
-use bevy::math::VectorSpace;
 use bevy::{
 	prelude::*,
 	render::{

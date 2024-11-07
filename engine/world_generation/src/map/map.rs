@@ -3,7 +3,6 @@ use bevy::prelude::*;
 use crate::hex_utils::*;
 
 use super::{
-	biome_map::{BiomeData, BiomeMap},
 	chunk::Chunk,
 	mesh_chunk::MeshChunkData,
 };

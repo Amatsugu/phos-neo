@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_asset_loader::asset_collection::AssetCollection;
 use bevy_inspector_egui::InspectorOptions;
 use serde::{Deserialize, Serialize};
 

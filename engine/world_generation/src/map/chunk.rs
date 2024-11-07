@@ -1,7 +1,6 @@
 use crate::hex_utils::SHORT_DIAGONAL;
 use bevy::prelude::*;
 
-use super::biome_map::BiomeData;
 
 #[derive(Clone)]
 pub struct Chunk {

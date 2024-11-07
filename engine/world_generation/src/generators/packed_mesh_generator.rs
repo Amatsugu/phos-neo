@@ -1,5 +1,5 @@
 use crate::hex_utils::HexCoord;
-use crate::map::biome_map::{self, BiomeChunk, BiomeMap};
+use crate::map::biome_map::BiomeChunk;
 use crate::prelude::*;
 use crate::tile_manager::TileAsset;
 use crate::tile_mapper::TileMapperAsset;

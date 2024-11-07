@@ -8,7 +8,7 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 use crate::biome_painter::BiomePainter;
 use crate::map::biome_map::{BiomeChunk, BiomeData, BiomeMap};
-use crate::{map, prelude::*};
+use crate::prelude::*;
 
 pub fn generate_heightmap(cfg: &GenerationConfig, seed: u32, painter: &BiomePainter) -> (Map, BiomeMap) {
 	let biomes = generate_biomes(cfg, seed, painter);
