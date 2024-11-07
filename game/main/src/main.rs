@@ -1,3 +1,5 @@
+use std::env;
+
 use bevy::pbr::wireframe::WireframePlugin;
 use bevy::prelude::*;
 use bevy::render::texture::{ImageAddressMode, ImageFilterMode, ImageSamplerDescriptor};
@@ -10,6 +12,7 @@ mod map_rendering;
 mod phos;
 mod prelude;
 mod shader_extensions;
+mod ui;
 mod utlis;
 
 fn main() {
