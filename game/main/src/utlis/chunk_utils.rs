@@ -47,6 +47,7 @@ pub fn paint_chunk(
 			let tile_handle = mapper.unwrap().sample_tile(height);
 			let tile = tiles.get(tile_handle).unwrap();
 			chunk.textures[idx] = [tile.texture_id, tile.side_texture_id];
+			chunk.overlay_textures[idx] = tile.side_overlay_id;
 		}
 	}
 }

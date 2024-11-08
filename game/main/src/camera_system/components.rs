@@ -21,7 +21,7 @@ impl Default for PhosCamera {
 			max_height: 420.,
 			speed: 100.,
 			pan_speed: Vec2::new(0.8, 0.5),
-			zoom_speed: 20.,
+			zoom_speed: 200.,
 			min_angle: (20. as f32).to_radians(),
 			max_angle: 1.,
 		}

@@ -2,10 +2,7 @@ use bevy::prelude::*;
 
 use crate::hex_utils::*;
 
-use super::{
-	chunk::Chunk,
-	mesh_chunk::MeshChunkData,
-};
+use super::{chunk::Chunk, mesh_chunk::MeshChunkData};
 
 #[derive(Resource, Clone)]
 pub struct Map {
@@ -41,6 +38,7 @@ impl Map {
 			sealevel: self.sealevel,
 			heights: chunk.heights.clone(),
 			textures: chunk.textures.clone(),
+			overlay_textures: chunk.overlay_textures.clone(),
 			distance_to_land: self.get_distance_from_land(chunk.chunk_offset, 4),
 		};
 	}

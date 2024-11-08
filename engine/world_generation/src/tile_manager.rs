@@ -29,6 +29,7 @@ pub struct TileAsset {
 	#[serde(skip)]
 	pub texture: String,
 	pub side_texture_id: u32,
+	pub side_overlay_id: Option<u32>,
 	#[serde(skip)]
 	pub side_texture: String,
 }

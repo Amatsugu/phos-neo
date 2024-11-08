@@ -39,6 +39,7 @@ pub fn generate_chunk_mesh(chunk: &MeshChunkData) -> Mesh {
 				// &mut tex,
 				chunk.textures[idx][0],
 				chunk.textures[idx][1],
+				chunk.overlay_textures[idx],
 			);
 		}
 	}
@@ -63,10 +64,14 @@ fn create_tile(
 	normals: &mut Vec<Vec3>,
 	texture_index: u32,
 	side_texture_index: u32,
+	side_overlay_texture_index: Option<u32>,
 ) {
 	let uv_offset = Vec2::splat(0.5);
 	let tex_off = Vec2::new(texture_index as f32, 0.);
-	let side_tex_off = Vec2::new(side_texture_index as f32, 0.);
+	let side_tex_off = Vec2::new(
+		pack_texture_data(side_texture_index, side_overlay_texture_index) as f32,
+		0.,
+	);
 
 	let idx = verts.len() as u32;
 	for i in 0..6 {
@@ -278,6 +283,13 @@ fn create_tile_wall(
 	uvs.push((Vec2::new(1., pos.y - height) / TEX_MULTI) + tex_off);
 }
 
+fn pack_texture_data(texture: u32, overlay: Option<u32>) -> u32 {
+	if let Some(ovr) = overlay {
+		return texture + (ovr << 5);
+	}
+	return texture + (texture << 5);
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -320,7 +332,17 @@ mod tests {
 		//4 side faces
 		let nbors = [2.0, 2.0, 0.0, 0.0, 0.0, 0.0];
 
-		create_tile(Vec3::Y, &nbors, &mut verts, &mut uvs, &mut indices, &mut normals, 3, 7);
+		create_tile(
+			Vec3::Y,
+			&nbors,
+			&mut verts,
+			&mut uvs,
+			&mut indices,
+			&mut normals,
+			3,
+			7,
+			None,
+		);
 
 		assert!(verts.len() == (6 + 4 * 4), "Number of verts don't match");
 		assert!(uvs.len() == (6 + 4 * 4), "Number of uvs don't match");

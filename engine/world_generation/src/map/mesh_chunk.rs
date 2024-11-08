@@ -9,6 +9,7 @@ use super::chunk::Chunk;
 pub struct MeshChunkData {
 	pub heights: [f32; Chunk::AREA],
 	pub textures: [[u32; 2]; Chunk::AREA],
+	pub overlay_textures: [Option<u32>; Chunk::AREA],
 	pub min_height: f32,
 	pub sealevel: f32,
 	pub distance_to_land: [f32; Chunk::AREA],
