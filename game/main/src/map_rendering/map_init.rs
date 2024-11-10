@@ -3,6 +3,7 @@ use bevy::log::*;
 use bevy::{
 	pbr::{ExtendedMaterial, NotShadowCaster},
 	prelude::*,
+	render::render_resource::{ColorTargetState, FragmentState, RenderPipelineDescriptor},
 };
 use bevy_asset_loader::prelude::*;
 
@@ -49,7 +50,7 @@ impl Plugin for MapInitPlugin {
 		app.add_plugins((
 			ChunkRebuildPlugin,
 			// TerraFormingTestPlugin,
-			MaterialPlugin::<ExtendedMaterial<StandardMaterial, ChunkMaterial>>::default(),
+			MaterialPlugin::<ChunkMaterial>::default(),
 			MaterialPlugin::<ExtendedMaterial<StandardMaterial, WaterMaterial>> {
 				prepass_enabled: false,
 				..Default::default()
@@ -122,7 +123,7 @@ fn finalize_biome_painter(
 fn finalize_texture(
 	mut atlas: ResMut<PhosAssets>,
 	mut images: ResMut<Assets<Image>>,
-	mut chunk_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, ChunkMaterial>>>,
+	mut chunk_materials: ResMut<Assets<ChunkMaterial>>,
 	mut next_load_state: ResMut<NextState<AssetLoadState>>,
 ) {
 	let image = images.get_mut(atlas.handle.id()).unwrap();
@@ -130,11 +131,8 @@ fn finalize_texture(
 	let array_layers = image.height() / image.width();
 	image.reinterpret_stacked_2d_as_array(array_layers);
 
-	let chunk_material = chunk_materials.add(ExtendedMaterial {
-		base: StandardMaterial::default(),
-		extension: ChunkMaterial {
-			array_texture: atlas.handle.clone(),
-		},
+	let chunk_material = chunk_materials.add(ChunkMaterial {
+		array_texture: atlas.handle.clone(),
 	});
 	atlas.chunk_material_handle = chunk_material;
 
@@ -219,6 +217,7 @@ fn spawn_map(
 ) {
 	paint_map(&mut heightmap, &biome_painter, &tile_assets, &tile_mappers);
 
+	//Prepare Mesh Data
 	let map_size = UVec2::new(heightmap.width as u32, heightmap.height as u32);
 	let chunk_meshes: Vec<_> = heightmap
 		.chunks
@@ -236,6 +235,8 @@ fn spawn_map(
 		.collect();
 
 	let mut registry = PhosChunkRegistry::new(chunk_meshes.len());
+
+	//Spawn Chunks
 	{
 		#[cfg(feature = "tracing")]
 		let _spawn_span = info_span!("Spawn Chunks").entered();
@@ -276,20 +277,6 @@ fn spawn_map(
 			registry.waters.push(water);
 		}
 	}
-
-	// commands.spawn((
-	// 	MaterialMeshBundle {
-	// 		transform: Transform::from_translation(heightmap.get_center()),
-	// 		mesh: meshes.add(
-	// 			Plane3d::default()
-	// 				.mesh()
-	// 				.size(heightmap.get_world_width(), heightmap.get_world_height()),
-	// 		),
-	// 		material: atlas.water_material.clone(),
-	// 		..default()
-	// 	},
-	// 	NotShadowCaster,
-	// ));
 
 	commands.insert_resource(registry);
 	generator_state.set(GeneratorState::Idle);

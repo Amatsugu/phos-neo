@@ -12,7 +12,7 @@ use crate::shader_extensions::water_material::WaterMaterial;
 pub struct PhosAssets {
 	#[asset(key = "chunk_atlas")]
 	pub handle: Handle<Image>,
-	pub chunk_material_handle: Handle<ExtendedMaterial<StandardMaterial, ChunkMaterial>>,
+	pub chunk_material_handle: Handle<ChunkMaterial>,
 	pub water_material: Handle<ExtendedMaterial<StandardMaterial, WaterMaterial>>,
 }
 

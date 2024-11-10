@@ -13,6 +13,7 @@ use world_generation::{
 	generators::{
 		chunk_colliders::generate_chunk_collider,
 		mesh_generator::{generate_chunk_mesh, generate_chunk_water_mesh},
+		packed_mesh_generator::generate_packed_chunk_mesh,
 	},
 	hex_utils::offset_to_world,
 	prelude::{Chunk, Map, MeshChunkData},
@@ -60,7 +61,7 @@ pub fn prepare_chunk_mesh(
 ) -> (Mesh, Mesh, (Vec<Vec3>, Vec<[u32; 3]>), Vec3, usize) {
 	#[cfg(feature = "tracing")]
 	let _gen_mesh = info_span!("Generate Chunk").entered();
-	let chunk_mesh = generate_chunk_mesh(chunk);
+	let chunk_mesh = generate_packed_chunk_mesh(chunk);
 	let water_mesh = generate_chunk_water_mesh(chunk, sealevel, map_size.x as usize, map_size.y as usize);
 	let col_data = generate_chunk_collider(chunk);
 
