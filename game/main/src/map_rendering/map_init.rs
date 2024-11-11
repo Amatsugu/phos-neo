@@ -50,7 +50,7 @@ impl Plugin for MapInitPlugin {
 		app.add_plugins((
 			ChunkRebuildPlugin,
 			// TerraFormingTestPlugin,
-			MaterialPlugin::<ChunkMaterial>::default(),
+			MaterialPlugin::<ExtendedMaterial<StandardMaterial, ChunkMaterial>>::default(),
 			MaterialPlugin::<ExtendedMaterial<StandardMaterial, WaterMaterial>> {
 				prepass_enabled: false,
 				..Default::default()
@@ -123,7 +123,7 @@ fn finalize_biome_painter(
 fn finalize_texture(
 	mut atlas: ResMut<PhosAssets>,
 	mut images: ResMut<Assets<Image>>,
-	mut chunk_materials: ResMut<Assets<ChunkMaterial>>,
+	mut chunk_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, ChunkMaterial>>>,
 	mut next_load_state: ResMut<NextState<AssetLoadState>>,
 ) {
 	let image = images.get_mut(atlas.handle.id()).unwrap();
@@ -131,8 +131,11 @@ fn finalize_texture(
 	let array_layers = image.height() / image.width();
 	image.reinterpret_stacked_2d_as_array(array_layers);
 
-	let chunk_material = chunk_materials.add(ChunkMaterial {
-		array_texture: atlas.handle.clone(),
+	let chunk_material = chunk_materials.add(ExtendedMaterial {
+		base: StandardMaterial::default(),
+		extension: ChunkMaterial {
+			array_texture: atlas.handle.clone(),
+		},
 	});
 	atlas.chunk_material_handle = chunk_material;
 
