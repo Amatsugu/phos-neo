@@ -3,6 +3,7 @@ use bevy::log::*;
 use bevy::{
 	pbr::{ExtendedMaterial, NotShadowCaster},
 	prelude::*,
+	render::render_resource::{ColorTargetState, FragmentState, RenderPipelineDescriptor},
 };
 use bevy_asset_loader::prelude::*;
 
@@ -219,6 +220,7 @@ fn spawn_map(
 ) {
 	paint_map(&mut heightmap, &biome_painter, &tile_assets, &tile_mappers);
 
+	//Prepare Mesh Data
 	let map_size = UVec2::new(heightmap.width as u32, heightmap.height as u32);
 	let chunk_meshes: Vec<_> = heightmap
 		.chunks
@@ -236,6 +238,8 @@ fn spawn_map(
 		.collect();
 
 	let mut registry = PhosChunkRegistry::new(chunk_meshes.len());
+
+	//Spawn Chunks
 	{
 		#[cfg(feature = "tracing")]
 		let _spawn_span = info_span!("Spawn Chunks").entered();
@@ -276,20 +280,6 @@ fn spawn_map(
 			registry.waters.push(water);
 		}
 	}
-
-	// commands.spawn((
-	// 	MaterialMeshBundle {
-	// 		transform: Transform::from_translation(heightmap.get_center()),
-	// 		mesh: meshes.add(
-	// 			Plane3d::default()
-	// 				.mesh()
-	// 				.size(heightmap.get_world_width(), heightmap.get_world_height()),
-	// 		),
-	// 		material: atlas.water_material.clone(),
-	// 		..default()
-	// 	},
-	// 	NotShadowCaster,
-	// ));
 
 	commands.insert_resource(registry);
 	generator_state.set(GeneratorState::Idle);
