@@ -3,6 +3,7 @@ use bevy::core_pipeline::prepass::DepthPrepass;
 use bevy::input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
 use bevy::window::{CursorGrabMode, PrimaryWindow};
+use bevy_lunex::prelude::MainUi;
 use shared::sets::GameplaySet;
 use shared::tags::MainCamera;
 use world_generation::hex_utils::HexCoord;
@@ -59,6 +60,7 @@ fn setup(mut commands: Commands, mut msaa: ResMut<Msaa>) {
 			MainCamera,
 			DepthPrepass,
 			PhosOrbitCamera::default(),
+			MainUi,
 		))
 		.insert(TemporalAntiAliasBundle::default());
 

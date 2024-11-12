@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use shared::tags::MainCamera;
 
 use crate::camera_system::components::PhosCamera;
 
@@ -52,7 +53,7 @@ impl Default for RenderDistanceVisibility {
 
 fn render_distance_system(
 	mut objects: Query<(&Transform, &mut Visibility, &RenderDistanceVisibility)>,
-	camera_query: Query<&Transform, With<PhosCamera>>,
+	camera_query: Query<&Transform, With<MainCamera>>,
 	settings: Res<RenderDistanceSettings>,
 ) {
 	let camera = camera_query.single();
