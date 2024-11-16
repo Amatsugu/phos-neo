@@ -3,7 +3,13 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use shared::identifiers::ResourceIdentifier;
 
-use crate::footprint::BuildingFootprint;
+use crate::{
+	buildings::{
+		basic_building::BasicBuildingInfo, conduit_building::ResourceConduitInfo,
+		factory_building::FactoryBuildingInfo, resource_gathering::ResourceGatheringBuildingInfo,
+	},
+	footprint::BuildingFootprint,
+};
 
 #[derive(Asset, TypePath, Debug, Serialize, Deserialize)]
 pub struct BuildingAsset {
@@ -19,6 +25,19 @@ pub struct BuildingAsset {
 	pub production: Vec<ResourceIdentifier>,
 }
 
+#[derive(Serialize, Deserialize, Debug, TypePath)]
+pub enum BuildingType {
+	Basic,
+	Gathering(ResourceGatheringBuildingInfo),
+	FactoryBuildingInfo(FactoryBuildingInfo),
+	ResourceConduit(ResourceConduitInfo),
+}
+
+#[derive(Serialize, Deserialize, Debug, Reflect)]
+pub enum AnimationComponent {
+	Rotation,
+	Slider,
+}
 create_asset_loader!(
 	BuildingAssetPlugin,
 	BuildingAssetLoader,

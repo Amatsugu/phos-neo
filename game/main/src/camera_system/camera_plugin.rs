@@ -60,6 +60,7 @@ fn setup(mut commands: Commands, mut msaa: ResMut<Msaa>) {
 			DepthPrepass,
 			PhosOrbitCamera::default(),
 		))
+		// .insert(RenderLayers::layer(0))
 		.insert(TemporalAntiAliasBundle::default());
 
 	*msaa = Msaa::Off;

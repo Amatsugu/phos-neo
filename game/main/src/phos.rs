@@ -37,6 +37,7 @@ impl Plugin for PhosGamePlugin {
 			MapInitPlugin,
 			RenderDistancePlugin,
 			BuildingPugin,
+			// BuildUiPlugin,
 			UnitsPlugin,
 			DespawnPuglin,
 			TileSelectionPlugin,
