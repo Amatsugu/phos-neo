@@ -1,6 +1,7 @@
+use bevy::reflect::Reflect;
 use serde::{Deserialize, Serialize};
 
-#[derive(Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default, Reflect, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct BuildingIdentifier(pub usize);
 
 impl From<i32> for BuildingIdentifier {

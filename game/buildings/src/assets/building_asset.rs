@@ -23,6 +23,11 @@ pub struct BuildingAsset {
 	pub cost: Vec<ResourceIdentifier>,
 	pub consumption: Vec<ResourceIdentifier>,
 	pub production: Vec<ResourceIdentifier>,
+
+	pub health: u32,
+
+	pub building_type: BuildingType,
+	pub animations: Vec<AnimationComponent>,
 }
 
 #[derive(Serialize, Deserialize, Debug, TypePath)]
