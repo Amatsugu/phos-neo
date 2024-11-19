@@ -1,6 +1,6 @@
 use std::f32::consts::E;
 
-use bevy::{ecs::world::CommandQueue, prelude::*, window::PrimaryWindow};
+use bevy::{ecs::world::CommandQueue, gltf::GltfMesh, prelude::*, window::PrimaryWindow};
 use bevy_asset_loader::loading_state::{
 	config::{ConfigureLoadingState, LoadingStateConfig},
 	LoadingStateAppExt,
@@ -87,7 +87,6 @@ fn hq_placement(
 	mut build_queue: ResMut<BuildQueue>,
 	mut next_state: ResMut<NextState<GameplayState>>,
 ) {
-
 	if let Some(contact) = tile_under_cursor.0 {
 		let positions = map.hex_select(&contact.tile, 3, true, |pos, h, _| pos.to_world(h));
 		show_indicators(positions, &mut commands, &indicator);
@@ -122,6 +121,8 @@ fn process_build_queue(
 	mut commands: Commands,
 	db: Res<BuildingDatabase>,
 	building_assets: Res<Assets<BuildingAsset>>,
+	gltf_assets: Res<Assets<Gltf>>,
+	gltf_meshes: Res<Assets<GltfMesh>>,
 	mut building_map: ResMut<BuildingMap>,
 	heightmap: Res<Map>,
 ) {
@@ -130,16 +131,14 @@ fn process_build_queue(
 		if let Some(building) = building_assets.get(handle.id()) {
 			let h = heightmap.sample_height(&item.pos);
 			println!("Spawning {} at {}", building.name, item.pos);
-			let e = commands.spawn((
-				SceneBundle {
-					scene: building.prefab.clone(),
-					transform: Transform::from_translation(item.pos.to_world(h)),
-					..Default::default()
-				},
-				Building,
-			));
-
-			building_map.add_building(BuildingEntry::new(item.pos, e.id()));
+			if let Some(gltf) = gltf_assets.get(building.prefab.id()) {
+				let e = building.spawn(item.pos.to_world(h), Quat::IDENTITY, gltf, &mut commands, &gltf_meshes);
+				if let Some(b) = e {
+					building_map.add_building(BuildingEntry::new(item.pos, b));
+				}
+			} else {
+				warn!("Failed to spawn building");
+			}
 		}
 	}
 	queue.queue.clear();

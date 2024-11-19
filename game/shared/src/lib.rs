@@ -9,6 +9,7 @@ pub mod resources;
 pub mod sets;
 pub mod states;
 pub mod tags;
+pub mod prefab_defination;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Tier {
