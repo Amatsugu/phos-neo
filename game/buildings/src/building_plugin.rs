@@ -1,6 +1,11 @@
 use std::f32::consts::E;
 
-use bevy::{ecs::world::CommandQueue, gltf::GltfMesh, prelude::*, window::PrimaryWindow};
+use bevy::{
+	ecs::world::CommandQueue,
+	gltf::{GltfMesh, GltfNode},
+	prelude::*,
+	window::PrimaryWindow,
+};
 use bevy_asset_loader::loading_state::{
 	config::{ConfigureLoadingState, LoadingStateConfig},
 	LoadingStateAppExt,
@@ -123,6 +128,7 @@ fn process_build_queue(
 	building_assets: Res<Assets<BuildingAsset>>,
 	gltf_assets: Res<Assets<Gltf>>,
 	gltf_meshes: Res<Assets<GltfMesh>>,
+	gltf_nodes: Res<Assets<GltfNode>>,
 	mut building_map: ResMut<BuildingMap>,
 	heightmap: Res<Map>,
 ) {
@@ -132,7 +138,14 @@ fn process_build_queue(
 			let h = heightmap.sample_height(&item.pos);
 			println!("Spawning {} at {}", building.name, item.pos);
 			if let Some(gltf) = gltf_assets.get(building.prefab.id()) {
-				let e = building.spawn(item.pos.to_world(h), Quat::IDENTITY, gltf, &mut commands, &gltf_meshes);
+				let e = building.spawn(
+					item.pos.to_world(h),
+					Quat::IDENTITY,
+					gltf,
+					&mut commands,
+					&gltf_meshes,
+					&gltf_nodes,
+				);
 				if let Some(b) = e {
 					building_map.add_building(BuildingEntry::new(item.pos, b));
 				}

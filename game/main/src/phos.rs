@@ -15,6 +15,7 @@ use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
 use buildings::BuildingPugin;
 use iyes_perf_ui::prelude::*;
+use shared::animation_plugin::SimpleAnimationPlugin;
 use shared::sets::GameplaySet;
 use shared::states::{GameplayState, MenuState};
 use shared::{despawn::DespawnPuglin, states::AssetLoadState};
@@ -38,6 +39,7 @@ impl Plugin for PhosGamePlugin {
 			MapInitPlugin,
 			RenderDistancePlugin,
 			BuildingPugin,
+			SimpleAnimationPlugin,
 			// BuildUiPlugin,
 			UnitsPlugin,
 			DespawnPuglin,

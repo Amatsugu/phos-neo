@@ -1,4 +1,5 @@
 use bevy::{
+	ecs::system::{EntityCommand, EntityCommands},
 	gltf::{Gltf, GltfMesh},
 	math::{Quat, Vec3},
 	prelude::*,
@@ -57,6 +58,23 @@ impl UnpackGltfMesh for GltfMesh {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum AnimationComponent {
-	Rotation,
+	Rotation(RotationAnimation),
 	Slider,
+}
+
+#[derive(Serialize, Deserialize, Debug, Component, Clone, Copy)]
+pub struct RotationAnimation {
+	pub axis: Vec3,
+	pub speed: f32,
+}
+
+impl AnimationComponent {
+	pub fn apply(&self, commands: &mut EntityCommands) {
+		match self {
+			AnimationComponent::Rotation(comp) => {
+				commands.insert(comp.clone());
+			}
+			AnimationComponent::Slider => todo!(),
+		};
+	}
 }

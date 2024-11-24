@@ -1,7 +1,10 @@
 use asset_loader::create_asset_loader;
-use bevy::{gltf::GltfMesh, prelude::*};
+use bevy::{
+	gltf::{GltfMesh, GltfNode},
+	prelude::*,
+};
 use serde::{Deserialize, Serialize};
-use shared::{identifiers::ResourceIdentifier, prefab_defination::*};
+use shared::{component_defination::ComponentDefination, identifiers::ResourceIdentifier, prefab_defination::*};
 
 use crate::{
 	buildings::{
@@ -29,7 +32,7 @@ pub struct BuildingAsset {
 	pub health: u32,
 
 	pub building_type: BuildingType,
-	pub children: Option<Vec<PrefabDefination>>,
+	pub components: Option<Vec<ComponentDefination>>,
 }
 
 impl BuildingAsset {
@@ -40,30 +43,78 @@ impl BuildingAsset {
 		gltf: &Gltf,
 		commands: &mut Commands,
 		meshes: &Assets<GltfMesh>,
+		nodes: &Assets<GltfNode>,
 	) -> Option<Entity> {
-		let keys: Vec<_> = gltf.named_meshes.keys().collect();
-		info!("{keys:#?}");
-		let mesh_handle = &gltf.named_meshes[&self.base_mesh_path.clone().into_boxed_str()];
-		if let Some(gltf_mesh) = meshes.get(mesh_handle.id()) {
-			let (mesh, mat) = gltf_mesh.unpack();
-			let mut entity = commands.spawn((
-				PbrBundle {
-					mesh,
-					material: mat,
-					transform: Transform::from_translation(pos)
-						.with_rotation(Quat::from_rotation_arc(Vec3::NEG_Z, Vec3::Y) * rot),
-					..Default::default()
-				},
-				Building,
-			));
-			if let Some(children) = &self.children {
+		let base_node = &gltf.named_nodes[&self.base_mesh_path.clone().into_boxed_str()];
+		if let Some(node) = nodes.get(base_node.id()) {
+			if let Some(mesh_handle) = &node.mesh {
+				if let Some(gltf_mesh) = meshes.get(mesh_handle.id()) {
+					let (mesh, mat) = gltf_mesh.unpack();
+					let mut entity = commands.spawn((
+						PbrBundle {
+							mesh,
+							material: mat,
+							transform: Transform::from_translation(pos).with_rotation(rot),
+							..Default::default()
+						},
+						Building,
+					));
+					entity.with_children(|b| {
+						for child in &node.children {
+							self.process_node(child, meshes, b, &node.name);
+						}
+					});
+					if let Some(component) = self.get_component_def(&format!("/{0}", &node.name)) {
+						component.apply(&mut entity);
+					}
+					return Some(entity.id());
+				}
+			}
+		}
+		return None;
+	}
+
+	fn process_node(
+		&self,
+		node: &GltfNode,
+		meshes: &Assets<GltfMesh>,
+		commands: &mut ChildBuilder,
+		parent: &String,
+	) -> Option<Entity> {
+		let path = format!("{0}/{1}", parent, node.name);
+		if let Some(mesh) = &node.mesh {
+			if let Some(gltf_mesh) = meshes.get(mesh.id()) {
+				let (mesh, mat) = gltf_mesh.unpack();
+				let mut entity = commands.spawn((
+					PbrBundle {
+						mesh,
+						material: mat,
+						transform: node.transform,
+						..Default::default()
+					},
+					Building,
+				));
 				entity.with_children(|b| {
-					for child in children {
-						child.spawn_recursive(gltf, b, meshes);
+					for child in &node.children {
+						self.process_node(child, meshes, b, &path);
 					}
 				});
+				if let Some(component) = self.get_component_def(&path) {
+					component.apply(&mut entity);
+				}
+				return Some(entity.id());
 			}
-			return Some(entity.id());
+		}
+		return None;
+	}
+
+	fn get_component_def(&self, path: &String) -> Option<&ComponentDefination> {
+		if let Some(components) = &self.components {
+			for c in components {
+				if c.path.eq(path) {
+					return Some(c);
+				}
+			}
 		}
 		return None;
 	}
