@@ -111,7 +111,7 @@ impl BuildingAsset {
 	fn get_component_def(&self, path: &String) -> Option<&ComponentDefination> {
 		if let Some(components) = &self.components {
 			for c in components {
-				if c.path.eq(path) {
+				if c.path.ends_with(path) {
 					return Some(c);
 				}
 			}
