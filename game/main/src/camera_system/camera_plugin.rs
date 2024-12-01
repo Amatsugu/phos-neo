@@ -61,7 +61,6 @@ fn setup(mut commands: Commands, mut msaa: ResMut<Msaa>) {
 			MainCamera,
 			DepthPrepass,
 			PhosOrbitCamera::default(),
-			MainUi,
 		))
 		// .insert(RenderLayers::layer(0))
 		.insert(TemporalAntiAliasBundle::default());

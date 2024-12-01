@@ -2,6 +2,7 @@ use crate::camera_system::components::PhosCamera;
 use crate::map_rendering::map_init::MapInitPlugin;
 use crate::map_rendering::render_distance_system::RenderDistancePlugin;
 use crate::ui::game::build_ui::BuildUiPlugin;
+use crate::ui::lunex_setup_plugin::LunexSetupPlugin;
 use crate::utlis::editor_plugin::EditorPlugin;
 use crate::utlis::tile_selection_plugin::TileSelectionPlugin;
 use crate::{camera_system::camera_plugin::PhosCameraPlugin, utlis::debug_plugin::DebugPlugin};
@@ -40,7 +41,8 @@ impl Plugin for PhosGamePlugin {
 			RenderDistancePlugin,
 			BuildingPugin,
 			SimpleAnimationPlugin,
-			// BuildUiPlugin,
+			LunexSetupPlugin,
+			BuildUiPlugin,
 			UnitsPlugin,
 			DespawnPuglin,
 			TileSelectionPlugin,

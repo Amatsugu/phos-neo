@@ -13,6 +13,6 @@ impl Plugin for SimpleAnimationPlugin {
 fn rotate(mut query: Query<(&mut Transform, &RotationAnimation)>, time: Res<Time>) {
 	for (mut transform, rot) in query.iter_mut() {
 		let cur_rot = transform.rotation;
-		transform.rotation = cur_rot * Quat::from_axis_angle(rot.axis, rot.speed.to_radians() * time.elapsed_seconds());
+		transform.rotation = cur_rot * Quat::from_axis_angle(rot.axis, rot.speed.to_radians() * time.delta_seconds());
 	}
 }
