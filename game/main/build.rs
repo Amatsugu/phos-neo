@@ -13,6 +13,10 @@ where
 
 	for path in fs::read_dir(from).unwrap() {
 		let path = path.unwrap().path();
+		println!("{path:?}");
+		if path.starts_with("assets/raw_assets") {
+			continue;
+		}
 		let to = to.clone().join(path.file_name().unwrap());
 
 		if path.is_file() {
