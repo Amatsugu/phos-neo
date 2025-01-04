@@ -14,11 +14,11 @@ impl Plugin for EditorPlugin {
 	fn build(&self, app: &mut App) {
 		app.init_resource::<UIState>();
 
-		app.add_systems(PostUpdate, prepare_image.run_if(in_state(GeneratorState::SpawnMap)));
-		app.add_systems(
-			Update,
-			(render_map_ui, update_map_render, asset_reloaded).run_if(in_state(GeneratorState::Idle)),
-		);
+		// app.add_systems(PostUpdate, prepare_image.run_if(in_state(GeneratorState::SpawnMap)));
+		// app.add_systems(
+		// 	Update,
+		// 	(render_map_ui, update_map_render, asset_reloaded).run_if(in_state(GeneratorState::Idle)),
+		// );
 	}
 }
 
@@ -69,7 +69,7 @@ fn asset_reloaded(
 	let mut rebuild = false;
 	for event in asset_events.read() {
 		match event {
-			AssetEvent::Modified {..}=>	rebuild = true,
+			AssetEvent::Modified { .. } => rebuild = true,
 			_ => (),
 		}
 	}
