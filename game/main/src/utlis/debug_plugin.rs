@@ -29,7 +29,7 @@ impl Plugin for DebugPlugin {
 				.run_if(in_state(DebugState::Verbose)),
 		);
 
-		app.add_systems(Update, camera_debug.in_set(GameplaySet));
+		// app.add_systems(Update, camera_debug.in_set(GameplaySet));
 		app.add_systems(Update, regenerate_map.run_if(in_state(GeneratorState::Idle)));
 
 		app.insert_resource(Shape(Polyline3d::new([

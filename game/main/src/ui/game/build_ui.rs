@@ -1,4 +1,4 @@
-use bevy::{prelude::*, sprite::Anchor};
+use bevy::{prelude::*, render::view::RenderLayers, sprite::Anchor};
 use bevy_lunex::prelude::*;
 
 pub struct BuildUiPlugin;
@@ -18,6 +18,7 @@ fn setup_ui(mut commands: Commands, assets: Res<AssetServer>, mut material: ResM
 			},
 			Name::new("Build UI"),
 			SourceFromCamera,
+			RenderLayers::layer(1),
 		))
 		.with_children(|ui| {
 			ui.spawn((
@@ -26,6 +27,7 @@ fn setup_ui(mut commands: Commands, assets: Res<AssetServer>, mut material: ResM
 					.pos1((Rl(0.), Rl(0.)))
 					.pos2((Rl(100.), Rl(100.)))
 					.pack::<Base>(),
+				RenderLayers::layer(1),
 			));
 
 			ui.spawn((
@@ -35,6 +37,7 @@ fn setup_ui(mut commands: Commands, assets: Res<AssetServer>, mut material: ResM
 					.size((Ab(800.), Rl(100.)))
 					.pos((Rl(50.), Rl(100.)))
 					.pack::<Base>(),
+				RenderLayers::layer(1),
 			));
 
 			ui.spawn((
@@ -43,21 +46,29 @@ fn setup_ui(mut commands: Commands, assets: Res<AssetServer>, mut material: ResM
 					.align_y(Align::END)
 					.size((Rl(100.), Ab(30.)))
 					.pack::<Base>(),
+				RenderLayers::layer(1),
 			));
 
-			for i in 1..5 {
+			for i in 0..5 {
 				let path = format!("Root/MainRect/Categories/Button{}", i);
 				ui.spawn((
 					UiLink::<MainUi>::path(path),
-					UiLayout::div()
-						.margin_x(Ab(5.))
-						.height(Sizing::Max)
-						.min_height(Ab(30.))
-						.min_width(Sp(10.))
-						.max_width(Sp(100.))
+					UiLayout::window()
+						.size((Rl(100. / 5.), Ab(30.)))
+						.x(Rl((100. / 5.) * i as f32))
 						.pack::<Base>(),
+					UiLayout::window()
+						.size((Rl(100. / 5.), Ab(20.)))
+						.x(Rl((100. / 5.) * i as f32))
+						.pack::<Hover>(),
 					UiImage2dBundle::from(assets.load("textures/world/test2.png")),
+					RenderLayers::layer(1),
 				));
+				// ui.spawn((
+				// 	UiLink::<MainUi>::path(format!("{}/img", path)),
+				// 	UiLayout::solid().size((Ab(30.), Ab(100.))).pack::<Base>(),
+				// 	UiImage2dBundle::from(assets.load("textures/world/test2.png")),
+				// ));
 			}
 		});
 }

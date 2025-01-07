@@ -1,6 +1,9 @@
 use bevy::{
 	prelude::*,
-	render::render_resource::{Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages},
+	render::{
+		render_resource::{Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages},
+		view::RenderLayers,
+	},
 	window::PrimaryWindow,
 };
 use bevy_lunex::prelude::*;
@@ -21,7 +24,7 @@ impl Plugin for LunexSetupPlugin {
 fn setup_cameras(
 	mut commands: Commands,
 	assets: Res<AssetServer>,
-	mut camera_query: Query<&mut Camera, With<MainCamera>>,
+	mut main_3d_camera_q: Query<&mut Camera, With<MainCamera>>,
 	window_query: Query<&Window, With<PrimaryWindow>>,
 ) {
 	//Prepare Render Texture
@@ -48,7 +51,7 @@ fn setup_cameras(
 	image.resize(size);
 
 	//Configure 3D Camera
-	let mut cam = camera_query.single_mut();
+	let mut cam = main_3d_camera_q.single_mut();
 	let render_image = assets.add(image);
 	cam.target = render_image.clone().into();
 	cam.order = -1;
@@ -56,20 +59,26 @@ fn setup_cameras(
 
 	//Add Render Texture image
 	commands
-		.spawn((UiTreeBundle::<MainUi>::from(UiTree::new2d("Main UI")), SourceFromCamera))
+		.spawn((
+			UiTreeBundle::<MainUi>::from(UiTree::new2d("Main UI")),
+			SourceFromCamera,
+			RenderLayers::layer(1),
+		))
 		.with_children(|ui| {
 			ui.spawn((
 				UiLink::<MainUi>::path("Root"),
-				UiLayout::window_full().size((win.width(), win.height())).pack::<Base>(),
+				UiLayout::window_full().size((Rl(100.), Rl(100.))).pack::<Base>(),
+				RenderLayers::layer(1),
 			));
 			ui.spawn((
 				UiLink::<MainUi>::path("Root/Camera3D"),
 				UiLayout::solid()
-					.size((win.width(), win.height()))
+					.size((Rl(100.), Rl(100.)))
 					.scaling(Scaling::Fill)
 					.pack::<Base>(),
 				UiImage2dBundle::from(render_image),
 				PickingPortal,
+				RenderLayers::layer(1),
 			));
 		});
 
@@ -80,5 +89,6 @@ fn setup_cameras(
 			transform: Transform::from_xyz(0.0, 0.0, 1000.0),
 			..default()
 		},
+		RenderLayers::from_layers(&[1]),
 	));
 }
