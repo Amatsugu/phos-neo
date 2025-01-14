@@ -29,12 +29,12 @@ macro_rules! create_asset_loader {
 
 			type Error = String;
 
-			async fn load<'a>(
-				&'a self,
-				reader: &'a mut Reader<'_>,
-				_settings: &'a Self::Settings,
-				load_context: &'a mut LoadContext<'_>,
-			) -> Result<Self::Asset, Self::Error> {
+			async fn load(
+		        &self,
+				reader: & mut dyn bevy::asset::io::Reader,
+				_: &Self::Settings,
+				load_context: &mut LoadContext<'_>,
+		    ) -> Result<Self::Asset, Self::Error> {
 				let mut bytes = Vec::new();
 				let read_result = reader.read_to_end(&mut bytes).await;
 				if read_result.is_err() {

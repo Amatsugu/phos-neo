@@ -24,7 +24,7 @@ impl Plugin for DespawnPuglin {
 
 fn despawn_at(mut commands: Commands, time: Res<Time>, entities: Query<(Entity, &DespawnAt), Without<DespawnAfter>>) {
 	for (entity, at) in entities.iter() {
-		let d = at.0 - time.elapsed_seconds();
+		let d = at.0 - time.elapsed_secs();
 		commands
 			.entity(entity)
 			.insert(DespawnAfter(Timer::from_seconds(d, TimerMode::Once)));

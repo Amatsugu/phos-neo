@@ -19,17 +19,16 @@ impl PrefabDefination {
 		let mesh_handle = &gltf.named_meshes[&self.path.clone().into_boxed_str()];
 		if let Some(gltf_mesh) = meshes.get(mesh_handle.id()) {
 			let (m, mat) = gltf_mesh.unpack();
-			let mut entity = commands.spawn(PbrBundle {
-				mesh: m,
-				material: mat,
-				transform: Transform::from_translation(self.pos).with_rotation(Quat::from_euler(
+			let mut entity = commands.spawn((
+				Mesh3d(m),
+				MeshMaterial3d(mat),
+				Transform::from_translation(self.pos).with_rotation(Quat::from_euler(
 					bevy::math::EulerRot::XYZ,
 					self.rot.x,
 					self.rot.y,
 					self.rot.z,
 				)),
-				..Default::default()
-			});
+			));
 			if let Some(children) = &self.children {
 				entity.with_children(|b| {
 					for child in children {

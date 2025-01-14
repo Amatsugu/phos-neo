@@ -34,11 +34,7 @@ fn spawn_test_unit(
 	if let Some(contact) = tile_under_cursor.0 {
 		info!("Spawning Test Unit");
 		commands.spawn((
-			PbrBundle {
-				transform: Transform::from_translation(contact.surface),
-				mesh: unit.0.clone(),
-				..default()
-			},
+			(Transform::from_translation(contact.surface), Mesh3d(unit.0.clone())),
 			Unit,
 			LandUnit,
 		));

@@ -1,9 +1,9 @@
 use bevy::asset::{Asset, Handle};
+use bevy::image::Image;
 use bevy::pbr::{Material, MaterialExtension};
 use bevy::reflect::TypePath;
 use bevy::render::mesh::{MeshVertexAttribute, MeshVertexBufferLayoutRef};
 use bevy::render::render_resource::{AsBindGroup, ShaderRef};
-use bevy::render::texture::Image;
 use world_generation::consts::{ATTRIBUTE_PACKED_VERTEX_DATA, ATTRIBUTE_VERTEX_HEIGHT};
 
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]

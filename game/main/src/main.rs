@@ -1,8 +1,8 @@
 use std::env;
 
+use bevy::image::{ImageAddressMode, ImageFilterMode, ImageSamplerDescriptor};
 use bevy::pbr::wireframe::WireframePlugin;
 use bevy::prelude::*;
-use bevy::render::texture::{ImageAddressMode, ImageFilterMode, ImageSamplerDescriptor};
 use bevy::window::PresentMode;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use phos::PhosGamePlugin;

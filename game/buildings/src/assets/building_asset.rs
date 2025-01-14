@@ -51,17 +51,18 @@ impl BuildingAsset {
 				if let Some(gltf_mesh) = meshes.get(mesh_handle.id()) {
 					let (mesh, mat) = gltf_mesh.unpack();
 					let mut entity = commands.spawn((
-						PbrBundle {
-							mesh,
-							material: mat,
-							transform: Transform::from_translation(pos).with_rotation(rot),
-							..Default::default()
-						},
+						Mesh3d(mesh),
+						MeshMaterial3d(mat),
+						Transform::from_translation(pos).with_rotation(rot),
 						Building,
 					));
 					entity.with_children(|b| {
 						for child in &node.children {
-							self.process_node(child, meshes, b, &node.name);
+							let child_node = nodes.get(child.id());
+							if child_node.is_none() {
+								continue;
+							}
+							self.process_node(child_node.unwrap(), meshes, nodes, b, &node.name);
 						}
 					});
 					if let Some(component) = self.get_component_def(&format!("/{0}", &node.name)) {
@@ -78,6 +79,7 @@ impl BuildingAsset {
 		&self,
 		node: &GltfNode,
 		meshes: &Assets<GltfMesh>,
+		nodes: &Assets<GltfNode>,
 		commands: &mut ChildBuilder,
 		parent: &String,
 	) -> Option<Entity> {
@@ -85,18 +87,14 @@ impl BuildingAsset {
 		if let Some(mesh) = &node.mesh {
 			if let Some(gltf_mesh) = meshes.get(mesh.id()) {
 				let (mesh, mat) = gltf_mesh.unpack();
-				let mut entity = commands.spawn((
-					PbrBundle {
-						mesh,
-						material: mat,
-						transform: node.transform,
-						..Default::default()
-					},
-					Building,
-				));
+				let mut entity = commands.spawn((Mesh3d(mesh), MeshMaterial3d(mat), node.transform, Building));
 				entity.with_children(|b| {
 					for child in &node.children {
-						self.process_node(child, meshes, b, &path);
+						let child_node = nodes.get(child.id());
+						if child_node.is_none() {
+							continue;
+						}
+						self.process_node(child_node.unwrap(), meshes, nodes, b, &path);
 					}
 				});
 				if let Some(component) = self.get_component_def(&path) {

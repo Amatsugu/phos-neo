@@ -110,12 +110,9 @@ fn hq_placement(
 fn show_indicators(positions: Vec<Vec3>, commands: &mut Commands, indicator: &IndicatorCube) {
 	for p in positions {
 		commands.spawn((
-			PbrBundle {
-				mesh: indicator.0.clone(),
-				material: indicator.1.clone(),
-				transform: Transform::from_translation(p),
-				..default()
-			},
+			Mesh3d(indicator.0.clone()),
+			MeshMaterial3d(indicator.1.clone()),
+			Transform::from_translation(p),
 			Despawn,
 		));
 	}

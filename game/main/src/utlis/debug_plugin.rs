@@ -68,12 +68,7 @@ fn regenerate_map(
 fn show_tile_heights(map: Res<Map>, mut gizmos: Gizmos, shape: Res<Shape>, tile_under_cursor: Res<TileUnderCursor>) {
 	if let Some(contact) = tile_under_cursor.0 {
 		let height = map.sample_height(&contact.tile);
-		gizmos.primitive_3d(
-			&shape.0,
-			contact.tile.to_world(height + 0.01),
-			Quat::IDENTITY,
-			Color::WHITE,
-		);
+		gizmos.primitive_3d(&shape.0, contact.tile.to_world(height + 0.01), Color::WHITE);
 
 		gizmos.line(contact.point, contact.point + Vec3::X, LinearRgba::RED);
 		gizmos.line(contact.point, contact.point + Vec3::Y, LinearRgba::GREEN);
@@ -95,11 +90,11 @@ fn show_water_corners(pos: Vec3, gizmos: &mut Gizmos) {
 fn camera_debug(mut cam_query: Query<(&PhosCamera, &PhosOrbitCamera)>, mut gizmos: Gizmos) {
 	let (config, orbit) = cam_query.single();
 
-	gizmos.sphere(orbit.target, Quat::IDENTITY, 0.3, LinearRgba::RED);
+	gizmos.sphere(orbit.target, 0.3, LinearRgba::RED);
 	let cam_proxy = orbit.target - (orbit.forward * 10.0);
 	gizmos.ray(orbit.target, orbit.forward * 10.0, LinearRgba::rgb(1.0, 0.0, 1.0));
 
-	gizmos.circle(cam_proxy, Dir3::Y, 0.3, LinearRgba::rgb(1.0, 1.0, 0.0));
+	gizmos.circle(cam_proxy, 0.3, LinearRgba::rgb(1.0, 1.0, 0.0));
 }
 
 fn verbose_data() {}

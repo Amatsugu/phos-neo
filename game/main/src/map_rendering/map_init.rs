@@ -252,12 +252,9 @@ fn spawn_map(
 			// let mesh_handle = meshes.a
 			let chunk = commands
 				.spawn((
-					MaterialMeshBundle {
-						mesh: meshes.add(chunk_mesh),
-						material: atlas.chunk_material_handle.clone(),
-						transform: Transform::from_translation(pos),
-						..default()
-					},
+					Mesh3d(meshes.add(chunk_mesh)),
+					MeshMaterial3d(atlas.chunk_material_handle.clone()),
+					Transform::from_translation(pos),
 					PhosChunk::new(index),
 					RenderDistanceVisibility::default().with_offset(visibility_offset),
 					collider,
@@ -265,12 +262,9 @@ fn spawn_map(
 				.id();
 			let water = commands
 				.spawn((
-					MaterialMeshBundle {
-						mesh: meshes.add(water_mesh),
-						material: atlas.water_material.clone(),
-						transform: Transform::from_translation(pos),
-						..default()
-					},
+					Mesh3d(meshes.add(water_mesh)),
+					MeshMaterial3d(atlas.water_material.clone()),
+					Transform::from_translation(pos),
 					PhosChunk::new(index),
 					NotShadowCaster,
 					RenderDistanceVisibility::default().with_offset(visibility_offset),

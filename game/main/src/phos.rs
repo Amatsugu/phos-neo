@@ -1,8 +1,6 @@
 use crate::camera_system::components::PhosCamera;
 use crate::map_rendering::map_init::MapInitPlugin;
 use crate::map_rendering::render_distance_system::RenderDistancePlugin;
-use crate::ui::game::build_ui::BuildUiPlugin;
-use crate::ui::lunex_setup_plugin::LunexSetupPlugin;
 use crate::utlis::editor_plugin::EditorPlugin;
 use crate::utlis::tile_selection_plugin::TileSelectionPlugin;
 use crate::{camera_system::camera_plugin::PhosCameraPlugin, utlis::debug_plugin::DebugPlugin};
@@ -15,7 +13,7 @@ use bevy_rapier3d::dynamics::{Ccd, RigidBody, Velocity};
 use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
 use buildings::BuildingPugin;
-use iyes_perf_ui::prelude::*;
+// use iyes_perf_ui::prelude::*;
 use shared::animation_plugin::SimpleAnimationPlugin;
 use shared::sets::GameplaySet;
 use shared::states::{GameplayState, MenuState};
@@ -41,8 +39,6 @@ impl Plugin for PhosGamePlugin {
 			RenderDistancePlugin,
 			BuildingPugin,
 			SimpleAnimationPlugin,
-			LunexSetupPlugin,
-			BuildUiPlugin,
 			UnitsPlugin,
 			DespawnPuglin,
 			TileSelectionPlugin,
@@ -63,8 +59,8 @@ impl Plugin for PhosGamePlugin {
 		//Perf UI
 		app.add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
 			.add_plugins(bevy::diagnostic::EntityCountDiagnosticsPlugin)
-			.add_plugins(bevy::diagnostic::SystemInformationDiagnosticsPlugin)
-			.add_plugins(PerfUiPlugin);
+			.add_plugins(bevy::diagnostic::SystemInformationDiagnosticsPlugin);
+		// .add_plugins(PerfUiPlugin);
 
 		//Physics
 		app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
@@ -80,52 +76,51 @@ impl Plugin for PhosGamePlugin {
 fn configure_gameplay_set(app: &mut App) {
 	app.configure_sets(
 		Update,
-		GameplaySet.run_if(in_state(GeneratorState::Idle).and_then(in_state(MenuState::InGame))),
+		GameplaySet.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
 	);
 	app.configure_sets(
 		PreUpdate,
-		GameplaySet.run_if(in_state(GeneratorState::Idle).and_then(in_state(MenuState::InGame))),
+		GameplaySet.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
 	);
 	app.configure_sets(
 		PostUpdate,
-		GameplaySet.run_if(in_state(GeneratorState::Idle).and_then(in_state(MenuState::InGame))),
+		GameplaySet.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
 	);
 
 	app.configure_sets(
 		FixedUpdate,
-		GameplaySet.run_if(in_state(GeneratorState::Idle).and_then(in_state(MenuState::InGame))),
+		GameplaySet.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
 	);
 	app.configure_sets(
 		FixedPreUpdate,
-		GameplaySet.run_if(in_state(GeneratorState::Idle).and_then(in_state(MenuState::InGame))),
+		GameplaySet.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
 	);
 	app.configure_sets(
 		FixedPostUpdate,
-		GameplaySet.run_if(in_state(GeneratorState::Idle).and_then(in_state(MenuState::InGame))),
+		GameplaySet.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
 	);
 }
 
 fn init_game(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>) {
-	commands.spawn((
-		PerfUiRoot::default(),
-		PerfUiEntryFPS::default(),
-		PerfUiEntryFPSWorst::default(),
-		PerfUiEntryFrameTime::default(),
-		PerfUiEntryFrameTimeWorst::default(),
-	));
+	// commands.spawn((
+	// 	PerfUiRoot::default(),
+	// 	PerfUiEntryFPS::default(),
+	// 	PerfUiEntryFPSWorst::default(),
+	// 	PerfUiEntryFrameTime::default(),
+	// 	PerfUiEntryFrameTimeWorst::default(),
+	// ));
 
-	commands.spawn(DirectionalLightBundle {
-		directional_light: DirectionalLight {
+	commands.spawn((
+		DirectionalLight {
 			shadows_enabled: true,
 			..default()
 		},
-		cascade_shadow_config: CascadeShadowConfig {
+		CascadeShadowConfig {
 			bounds: vec![200., 400., 600., 800.],
 			..default()
 		},
-		transform: Transform::from_xyz(500., 260.0, 500.).looking_at(Vec3::ZERO, Vec3::Y),
-		..default()
-	});
+		Transform::from_xyz(500., 260.0, 500.).looking_at(Vec3::ZERO, Vec3::Y),
+	));
 
 	let sphere_mat = StandardMaterial {
 		base_color: Color::srgb(1., 1., 0.),
@@ -148,12 +143,9 @@ fn spawn_sphere(
 	if keyboard_input.just_pressed(KeyCode::KeyF) {
 		let cam_transform = cam.single();
 		commands.spawn((
-			MaterialMeshBundle {
-				mesh: meshes.add(Sphere::new(0.3)),
-				material: mat.0.clone(),
-				transform: Transform::from_translation(cam_transform.translation),
-				..default()
-			},
+			Mesh3d(meshes.add(Sphere::new(0.3))),
+			MeshMaterial3d(mat.0.clone()),
+			Transform::from_translation(cam_transform.translation),
 			Collider::ball(0.3),
 			RigidBody::Dynamic,
 			Ccd::enabled(),

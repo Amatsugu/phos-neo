@@ -1,5 +1,8 @@
 use bevy::{prelude::*, window::PrimaryWindow};
-use bevy_rapier3d::{plugin::RapierContext, prelude::QueryFilter};
+use bevy_rapier3d::{
+	plugin::{RapierContext, ReadDefaultRapierContext},
+	prelude::QueryFilter,
+};
 use shared::{
 	resources::{TileContact, TileUnderCursor},
 	tags::MainCamera,
@@ -20,7 +23,7 @@ impl Plugin for TileSelectionPlugin {
 fn update_tile_under_cursor(
 	cam_query: Query<(&GlobalTransform, &Camera), With<MainCamera>>,
 	window: Query<&Window, With<PrimaryWindow>>,
-	rapier_context: Res<RapierContext>,
+	rapier_context: ReadDefaultRapierContext,
 	map: Res<Map>,
 	mut tile_under_cursor: ResMut<TileUnderCursor>,
 ) {
@@ -35,7 +38,7 @@ fn update_tile_under_cursor(
 		return;
 	};
 
-	let Some(cam_ray) = camera.viewport_to_world(cam_transform, cursor_pos) else {
+	let Ok(cam_ray) = camera.viewport_to_world(cam_transform, cursor_pos) else {
 		return;
 	};
 

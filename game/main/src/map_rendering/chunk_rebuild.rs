@@ -73,14 +73,14 @@ fn chunk_rebuilder(
 }
 
 fn collider_task_resolver(
-	mut chunks: Query<(&mut ChunkRebuildTask, &Handle<Mesh>), With<PhosChunk>>,
+	mut chunks: Query<(&mut ChunkRebuildTask, &Mesh3d), With<PhosChunk>>,
 	mut commands: Commands,
 	mut meshes: ResMut<Assets<Mesh>>,
 ) {
 	for (mut task, mesh_handle) in &mut chunks {
 		if let Some((mut c, mesh)) = futures::check_ready(&mut task.task) {
 			commands.append(&mut c);
-			meshes.insert(mesh_handle, mesh);
+			meshes.insert(mesh_handle.id(), mesh);
 		}
 	}
 }

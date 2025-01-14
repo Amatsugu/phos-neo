@@ -1,4 +1,4 @@
-use bevy::core_pipeline::experimental::taa::{TemporalAntiAliasBundle, TemporalAntiAliasPlugin};
+use bevy::core_pipeline::experimental::taa::{TemporalAntiAliasBundle, TemporalAntiAliasPlugin, TemporalAntiAliasing};
 use bevy::core_pipeline::prepass::DepthPrepass;
 use bevy::input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
@@ -44,22 +44,21 @@ fn init_bounds(
 		});
 }
 
-fn setup(mut commands: Commands, mut msaa: ResMut<Msaa>) {
+fn setup(mut commands: Commands) {
 	commands
 		.spawn((
-			Camera3dBundle {
-				transform: Transform::from_xyz(0., 30., 0.).looking_to(Vec3::NEG_Z, Vec3::Y),
-				..default()
-			},
+			Camera3d::default(),
+			Transform::from_xyz(0., 30., 0.).looking_to(Vec3::NEG_Z, Vec3::Y),
 			PhosCamera::default(),
 			MainCamera,
 			DepthPrepass,
 			PhosOrbitCamera::default(),
+			TemporalAntiAliasing::default(),
 		))
-		// .insert(RenderLayers::layer(0))
-		.insert(TemporalAntiAliasBundle::default());
+		.insert(Msaa::Off);
+	// .insert(RenderLayers::layer(0))
 
-	*msaa = Msaa::Off;
+	// *msaa = Msaa::Off;
 }
 
 fn orbit_camera_upate(
@@ -87,24 +86,24 @@ fn orbit_camera_upate(
 		for e in mouse_motion.read() {
 			orbit_move += e.delta;
 		}
-		orbit_move *= config.pan_speed * time.delta_seconds() * -1.0;
+		orbit_move *= config.pan_speed * time.delta_secs() * -1.0;
 		let rot_y = Quat::from_axis_angle(Vec3::Y, orbit_move.x);
 		let right = orbit.forward.cross(Vec3::Y).normalize();
 		let rot_x = Quat::from_axis_angle(right, orbit_move.y);
 		orbit.forward = rot_x * rot_y * orbit.forward;
 		// orbit.forward.y = orbit.forward.y.clamp(-0.9, 0.0);
 		orbit.forward = orbit.forward.normalize();
-		window.cursor.grab_mode = CursorGrabMode::Locked;
-		window.cursor.visible = false;
+		window.cursor_options.grab_mode = CursorGrabMode::Locked;
+		window.cursor_options.visible = false;
 	} else {
-		window.cursor.grab_mode = CursorGrabMode::None;
-		window.cursor.visible = true;
+		window.cursor_options.grab_mode = CursorGrabMode::None;
+		window.cursor_options.visible = true;
 	}
 	if key.pressed(KeyCode::KeyE) {
-		let rot = Quat::from_axis_angle(Vec3::Y, f32::to_radians(config.speed) * time.delta_seconds());
+		let rot = Quat::from_axis_angle(Vec3::Y, f32::to_radians(config.speed) * time.delta_secs());
 		orbit.forward = rot * orbit.forward;
 	} else if key.pressed(KeyCode::KeyQ) {
-		let rot = Quat::from_axis_angle(Vec3::Y, f32::to_radians(-config.speed) * time.delta_seconds());
+		let rot = Quat::from_axis_angle(Vec3::Y, f32::to_radians(-config.speed) * time.delta_secs());
 		orbit.forward = rot * orbit.forward;
 	}
 
@@ -137,7 +136,7 @@ fn orbit_camera_upate(
 			gizmos.arrow(orbit.target, orbit.target + move_fwd, LinearRgba::WHITE.with_alpha(0.5));
 			gizmos.arrow(orbit.target, orbit.target - (move_rot * cam_move), LinearRgba::BLUE);
 		}
-		orbit.target -= (move_rot * cam_move) * move_speed * time.delta_seconds();
+		orbit.target -= (move_rot * cam_move) * move_speed * time.delta_secs();
 		orbit.target.y = sample_ground(orbit.target, &map);
 
 		orbit.target.x = orbit.target.x.clamp(bounds.min.x, bounds.max.x);
@@ -152,7 +151,7 @@ fn orbit_camera_upate(
 		}
 	}
 
-	orbit.distance -= scroll * time.delta_seconds() * config.zoom_speed;
+	orbit.distance -= scroll * time.delta_secs() * config.zoom_speed;
 	orbit.distance = orbit.distance.clamp(config.min_height, config.max_height);
 
 	// let ground_below_cam = sample_ground(cam_pos, &map) + config.min_height;

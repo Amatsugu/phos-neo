@@ -1,16 +1,12 @@
 use std::ops::Add;
 
-use bevy::{math::VectorSpace, prelude::*};
+use bevy::{asset::AssetLoader, math::VectorSpace, prelude::*};
 use image::ImageBuffer;
 use rayon::prelude::*;
 
 use crate::hex_utils::HexCoord;
 
-use super::{
-	biome_map::BiomeMap,
-	chunk::Chunk,
-	map::Map,
-};
+use super::{biome_map::BiomeMap, chunk::Chunk, map::Map};
 
 pub fn render_image(
 	size: UVec2,
@@ -40,7 +36,7 @@ pub fn update_image(
 		let idx = (y * w + x) as usize;
 		let v = data[idx];
 		let t = v.remap(min, max, 0.0, 1.0);
-		let col = LinearRgba::lerp(&color1, color2, t);
+		let col = LinearRgba::lerp(color1, color2, t);
 		*pixel = to_pixel(&col);
 	});
 }
@@ -95,10 +91,10 @@ fn get_height_color_blend(base_color: Hsla, height: f32, height2: f32, smooth: f
 			d /= smooth;
 			if d > 0.0 {
 				let c2: LinearRgba = color.with_lightness(color.lightness + 0.1).into();
-				color = LinearRgba::lerp(&color.into(), c2, d).into();
+				color = LinearRgba::lerp(color.into(), c2, d).into();
 			} else {
 				let c2: LinearRgba = color.with_lightness(color.lightness - 0.1).into();
-				color = LinearRgba::lerp(&color.into(), c2, d.abs()).into();
+				color = LinearRgba::lerp(color.into(), c2, d.abs()).into();
 			}
 		}
 	}

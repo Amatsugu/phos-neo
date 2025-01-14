@@ -71,7 +71,7 @@ fn move_unit(
 			path.1 += 1;
 			continue;
 		}
-		let vel = d.normalize() * 10.0 * time.delta_seconds();
+		let vel = d.normalize() * 10.0 * time.delta_secs();
 		t.translation += vel;
 		let coord = HexCoord::from_world_pos(t.translation);
 		if map.is_in_bounds(&coord) {
