@@ -1,5 +1,5 @@
 use asset_loader::create_asset_loader;
-use bevy::{asset::Asset, ecs::system::Resource, reflect::TypePath};
+use bevy::{asset::Asset, reflect::TypePath};
 use serde::{Deserialize, Serialize};
 #[derive(Resource, Debug)]
 pub struct TileManager {

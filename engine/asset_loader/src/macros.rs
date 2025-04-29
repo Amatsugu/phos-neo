@@ -10,7 +10,6 @@ macro_rules! create_asset_loader {
 	) => {
 		use bevy::prelude::*;
 		use bevy::asset::{AssetLoader, AssetEvent, AssetEvents, LoadContext, LoadState, AsyncReadExt, io::Reader};
-		use bevy::utils::BoxedFuture;
 		pub struct $plugin_name;
 		impl Plugin for $plugin_name {
 			fn build(&self, app: &mut App) {
