@@ -1,7 +1,4 @@
-use bevy::{
-	prelude::*,
-	render::{mesh::MeshVertexAttribute, render_resource::VertexFormat},
-};
+use bevy::{mesh::MeshVertexAttribute, prelude::*, render::render_resource::VertexFormat};
 
 use crate::hex_utils::{INNER_RADIUS, OUTER_RADIUS};
 

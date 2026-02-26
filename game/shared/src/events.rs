@@ -1,13 +1,13 @@
 use bevy::prelude::*;
 use world_generation::hex_utils::*;
 
-#[derive(Event)]
+#[derive(Message)]
 pub enum TileModifiedEvent {
 	HeightChanged(HexCoord, f32),
 	TypeChanged(HexCoord, usize),
 }
 
-#[derive(Event)]
+#[derive(Message)]
 pub struct ChunkModifiedEvent {
 	pub index: usize,
 }

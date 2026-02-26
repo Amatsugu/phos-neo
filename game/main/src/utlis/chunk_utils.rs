@@ -4,7 +4,7 @@ use bevy::{
 	asset::Assets,
 	ecs::system::Res,
 	math::{IVec2, UVec2, Vec3},
-	render::mesh::Mesh,
+	mesh::Mesh,
 };
 use bevy_rapier3d::geometry::{Collider, TriMeshFlags};
 use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
@@ -87,7 +87,8 @@ pub fn prepare_chunk_mesh_with_collider(
 	{
 		#[cfg(feature = "tracing")]
 		let _collider_span = info_span!("Create Collider Trimesh").entered();
-		collider = Collider::trimesh_with_flags(col_verts, col_indicies, TriMeshFlags::DELETE_DUPLICATE_TRIANGLES);
+		collider = Collider::trimesh_with_flags(col_verts, col_indicies, TriMeshFlags::DELETE_DUPLICATE_TRIANGLES)
+			.expect("Failed to generate chunk collision mesh");
 	}
 	return (chunk_mesh, water_mesh, collider, pos, index);
 }

@@ -3,7 +3,8 @@ use bevy::math::VectorSpace;
 use bevy::pbr::MaterialExtension;
 use bevy::prelude::*;
 use bevy::reflect::Reflect;
-use bevy::render::render_resource::{AsBindGroup, ShaderRef, ShaderType};
+use bevy::render::render_resource::{AsBindGroup, ShaderType};
+use bevy::shader::ShaderRef;
 
 #[derive(Asset, Reflect, AsBindGroup, Debug, Clone, Default)]
 pub struct WaterMaterial {

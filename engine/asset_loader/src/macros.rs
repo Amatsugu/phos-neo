@@ -1,3 +1,5 @@
+use bevy::{asset::AssetLoader, reflect::TypePath};
+
 #[macro_export]
 macro_rules! create_asset_loader {
 	(
@@ -9,7 +11,7 @@ macro_rules! create_asset_loader {
 		$($string_array_name: ident -> $handle_array_name: ident)* ?
 	) => {
 		use bevy::prelude::*;
-		use bevy::asset::{AssetLoader, AssetEvent, AssetEvents, LoadContext, LoadState, AsyncReadExt, io::Reader};
+		use bevy::asset::{AssetLoader, AssetEvent,  LoadContext, LoadState, AsyncReadExt, io::Reader};
 		pub struct $plugin_name;
 		impl Plugin for $plugin_name {
 			fn build(&self, app: &mut App) {
@@ -18,7 +20,7 @@ macro_rules! create_asset_loader {
 			}
 		}
 
-		#[derive(Default)]
+		#[derive(Default, TypePath)]
 		pub struct $loader_name;
 
 		impl AssetLoader for $loader_name {
@@ -30,10 +32,10 @@ macro_rules! create_asset_loader {
 
 			async fn load(
 		        &self,
-				reader: & mut dyn bevy::asset::io::Reader,
-				_: &Self::Settings,
-				load_context: &mut LoadContext<'_>,
-		    ) -> Result<Self::Asset, Self::Error> {
+		        reader: &mut dyn bevy::asset::io::Reader,
+		        settings: &Self::Settings,
+		        load_context: &mut bevy::asset::LoadContext<'_>,
+		    ) -> Result<Self::Asset, Self::Error>{
 				let mut bytes = Vec::new();
 				let read_result = reader.read_to_end(&mut bytes).await;
 				if read_result.is_err() {

@@ -1,7 +1,6 @@
 use bevy::ecs::world::CommandQueue;
 use bevy::prelude::*;
 use bevy::tasks::*;
-use bevy::utils::futures;
 use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::geometry::TriMeshFlags;
 use shared::events::ChunkModifiedEvent;
@@ -20,8 +19,8 @@ pub struct ChunkRebuildPlugin;
 impl Plugin for ChunkRebuildPlugin {
 	fn build(&self, app: &mut App) {
 		app.init_resource::<PhosChunkRegistry>();
-		app.add_event::<ChunkModifiedEvent>();
-		app.add_event::<TileModifiedEvent>();
+		app.add_message::<ChunkModifiedEvent>();
+		app.add_message::<TileModifiedEvent>();
 		app.add_systems(PreUpdate, chunk_rebuilder.run_if(in_state(GeneratorState::Idle)));
 		app.add_systems(PostUpdate, collider_task_resolver);
 	}
@@ -55,7 +54,8 @@ fn chunk_rebuilder(
 				collider_data.0,
 				collider_data.1,
 				TriMeshFlags::DELETE_DUPLICATE_TRIANGLES,
-			);
+			)
+			.expect("Failed to build chunk mesh");
 			#[cfg(feature = "tracing")]
 			drop(trimesh_span);
 			queue.push(move |world: &mut World| {

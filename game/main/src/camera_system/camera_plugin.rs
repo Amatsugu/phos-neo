@@ -1,8 +1,8 @@
-use bevy::core_pipeline::experimental::taa::{TemporalAntiAliasBundle, TemporalAntiAliasPlugin, TemporalAntiAliasing};
+use bevy::anti_alias::taa::{TemporalAntiAliasPlugin, TemporalAntiAliasing};
 use bevy::core_pipeline::prepass::DepthPrepass;
 use bevy::input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
-use bevy::window::{CursorGrabMode, PrimaryWindow};
+use bevy::window::{CursorGrabMode, CursorOptions, PrimaryWindow};
 use shared::sets::GameplaySet;
 use shared::tags::MainCamera;
 use world_generation::hex_utils::HexCoord;
@@ -30,10 +30,10 @@ impl Plugin for PhosCameraPlugin {
 
 fn init_bounds(
 	mut commands: Commands,
-	mut cam: Query<(&mut Transform, Entity), With<PhosCamera>>,
+	mut cam: Single<(&mut Transform, Entity), With<PhosCamera>>,
 	heightmap: Res<Map>,
 ) {
-	let (mut cam_t, cam_entity) = cam.single_mut();
+	let (mut cam_t, cam_entity) = cam.into_inner();
 	cam_t.translation = heightmap.get_center();
 	commands
 		.entity(cam_entity)
@@ -62,18 +62,17 @@ fn setup(mut commands: Commands) {
 }
 
 fn orbit_camera_upate(
-	mut cam_query: Query<(&mut Transform, &PhosCamera, &mut PhosOrbitCamera, &CameraBounds)>,
-	mut wheel: EventReader<MouseWheel>,
-	mut mouse_motion: EventReader<MouseMotion>,
+	cam_query: Single<(&mut Transform, &PhosCamera, &mut PhosOrbitCamera, &CameraBounds)>,
+	mut wheel: MessageReader<MouseWheel>,
+	mut mouse_motion: MessageReader<MouseMotion>,
 	mouse: Res<ButtonInput<MouseButton>>,
-	mut window_query: Query<&mut Window, With<PrimaryWindow>>,
+	mut cursor_options: Single<&mut CursorOptions, With<PrimaryWindow>>,
 	key: Res<ButtonInput<KeyCode>>,
 	time: Res<Time>,
 	map: Res<Map>,
 	#[cfg(debug_assertions)] mut gizmos: Gizmos,
 ) {
-	let (mut transform, config, mut orbit, bounds) = cam_query.single_mut();
-	let mut window = window_query.single_mut();
+	let (mut transform, config, mut orbit, bounds) = cam_query.into_inner();
 
 	let target = orbit.target;
 	let mut cam_pos = target;
@@ -93,11 +92,11 @@ fn orbit_camera_upate(
 		orbit.forward = rot_x * rot_y * orbit.forward;
 		// orbit.forward.y = orbit.forward.y.clamp(-0.9, 0.0);
 		orbit.forward = orbit.forward.normalize();
-		window.cursor_options.grab_mode = CursorGrabMode::Locked;
-		window.cursor_options.visible = false;
+		cursor_options.grab_mode = CursorGrabMode::Locked;
+		cursor_options.visible = false;
 	} else {
-		window.cursor_options.grab_mode = CursorGrabMode::None;
-		window.cursor_options.visible = true;
+		cursor_options.grab_mode = CursorGrabMode::None;
+		cursor_options.visible = true;
 	}
 	if key.pressed(KeyCode::KeyE) {
 		let rot = Quat::from_axis_angle(Vec3::Y, f32::to_radians(config.speed) * time.delta_secs());

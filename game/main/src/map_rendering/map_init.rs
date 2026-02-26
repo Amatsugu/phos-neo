@@ -1,7 +1,8 @@
 #[cfg(feature = "tracing")]
 use bevy::log::*;
 use bevy::{
-	pbr::{ExtendedMaterial, NotShadowCaster},
+	light::NotShadowCaster,
+	pbr::ExtendedMaterial,
 	prelude::*,
 	render::render_resource::{ColorTargetState, FragmentState, RenderPipelineDescriptor},
 };
@@ -51,10 +52,7 @@ impl Plugin for MapInitPlugin {
 			ChunkRebuildPlugin,
 			// TerraFormingTestPlugin,
 			MaterialPlugin::<ExtendedMaterial<StandardMaterial, ChunkMaterial>>::default(),
-			MaterialPlugin::<ExtendedMaterial<StandardMaterial, WaterMaterial>> {
-				prepass_enabled: false,
-				..Default::default()
-			},
+			MaterialPlugin::<ExtendedMaterial<StandardMaterial, WaterMaterial>> { ..Default::default() },
 		));
 
 		app.configure_loading_state(
@@ -78,7 +76,7 @@ impl Plugin for MapInitPlugin {
 		app.add_systems(Update, despawn_map.run_if(in_state(GeneratorState::Regenerate)));
 		app.add_systems(
 			Update,
-			spawn_map.run_if(in_state(AssetLoadState::LoadComplete).and_then(in_state(GeneratorState::SpawnMap))),
+			spawn_map.run_if(in_state(AssetLoadState::LoadComplete).and(in_state(GeneratorState::SpawnMap))),
 		);
 
 		app.insert_resource(TileManager::default());

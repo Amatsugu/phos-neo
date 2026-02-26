@@ -2,8 +2,8 @@ use bevy::asset::{Asset, Handle};
 use bevy::image::Image;
 use bevy::pbr::{Material, MaterialExtension};
 use bevy::reflect::TypePath;
-use bevy::render::mesh::{MeshVertexAttribute, MeshVertexBufferLayoutRef};
-use bevy::render::render_resource::{AsBindGroup, ShaderRef};
+use bevy::render::render_resource::AsBindGroup;
+use bevy::shader::ShaderRef;
 use world_generation::consts::{ATTRIBUTE_PACKED_VERTEX_DATA, ATTRIBUTE_VERTEX_HEIGHT};
 
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
@@ -48,11 +48,11 @@ impl Material for PackedChunkMaterial {
 	// }
 
 	fn specialize(
-		_pipeline: &bevy::pbr::MaterialPipeline<Self>,
+		pipeline: &bevy::pbr::MaterialPipeline,
 		descriptor: &mut bevy::render::render_resource::RenderPipelineDescriptor,
-		layout: &MeshVertexBufferLayoutRef,
-		_key: bevy::pbr::MaterialPipelineKey<Self>,
-	) -> Result<(), bevy::render::render_resource::SpecializedMeshPipelineError> {
+		layout: &bevy::mesh::MeshVertexBufferLayoutRef,
+		key: bevy::pbr::MaterialPipelineKey<Self>,
+	) -> bevy::ecs::error::Result<(), bevy::render::render_resource::SpecializedMeshPipelineError> {
 		let vertex_layout = layout.0.get_layout(&[
 			// Mesh::ATTRIBUTE_POSITION.at_shader_location(0),
 			// Mesh::ATTRIBUTE_UV_0.at_shader_location(1),

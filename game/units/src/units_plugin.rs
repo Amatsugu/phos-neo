@@ -1,6 +1,10 @@
 use std::collections::HashMap;
 
-use bevy::{ecs::world::CommandQueue, prelude::*, tasks::AsyncComputeTaskPool, utils::futures};
+use bevy::{
+	ecs::world::CommandQueue,
+	prelude::*,
+	tasks::{futures, AsyncComputeTaskPool},
+};
 use pathfinding::prelude::astar;
 use shared::{events::TileModifiedEvent, resources::TileUnderCursor, sets::GameplaySet};
 use world_generation::{hex_utils::HexCoord, prelude::Map, states::GeneratorState};
@@ -41,7 +45,7 @@ fn build_navdata(mut commands: Commands, map: Res<Map>) {
 	commands.insert_resource(nav_data);
 }
 
-fn update_navdata(mut tile_updates: EventReader<TileModifiedEvent>, mut nav_data: ResMut<NavData>) {
+fn update_navdata(mut tile_updates: MessageReader<TileModifiedEvent>, mut nav_data: ResMut<NavData>) {
 	for event in tile_updates.read() {
 		match event {
 			TileModifiedEvent::HeightChanged(coord, new_height) => {

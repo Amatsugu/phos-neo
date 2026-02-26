@@ -1,4 +1,5 @@
-use bevy::{prelude::*, render::render_asset::RenderAssetUsages};
+use bevy::asset::RenderAssetUsages;
+use bevy::prelude::*;
 use bevy_inspector_egui::bevy_egui::EguiContexts;
 use bevy_inspector_egui::egui::{self};
 use image::{ImageBuffer, Rgba};
@@ -61,7 +62,7 @@ enum MapDisplayType {
 }
 
 fn asset_reloaded(
-	mut asset_events: EventReader<AssetEvent<BiomeAsset>>,
+	mut asset_events: MessageReader<AssetEvent<BiomeAsset>>,
 	mut biomes: ResMut<Assets<BiomeAsset>>,
 	biome_painter: Res<BiomePainterAsset>,
 	mut commands: Commands,
@@ -79,55 +80,55 @@ fn asset_reloaded(
 	}
 }
 
-fn render_map_ui(
-	image: Res<MapImage>,
-	heightmap: Res<Map>,
-	biome_map: Res<BiomeMap>,
-	mut contexts: EguiContexts,
-	mut state: ResMut<UIState>,
-) {
-	let id = contexts.add_image(image.0.clone_weak());
+// fn render_map_ui(
+// 	image: Res<MapImage>,
+// 	heightmap: Res<Map>,
+// 	biome_map: Res<BiomeMap>,
+// 	mut contexts: EguiContexts,
+// 	mut state: ResMut<UIState>,
+// ) {
+// 	let id = contexts.add_image(image.0.clone());
 
-	let mut map_type = state.target_map_type;
-	let ctx = contexts.ctx_mut();
-	egui::Window::new("Map").open(&mut state.is_open).show(ctx, |ui| {
-		ui.label("Map Test");
-		egui::ComboBox::from_label("Display Type")
-			.selected_text(format!("{:?}", map_type))
-			.show_ui(ui, |ui| {
-				ui.selectable_value(&mut map_type, MapDisplayType::HeightMap, "Heightmap");
-				ui.selectable_value(&mut map_type, MapDisplayType::Biomes, "Biomes");
-				ui.selectable_value(&mut map_type, MapDisplayType::BiomeNoise, "Biome Noise");
-				ui.selectable_value(
-					&mut map_type,
-					MapDisplayType::BiomeNoiseTemp,
-					"Biome Noise: Tempurature",
-				);
-				ui.selectable_value(
-					&mut map_type,
-					MapDisplayType::BiomeNoiseContinent,
-					"Biome Noise: Continent",
-				);
-				ui.selectable_value(
-					&mut map_type,
-					MapDisplayType::BiomeNoiseMoisture,
-					"Biome Noise: Moisture",
-				);
-			});
+// 	let mut map_type = state.target_map_type;
+// 	let ctx = contexts.ctx_mut();
+// 	egui::Window::new("Map").open(&mut state.is_open).show(ctx, |ui| {
+// 		ui.label("Map Test");
+// 		egui::ComboBox::from_label("Display Type")
+// 			.selected_text(format!("{:?}", map_type))
+// 			.show_ui(ui, |ui| {
+// 				ui.selectable_value(&mut map_type, MapDisplayType::HeightMap, "Heightmap");
+// 				ui.selectable_value(&mut map_type, MapDisplayType::Biomes, "Biomes");
+// 				ui.selectable_value(&mut map_type, MapDisplayType::BiomeNoise, "Biome Noise");
+// 				ui.selectable_value(
+// 					&mut map_type,
+// 					MapDisplayType::BiomeNoiseTemp,
+// 					"Biome Noise: Tempurature",
+// 				);
+// 				ui.selectable_value(
+// 					&mut map_type,
+// 					MapDisplayType::BiomeNoiseContinent,
+// 					"Biome Noise: Continent",
+// 				);
+// 				ui.selectable_value(
+// 					&mut map_type,
+// 					MapDisplayType::BiomeNoiseMoisture,
+// 					"Biome Noise: Moisture",
+// 				);
+// 			});
 
-		ui.add(egui::widgets::Image::new(egui::load::SizedTexture::new(
-			id,
-			[512.0, 512.0],
-		)));
+// 		ui.add(egui::widgets::Image::new(egui::load::SizedTexture::new(
+// 			id,
+// 			[512.0, 512.0],
+// 		)));
 
-		if ui.button("Save Image").clicked() {
-			let img = get_map_image(&heightmap, &biome_map, map_type);
-			_ = img.save(format!("{:?}.png", map_type));
-		}
-	});
+// 		if ui.button("Save Image").clicked() {
+// 			let img = get_map_image(&heightmap, &biome_map, map_type);
+// 			_ = img.save(format!("{:?}.png", map_type));
+// 		}
+// 	});
 
-	state.target_map_type = map_type;
-}
+// 	state.target_map_type = map_type;
+// }
 
 fn update_map_render(
 	mut state: ResMut<UIState>,

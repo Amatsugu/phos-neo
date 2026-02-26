@@ -5,17 +5,16 @@ use crate::ui::build_ui::BuildUIPlugin;
 use crate::utlis::editor_plugin::EditorPlugin;
 use crate::utlis::tile_selection_plugin::TileSelectionPlugin;
 use crate::{camera_system::camera_plugin::PhosCameraPlugin, utlis::debug_plugin::DebugPlugin};
-use bevy::{
-	pbr::{wireframe::WireframeConfig, CascadeShadowConfig},
-	prelude::*,
-};
+use bevy::diagnostic::{EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin};
+use bevy::light::CascadeShadowConfig;
+use bevy::{pbr::wireframe::WireframeConfig, prelude::*};
 use bevy_asset_loader::prelude::*;
 use bevy_rapier3d::dynamics::{Ccd, RigidBody, Velocity};
 use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
 use buildings::BuildingPugin;
 // use iyes_perf_ui::prelude::*;
-use shared::animation_plugin::SimpleAnimationPlugin;
+// use shared::animation_plugin::SimpleAnimationPlugin;
 use shared::sets::GameplaySet;
 use shared::states::{GameplayState, MenuState};
 use shared::{despawn::DespawnPuglin, states::AssetLoadState};
@@ -40,7 +39,7 @@ impl Plugin for PhosGamePlugin {
 			RenderDistancePlugin,
 			BuildingPugin,
 			BuildUIPlugin,
-			SimpleAnimationPlugin,
+			// SimpleAnimationPlugin,
 			UnitsPlugin,
 			DespawnPuglin,
 			TileSelectionPlugin,
@@ -59,8 +58,8 @@ impl Plugin for PhosGamePlugin {
 		app.add_systems(Update, spawn_sphere);
 
 		//Perf UI
-		app.add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
-			.add_plugins(bevy::diagnostic::EntityCountDiagnosticsPlugin)
+		app.add_plugins(FrameTimeDiagnosticsPlugin::default())
+			.add_plugins(EntityCountDiagnosticsPlugin::default())
 			.add_plugins(bevy::diagnostic::SystemInformationDiagnosticsPlugin);
 		// .add_plugins(PerfUiPlugin);
 
@@ -137,21 +136,20 @@ struct SphereMat(Handle<StandardMaterial>);
 
 fn spawn_sphere(
 	mut commands: Commands,
-	cam: Query<&Transform, With<PhosCamera>>,
+	cam: Single<&Transform, With<PhosCamera>>,
 	keyboard_input: Res<ButtonInput<KeyCode>>,
 	mut meshes: ResMut<Assets<Mesh>>,
 	mat: Res<SphereMat>,
 ) {
 	if keyboard_input.just_pressed(KeyCode::KeyF) {
-		let cam_transform = cam.single();
 		commands.spawn((
 			Mesh3d(meshes.add(Sphere::new(0.3))),
 			MeshMaterial3d(mat.0.clone()),
-			Transform::from_translation(cam_transform.translation),
+			Transform::from_translation(cam.translation),
 			Collider::ball(0.3),
 			RigidBody::Dynamic,
 			Ccd::enabled(),
-			Velocity::linear(cam_transform.forward() * 50.),
+			Velocity::linear(cam.forward() * 50.),
 		));
 	}
 }

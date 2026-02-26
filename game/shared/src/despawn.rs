@@ -34,7 +34,7 @@ fn despawn_at(mut commands: Commands, time: Res<Time>, entities: Query<(Entity, 
 fn despawn_after(mut commands: Commands, mut entities: Query<(&mut DespawnAfter, Entity)>, time: Res<Time>) {
 	for (mut after, entity) in &mut entities.iter_mut() {
 		after.0.tick(time.delta());
-		if after.0.finished() {
+		if after.0.is_finished() {
 			commands.entity(entity).despawn();
 		}
 	}

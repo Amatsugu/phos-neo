@@ -20,13 +20,7 @@ impl UnitAsset {
 	pub fn spawn(&self, transform: Transform) -> CommandQueue {
 		let mut commands = CommandQueue::default();
 
-		let bundle = (
-			PbrBundle {
-				transform: transform,
-				..default()
-			},
-			Unit,
-		);
+		let bundle = (transform, Unit);
 		let domain = self.domain.clone();
 		commands.push(move |world: &mut World| {
 			let mut e = world.spawn(bundle);

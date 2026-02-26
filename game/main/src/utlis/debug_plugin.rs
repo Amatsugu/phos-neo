@@ -45,7 +45,7 @@ impl Plugin for DebugPlugin {
 }
 
 #[derive(Resource)]
-struct Shape(pub Polyline3d<7>);
+struct Shape(pub Polyline3d);
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum DebugState {
@@ -87,8 +87,8 @@ fn show_water_corners(pos: Vec3, gizmos: &mut Gizmos) {
 	}
 }
 
-fn camera_debug(mut cam_query: Query<(&PhosCamera, &PhosOrbitCamera)>, mut gizmos: Gizmos) {
-	let (config, orbit) = cam_query.single();
+fn camera_debug(mut cam_query: Single<(&PhosCamera, &PhosOrbitCamera)>, mut gizmos: Gizmos) {
+	let (config, orbit) = cam_query.into_inner();
 
 	gizmos.sphere(orbit.target, 0.3, LinearRgba::RED);
 	let cam_proxy = orbit.target - (orbit.forward * 10.0);

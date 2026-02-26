@@ -1,14 +1,10 @@
 use crate::hex_utils::HexCoord;
 use crate::{hex_utils::offset3d_to_world, prelude::*};
+use bevy::asset::RenderAssetUsages;
 #[cfg(feature = "tracing")]
 use bevy::log::*;
-use bevy::{
-	prelude::*,
-	render::{
-		mesh::{Indices, PrimitiveTopology},
-		render_asset::RenderAssetUsages,
-	},
-};
+use bevy::mesh::{Indices, PrimitiveTopology};
+use bevy::prelude::*;
 
 pub fn generate_chunk_mesh(chunk: &MeshChunkData) -> Mesh {
 	#[cfg(feature = "tracing")]

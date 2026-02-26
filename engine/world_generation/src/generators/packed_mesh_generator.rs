@@ -1,11 +1,9 @@
-use crate::hex_utils::{offset3d_to_world, HexCoord};
+use crate::hex_utils::HexCoord;
 use crate::prelude::*;
+use bevy::asset::RenderAssetUsages;
 use bevy::{
+	mesh::{Indices, PrimitiveTopology},
 	prelude::*,
-	render::{
-		mesh::{Indices, PrimitiveTopology},
-		render_asset::RenderAssetUsages,
-	},
 };
 
 pub fn generate_packed_chunk_mesh(chunk: &MeshChunkData) -> Mesh {

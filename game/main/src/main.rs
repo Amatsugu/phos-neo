@@ -4,6 +4,8 @@ use bevy::image::{ImageAddressMode, ImageFilterMode, ImageSamplerDescriptor};
 use bevy::pbr::wireframe::WireframePlugin;
 use bevy::prelude::*;
 use bevy::window::PresentMode;
+#[cfg(debug_assertions)]
+use bevy::window::WindowResolution;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use phos::PhosGamePlugin;
 
@@ -24,7 +26,7 @@ fn main() {
 						title: "Phos".into(),
 						name: Some("phos".into()),
 						#[cfg(debug_assertions)]
-						resolution: (1920., 1080.).into(),
+						resolution: WindowResolution::new(1920, 1080),
 						present_mode: PresentMode::AutoNoVsync,
 						#[cfg(not(debug_assertions))]
 						mode: bevy::window::WindowMode::BorderlessFullscreen,
@@ -46,7 +48,7 @@ fn main() {
 					..Default::default()
 				}),
 			WorldInspectorPlugin::new(),
-			WireframePlugin,
+			WireframePlugin::default(),
 			PhosGamePlugin,
 		))
 		.run();

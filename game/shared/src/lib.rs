@@ -9,9 +9,9 @@ pub mod resources;
 pub mod sets;
 pub mod states;
 pub mod tags;
-pub mod prefab_defination;
-pub mod component_defination;
-pub mod animation_plugin;
+// pub mod prefab_defination;
+// pub mod animation_plugin;
+// pub mod component_defination;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Tier {

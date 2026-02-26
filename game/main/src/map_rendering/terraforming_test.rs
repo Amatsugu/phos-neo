@@ -1,4 +1,4 @@
-use bevy::{prelude::*, utils::hashbrown::HashSet, window::PrimaryWindow};
+use bevy::{platform::collections::HashSet, prelude::*, window::PrimaryWindow};
 use bevy_rapier3d::{pipeline::QueryFilter, plugin::RapierContext};
 use shared::{
 	events::{ChunkModifiedEvent, TileModifiedEvent},
@@ -31,8 +31,8 @@ fn deform(
 	mut heightmap: ResMut<Map>,
 	chunks: Res<PhosChunkRegistry>,
 	tile_under_cursor: Res<TileUnderCursor>,
-	mut chunk_modified: EventWriter<ChunkModifiedEvent>,
-	mut tile_modified: EventWriter<TileModifiedEvent>,
+	mut chunk_modified: MessageWriter<ChunkModifiedEvent>,
+	mut tile_modified: MessageWriter<TileModifiedEvent>,
 ) {
 	let mut multi = 0.;
 	if mouse.just_pressed(MouseButton::Left) {
@@ -53,11 +53,11 @@ fn deform(
 		for (tile, height) in modified_tiles {
 			let chunk = tile.to_chunk_index(heightmap.width);
 			if !chunk_set.contains(&chunk) {
-				chunk_modified.send(ChunkModifiedEvent { index: chunk });
+				chunk_modified.write(ChunkModifiedEvent { index: chunk });
 				chunk_set.insert(chunk);
 				commands.entity(chunks.chunks[chunk]).insert(RebuildChunk);
 			}
-			tile_modified.send(TileModifiedEvent::HeightChanged(tile, height));
+			tile_modified.write(TileModifiedEvent::HeightChanged(tile, height));
 		}
 		// commands.entity(e).insert(RebuildChunk);
 	}

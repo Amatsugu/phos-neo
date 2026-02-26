@@ -46,7 +46,7 @@ impl Plugin for BuildingPugin {
 		app.add_systems(Update, init.run_if(in_state(AssetLoadState::Loading)));
 		app.add_systems(
 			Update,
-			hq_placement.run_if(in_state(GameplayState::PlaceHQ).and_then(in_state(GeneratorState::Idle))),
+			hq_placement.run_if(in_state(GameplayState::PlaceHQ).and(in_state(GeneratorState::Idle))),
 		);
 		app.add_systems(
 			PreUpdate,
@@ -155,7 +155,7 @@ fn process_build_queue(
 }
 
 fn update_building_heights(
-	mut tile_updates: EventReader<TileModifiedEvent>,
+	mut tile_updates: MessageReader<TileModifiedEvent>,
 	building_map: Res<BuildingMap>,
 	mut commands: Commands,
 ) {

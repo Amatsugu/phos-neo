@@ -1,7 +1,4 @@
-use bevy::{
-	prelude::*,
-	render::{camera::RenderTarget, view::RenderLayers},
-};
+use bevy::prelude::*;
 use shared::{states::AssetLoadState, tags::MainCamera};
 pub struct BuildUIPlugin;
 
@@ -13,7 +10,7 @@ impl Plugin for BuildUIPlugin {
 }
 
 fn setup_cameras(mut commands: Commands) {
-	commands.spawn((Camera2d, IsDefaultUiCamera, UiBoxShadowSamples(6)));
+	commands.spawn((Camera2d, IsDefaultUiCamera));
 }
 
 fn spawn_ui(mut commands: Commands) {
@@ -25,7 +22,7 @@ fn spawn_ui(mut commands: Commands) {
 			align_items: AlignItems::End,
 			..default()
 		},))
-		.insert(PickingBehavior::IGNORE)
+		// .insert(PickingBehavior::IGNORE)
 		.with_children(|parent| {
 			parent.spawn((
 				Node {

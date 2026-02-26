@@ -53,10 +53,9 @@ impl Default for RenderDistanceVisibility {
 
 fn render_distance_system(
 	mut objects: Query<(&Transform, &mut Visibility, &RenderDistanceVisibility)>,
-	camera_query: Query<&Transform, With<MainCamera>>,
+	camera: Single<&Transform, With<MainCamera>>,
 	settings: Res<RenderDistanceSettings>,
 ) {
-	let camera = camera_query.single();
 	let cam_pos = Vec3::new(camera.translation.x, 0.0, camera.translation.z);
 	for (t, mut vis, r) in objects.iter_mut() {
 		let dist = (cam_pos - (t.translation + r.offset)).length();
