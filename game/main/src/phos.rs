@@ -1,7 +1,7 @@
 use crate::camera_system::components::PhosCamera;
 use crate::map_rendering::map_init::MapInitPlugin;
 use crate::map_rendering::render_distance_system::RenderDistancePlugin;
-use crate::ui::build_ui::BuildUIPlugin;
+// use crate::ui::build_ui::BuildUIPlugin;
 use crate::utlis::editor_plugin::EditorPlugin;
 use crate::utlis::tile_selection_plugin::TileSelectionPlugin;
 use crate::{camera_system::camera_plugin::PhosCameraPlugin, utlis::debug_plugin::DebugPlugin};
@@ -12,19 +12,21 @@ use bevy_asset_loader::prelude::*;
 use bevy_rapier3d::dynamics::{Ccd, RigidBody, Velocity};
 use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
-use buildings::BuildingPugin;
+// use buildings::BuildingPugin;
 // use iyes_perf_ui::prelude::*;
 // use shared::animation_plugin::SimpleAnimationPlugin;
 use shared::sets::GameplaySet;
 use shared::states::{GameplayState, MenuState};
 use shared::{despawn::DespawnPuglin, states::AssetLoadState};
-use units::units_plugin::UnitsPlugin;
+// use units::units_plugin::UnitsPlugin;
 use world_generation::states::GeneratorState;
 
 pub struct PhosGamePlugin;
 
-impl Plugin for PhosGamePlugin {
-	fn build(&self, app: &mut App) {
+impl Plugin for PhosGamePlugin
+{
+	fn build(&self, app: &mut App)
+	{
 		app.insert_state(AssetLoadState::Loading);
 		app.insert_state(MenuState::Loading);
 		app.insert_state(GameplayState::Waiting);
@@ -37,10 +39,10 @@ impl Plugin for PhosGamePlugin {
 			PhosCameraPlugin,
 			MapInitPlugin,
 			RenderDistancePlugin,
-			BuildingPugin,
-			BuildUIPlugin,
+			// BuildingPugin,
+			// BuildUIPlugin,
 			// SimpleAnimationPlugin,
-			UnitsPlugin,
+			// UnitsPlugin,
 			DespawnPuglin,
 			TileSelectionPlugin,
 			#[cfg(debug_assertions)]
@@ -74,7 +76,8 @@ impl Plugin for PhosGamePlugin {
 	}
 }
 
-fn configure_gameplay_set(app: &mut App) {
+fn configure_gameplay_set(app: &mut App)
+{
 	app.configure_sets(
 		Update,
 		GameplaySet.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
@@ -102,7 +105,8 @@ fn configure_gameplay_set(app: &mut App) {
 	);
 }
 
-fn init_game(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>) {
+fn init_game(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>)
+{
 	// commands.spawn((
 	// 	PerfUiRoot::default(),
 	// 	PerfUiEntryFPS::default(),
@@ -140,8 +144,10 @@ fn spawn_sphere(
 	keyboard_input: Res<ButtonInput<KeyCode>>,
 	mut meshes: ResMut<Assets<Mesh>>,
 	mat: Res<SphereMat>,
-) {
-	if keyboard_input.just_pressed(KeyCode::KeyF) {
+)
+{
+	if keyboard_input.just_pressed(KeyCode::KeyF)
+	{
 		commands.spawn((
 			Mesh3d(meshes.add(Sphere::new(0.3))),
 			MeshMaterial3d(mat.0.clone()),
