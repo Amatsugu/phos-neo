@@ -1,5 +1,3 @@
-use std::env;
-
 use bevy::image::{ImageAddressMode, ImageFilterMode, ImageSamplerDescriptor};
 use bevy::pbr::wireframe::WireframePlugin;
 use bevy::prelude::*;

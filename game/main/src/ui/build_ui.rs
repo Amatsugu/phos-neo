@@ -1,19 +1,23 @@
-use bevy::prelude::*;
-use shared::{states::AssetLoadState, tags::MainCamera};
+use bevy::{camera::visibility::RenderLayers, prelude::*};
+use shared::states::AssetLoadState;
 pub struct BuildUIPlugin;
 
-impl Plugin for BuildUIPlugin {
-	fn build(&self, app: &mut App) {
+impl Plugin for BuildUIPlugin
+{
+	fn build(&self, app: &mut App)
+	{
 		app.add_systems(Startup, setup_cameras);
 		app.add_systems(Update, spawn_ui.run_if(in_state(AssetLoadState::LoadComplete)));
 	}
 }
 
-fn setup_cameras(mut commands: Commands) {
-	commands.spawn((Camera2d, IsDefaultUiCamera));
+fn setup_cameras(mut commands: Commands)
+{
+	commands.spawn((Camera2d, IsDefaultUiCamera, RenderLayers::layer(2)));
 }
 
-fn spawn_ui(mut commands: Commands) {
+fn spawn_ui(mut commands: Commands)
+{
 	commands
 		.spawn((Node {
 			width: Val::Percent(100.),

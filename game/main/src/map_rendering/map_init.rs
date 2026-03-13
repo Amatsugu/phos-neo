@@ -1,11 +1,6 @@
 #[cfg(feature = "tracing")]
 use bevy::log::*;
-use bevy::{
-	light::NotShadowCaster,
-	pbr::ExtendedMaterial,
-	prelude::*,
-	render::render_resource::{ColorTargetState, FragmentState, RenderPipelineDescriptor},
-};
+use bevy::{light::NotShadowCaster, pbr::ExtendedMaterial, prelude::*};
 use bevy_asset_loader::prelude::*;
 
 use bevy_inspector_egui::quick::ResourceInspectorPlugin;
@@ -23,7 +18,7 @@ use world_generation::{
 };
 
 use crate::{
-	prelude::{PhosAssets, PhosChunk, PhosChunkRegistry},
+	prelude::{PhosAssets, PhosChunk, PhosChunkRegistry, WaterMesh},
 	shader_extensions::{
 		chunk_material::ChunkMaterial,
 		water_material::{WaterMaterial, WaterSettings},
@@ -258,19 +253,21 @@ fn spawn_map(
 		for (chunk_mesh, water_mesh, collider, pos, index) in chunk_meshes
 		{
 			// let mesh_handle = meshes.a
+			let water_mesh_handle = meshes.add(water_mesh);
 			let chunk = commands
 				.spawn((
 					Mesh3d(meshes.add(chunk_mesh)),
 					MeshMaterial3d(atlas.chunk_material_handle.clone()),
 					Transform::from_translation(pos),
 					PhosChunk::new(index),
+					WaterMesh(water_mesh_handle.id()),
 					RenderDistanceVisibility::default().with_offset(visibility_offset),
 					collider,
 				))
 				.id();
 			let water = commands
 				.spawn((
-					Mesh3d(meshes.add(water_mesh)),
+					Mesh3d(water_mesh_handle),
 					MeshMaterial3d(atlas.water_material.clone()),
 					Transform::from_translation(pos),
 					PhosChunk::new(index),

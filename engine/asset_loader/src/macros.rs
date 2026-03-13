@@ -1,5 +1,3 @@
-use bevy::{asset::AssetLoader, reflect::TypePath};
-
 #[macro_export]
 macro_rules! create_asset_loader {
 	(

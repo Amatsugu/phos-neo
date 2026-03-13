@@ -1,11 +1,9 @@
 use bevy::asset::Asset;
-use bevy::math::VectorSpace;
 use bevy::pbr::MaterialExtension;
 use bevy::prelude::*;
 use bevy::reflect::Reflect;
 use bevy::render::render_resource::{AsBindGroup, ShaderType};
 use bevy::shader::ShaderRef;
-use world_generation::consts::{ATTRIBUTE_PACKED_VERTEX_DATA, ATTRIBUTE_VERTEX_HEIGHT};
 
 #[derive(Asset, Reflect, AsBindGroup, Debug, Clone, Default)]
 pub struct WaterMaterial

@@ -1,4 +1,4 @@
-use bevy::{gizmos::gizmos, prelude::*};
+use bevy::prelude::*;
 use shared::states::GameplayState;
 use shared::{resources::TileUnderCursor, sets::GameplaySet};
 use world_generation::{
@@ -11,8 +11,10 @@ use crate::camera_system::components::{PhosCamera, PhosOrbitCamera};
 
 pub struct DebugPlugin;
 
-impl Plugin for DebugPlugin {
-	fn build(&self, app: &mut App) {
+impl Plugin for DebugPlugin
+{
+	fn build(&self, app: &mut App)
+	{
 		app.insert_state(DebugState::Base);
 
 		app.add_systems(
@@ -29,7 +31,7 @@ impl Plugin for DebugPlugin {
 				.run_if(in_state(DebugState::Verbose)),
 		);
 
-		// app.add_systems(Update, camera_debug.in_set(GameplaySet));
+		app.add_systems(Update, camera_debug.in_set(GameplaySet));
 		app.add_systems(Update, regenerate_map.run_if(in_state(GeneratorState::Idle)));
 
 		app.insert_resource(Shape(Polyline3d::new([
@@ -48,7 +50,8 @@ impl Plugin for DebugPlugin {
 struct Shape(pub Polyline3d);
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
-pub enum DebugState {
+pub enum DebugState
+{
 	Base,
 	None,
 	Verbose,
@@ -58,15 +61,19 @@ fn regenerate_map(
 	mut generator_state: ResMut<NextState<GeneratorState>>,
 	mut gameplay_state: ResMut<NextState<GameplayState>>,
 	input: Res<ButtonInput<KeyCode>>,
-) {
-	if input.just_pressed(KeyCode::KeyR) {
+)
+{
+	if input.just_pressed(KeyCode::KeyR)
+	{
 		generator_state.set(GeneratorState::Regenerate);
 		gameplay_state.set(GameplayState::PlaceHQ);
 	}
 }
 
-fn show_tile_heights(map: Res<Map>, mut gizmos: Gizmos, shape: Res<Shape>, tile_under_cursor: Res<TileUnderCursor>) {
-	if let Some(contact) = tile_under_cursor.0 {
+fn show_tile_heights(map: Res<Map>, mut gizmos: Gizmos, shape: Res<Shape>, tile_under_cursor: Res<TileUnderCursor>)
+{
+	if let Some(contact) = tile_under_cursor.0
+	{
 		let height = map.sample_height(&contact.tile);
 		gizmos.primitive_3d(&shape.0, contact.tile.to_world(height + 0.01), Color::WHITE);
 
@@ -78,8 +85,11 @@ fn show_tile_heights(map: Res<Map>, mut gizmos: Gizmos, shape: Res<Shape>, tile_
 	}
 }
 
-fn show_water_corners(pos: Vec3, gizmos: &mut Gizmos) {
-	for i in 0..WATER_HEX_CORNERS.len() {
+#[allow(dead_code)]
+fn show_water_corners(pos: Vec3, gizmos: &mut Gizmos)
+{
+	for i in 0..WATER_HEX_CORNERS.len()
+	{
 		let p = pos + WATER_HEX_CORNERS[i];
 		let p2 = pos + WATER_HEX_CORNERS[(i + 1) % WATER_HEX_CORNERS.len()];
 
@@ -87,8 +97,9 @@ fn show_water_corners(pos: Vec3, gizmos: &mut Gizmos) {
 	}
 }
 
-fn camera_debug(mut cam_query: Single<(&PhosCamera, &PhosOrbitCamera)>, mut gizmos: Gizmos) {
-	let (config, orbit) = cam_query.into_inner();
+fn camera_debug(cam_query: Single<(&PhosCamera, &PhosOrbitCamera)>, mut gizmos: Gizmos)
+{
+	let (_config, orbit) = cam_query.into_inner();
 
 	gizmos.sphere(orbit.target, 0.3, LinearRgba::RED);
 	let cam_proxy = orbit.target - (orbit.forward * 10.0);

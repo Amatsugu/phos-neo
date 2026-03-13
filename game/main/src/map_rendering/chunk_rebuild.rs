@@ -9,6 +9,7 @@ use world_generation::prelude::Map;
 use world_generation::states::GeneratorState;
 
 use crate::prelude::RebuildChunk;
+use crate::prelude::WaterMesh;
 use crate::{
 	prelude::{PhosChunk, PhosChunkRegistry},
 	utlis::chunk_utils::prepare_chunk_mesh,
@@ -16,8 +17,10 @@ use crate::{
 
 pub struct ChunkRebuildPlugin;
 
-impl Plugin for ChunkRebuildPlugin {
-	fn build(&self, app: &mut App) {
+impl Plugin for ChunkRebuildPlugin
+{
+	fn build(&self, app: &mut App)
+	{
 		app.init_resource::<PhosChunkRegistry>();
 		app.add_message::<ChunkModifiedEvent>();
 		app.add_message::<TileModifiedEvent>();
@@ -30,11 +33,13 @@ fn chunk_rebuilder(
 	mut commands: Commands,
 	chunk_query: Query<(Entity, &PhosChunk), (With<RebuildChunk>, Without<ChunkRebuildTask>)>,
 	heightmap: Res<Map>,
-) {
+)
+{
 	let pool = AsyncComputeTaskPool::get();
 	let map_size = UVec2::new(heightmap.width as u32, heightmap.height as u32);
 
-	for (chunk_entity, idx) in &chunk_query {
+	for (chunk_entity, idx) in &chunk_query
+	{
 		#[cfg(feature = "tracing")]
 		let _spawn_span = info_span!("Rebuild Chunk").entered();
 		info!("Rebuilding Chunk");
@@ -62,7 +67,7 @@ fn chunk_rebuilder(
 				world.entity_mut(chunk_entity).insert(c).remove::<ChunkRebuildTask>();
 			});
 
-			return (queue, mesh);
+			return (queue, mesh, water_mesh);
 		});
 
 		commands
@@ -73,19 +78,28 @@ fn chunk_rebuilder(
 }
 
 fn collider_task_resolver(
-	mut chunks: Query<(&mut ChunkRebuildTask, &Mesh3d), With<PhosChunk>>,
+	mut chunks: Query<(&mut ChunkRebuildTask, &Mesh3d, &WaterMesh), With<PhosChunk>>,
 	mut commands: Commands,
 	mut meshes: ResMut<Assets<Mesh>>,
-) {
-	for (mut task, mesh_handle) in &mut chunks {
-		if let Some((mut c, mesh)) = futures::check_ready(&mut task.task) {
+)
+{
+	for (mut task, mesh_handle, water_mesh_handle) in &mut chunks
+	{
+		if let Some((mut c, chunk_mesh, water_mesh)) = futures::check_ready(&mut task.task)
+		{
 			commands.append(&mut c);
-			meshes.insert(mesh_handle.id(), mesh);
+			meshes
+				.insert(mesh_handle.id(), chunk_mesh)
+				.expect("Failed to update chunk mesh");
+			meshes
+				.insert(water_mesh_handle.0, water_mesh)
+				.expect("Failed to update chink water mesh");
 		}
 	}
 }
 
 #[derive(Component)]
-struct ChunkRebuildTask {
-	pub task: Task<(CommandQueue, Mesh)>,
+struct ChunkRebuildTask
+{
+	pub task: Task<(CommandQueue, Mesh, Mesh)>,
 }

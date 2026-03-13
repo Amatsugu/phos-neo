@@ -22,6 +22,7 @@ impl MaterialExtension for ChunkMaterial
 	}
 }
 
+#[allow(dead_code)]
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct PackedChunkMaterial
 {
@@ -56,10 +57,10 @@ impl Material for PackedChunkMaterial
 	// }
 
 	fn specialize(
-		pipeline: &bevy::pbr::MaterialPipeline,
+		_pipeline: &bevy::pbr::MaterialPipeline,
 		descriptor: &mut bevy::render::render_resource::RenderPipelineDescriptor,
 		layout: &bevy::mesh::MeshVertexBufferLayoutRef,
-		key: bevy::pbr::MaterialPipelineKey<Self>,
+		_key: bevy::pbr::MaterialPipelineKey<Self>,
 	) -> bevy::ecs::error::Result<(), bevy::render::render_resource::SpecializedMeshPipelineError>
 	{
 		let vertex_layout = layout.0.get_layout(&[

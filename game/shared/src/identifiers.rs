@@ -1,9 +1,9 @@
 use bevy::reflect::Reflect;
 use serde::{Deserialize, Serialize};
-use world_generation::hex_utils::HexCoord;
 
 #[derive(Serialize, Deserialize, Debug, Reflect)]
-pub struct ResourceIdentifier {
+pub struct ResourceIdentifier
+{
 	pub id: u32,
 	pub qty: u32,
 }

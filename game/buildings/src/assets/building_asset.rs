@@ -12,11 +12,11 @@ use crate::{
 		resource_gathering::ResourceGatheringBuildingInfo,
 	},
 	footprint::BuildingFootprint,
-	prelude::Building,
 };
 
 #[derive(Asset, TypePath, Debug, Serialize, Deserialize)]
-pub struct BuildingAsset {
+pub struct BuildingAsset
+{
 	pub name: String,
 	pub description: String,
 	pub footprint: BuildingFootprint,
@@ -35,7 +35,9 @@ pub struct BuildingAsset {
 	// pub components: Option<Vec<ComponentDefination>>,
 }
 
-impl BuildingAsset {
+impl BuildingAsset
+{
+	#[allow(unused)]
 	pub fn spawn(
 		&self,
 		pos: Vec3,
@@ -44,7 +46,8 @@ impl BuildingAsset {
 		commands: &mut Commands,
 		meshes: &Assets<GltfMesh>,
 		nodes: &Assets<GltfNode>,
-	) -> Option<Entity> {
+	) -> Option<Entity>
+	{
 		todo!("Update building spawning");
 		// let base_node = &gltf.named_nodes[&self.base_mesh_path.clone().into_boxed_str()];
 		// if let Some(node) = nodes.get(base_node.id()) {
@@ -120,7 +123,8 @@ impl BuildingAsset {
 }
 
 #[derive(Serialize, Deserialize, Debug, TypePath)]
-pub enum BuildingType {
+pub enum BuildingType
+{
 	Basic,
 	Gathering(ResourceGatheringBuildingInfo),
 	FactoryBuildingInfo(FactoryBuildingInfo),

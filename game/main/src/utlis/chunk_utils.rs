@@ -13,7 +13,6 @@ use world_generation::{
 	generators::{
 		chunk_colliders::generate_chunk_collider,
 		mesh_generator::{generate_chunk_mesh, generate_chunk_water_mesh},
-		packed_mesh_generator::generate_packed_chunk_mesh,
 	},
 	hex_utils::offset_to_world,
 	prelude::{Chunk, Map, MeshChunkData},
@@ -26,7 +25,8 @@ pub fn paint_map(
 	painter: &BiomePainter,
 	tiles: &Res<Assets<TileAsset>>,
 	mappers: &Res<Assets<TileMapperAsset>>,
-) {
+)
+{
 	map.chunks.par_iter_mut().for_each(|chunk: &mut Chunk| {
 		paint_chunk(chunk, painter, tiles, mappers);
 	});
@@ -37,9 +37,12 @@ pub fn paint_chunk(
 	painter: &BiomePainter,
 	tiles: &Res<Assets<TileAsset>>,
 	mappers: &Res<Assets<TileMapperAsset>>,
-) {
-	for z in 0..Chunk::SIZE {
-		for x in 0..Chunk::SIZE {
+)
+{
+	for z in 0..Chunk::SIZE
+	{
+		for x in 0..Chunk::SIZE
+		{
 			let idx = x + z * Chunk::SIZE;
 			let height = chunk.heights[idx];
 			let biome_id = chunk.biome_id[idx];
@@ -58,7 +61,8 @@ pub fn prepare_chunk_mesh(
 	chunk_offset: IVec2,
 	chunk_index: usize,
 	map_size: UVec2,
-) -> (Mesh, Mesh, (Vec<Vec3>, Vec<[u32; 3]>), Vec3, usize) {
+) -> (Mesh, Mesh, (Vec<Vec3>, Vec<[u32; 3]>), Vec3, usize)
+{
 	#[cfg(feature = "tracing")]
 	let _gen_mesh = info_span!("Generate Chunk").entered();
 	let chunk_mesh = generate_chunk_mesh(chunk);
@@ -80,7 +84,8 @@ pub fn prepare_chunk_mesh_with_collider(
 	chunk_offset: IVec2,
 	chunk_index: usize,
 	map_size: UVec2,
-) -> (Mesh, Mesh, Collider, Vec3, usize) {
+) -> (Mesh, Mesh, Collider, Vec3, usize)
+{
 	let (chunk_mesh, water_mesh, (col_verts, col_indicies), pos, index) =
 		prepare_chunk_mesh(chunk, sealevel, chunk_offset, chunk_index, map_size);
 	let collider: Collider;

@@ -1,4 +1,4 @@
-use bevy::anti_alias::taa::{TemporalAntiAliasPlugin, TemporalAntiAliasing};
+use bevy::anti_alias::taa::TemporalAntiAliasing;
 use bevy::core_pipeline::prepass::DepthPrepass;
 use bevy::input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
@@ -25,12 +25,10 @@ impl Plugin for PhosCameraPlugin
 		app.add_systems(Update, orbit_camera_upate.in_set(GameplaySet));
 
 		app.add_systems(Update, init_bounds.run_if(in_state(GeneratorState::SpawnMap)));
-
-		// app.add_plugins(TemporalAntiAliasPlugin);
 	}
 }
 
-fn init_bounds(mut commands: Commands, mut cam: Single<(&mut Transform, Entity), With<PhosCamera>>, heightmap: Res<Map>)
+fn init_bounds(mut commands: Commands, cam: Single<(&mut Transform, Entity), With<PhosCamera>>, heightmap: Res<Map>)
 {
 	let (mut cam_t, cam_entity) = cam.into_inner();
 	cam_t.translation = heightmap.get_center();
