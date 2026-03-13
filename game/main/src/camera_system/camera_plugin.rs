@@ -13,8 +13,10 @@ use super::components::*;
 
 pub struct PhosCameraPlugin;
 
-impl Plugin for PhosCameraPlugin {
-	fn build(&self, app: &mut App) {
+impl Plugin for PhosCameraPlugin
+{
+	fn build(&self, app: &mut App)
+	{
 		app.register_type::<PhosCamera>();
 		app.register_type::<PhosOrbitCamera>();
 
@@ -24,15 +26,12 @@ impl Plugin for PhosCameraPlugin {
 
 		app.add_systems(Update, init_bounds.run_if(in_state(GeneratorState::SpawnMap)));
 
-		app.add_plugins(TemporalAntiAliasPlugin);
+		// app.add_plugins(TemporalAntiAliasPlugin);
 	}
 }
 
-fn init_bounds(
-	mut commands: Commands,
-	mut cam: Single<(&mut Transform, Entity), With<PhosCamera>>,
-	heightmap: Res<Map>,
-) {
+fn init_bounds(mut commands: Commands, mut cam: Single<(&mut Transform, Entity), With<PhosCamera>>, heightmap: Res<Map>)
+{
 	let (mut cam_t, cam_entity) = cam.into_inner();
 	cam_t.translation = heightmap.get_center();
 	commands
@@ -44,7 +43,8 @@ fn init_bounds(
 		});
 }
 
-fn setup(mut commands: Commands) {
+fn setup(mut commands: Commands)
+{
 	commands
 		.spawn((
 			Camera3d::default(),
@@ -71,7 +71,8 @@ fn orbit_camera_upate(
 	time: Res<Time>,
 	map: Res<Map>,
 	#[cfg(debug_assertions)] mut gizmos: Gizmos,
-) {
+)
+{
 	let (mut transform, config, mut orbit, bounds) = cam_query.into_inner();
 
 	let target = orbit.target;
@@ -80,9 +81,11 @@ fn orbit_camera_upate(
 	//Apply Camera Dist
 	cam_pos -= orbit.forward * orbit.distance;
 
-	if mouse.pressed(MouseButton::Middle) {
+	if mouse.pressed(MouseButton::Middle)
+	{
 		let mut orbit_move = Vec2::ZERO;
-		for e in mouse_motion.read() {
+		for e in mouse_motion.read()
+		{
 			orbit_move += e.delta;
 		}
 		orbit_move *= config.pan_speed * time.delta_secs() * -1.0;
@@ -94,39 +97,54 @@ fn orbit_camera_upate(
 		orbit.forward = orbit.forward.normalize();
 		cursor_options.grab_mode = CursorGrabMode::Locked;
 		cursor_options.visible = false;
-	} else {
+	}
+	else
+	{
 		cursor_options.grab_mode = CursorGrabMode::None;
 		cursor_options.visible = true;
 	}
-	if key.pressed(KeyCode::KeyE) {
+	if key.pressed(KeyCode::KeyE)
+	{
 		let rot = Quat::from_axis_angle(Vec3::Y, f32::to_radians(config.speed) * time.delta_secs());
 		orbit.forward = rot * orbit.forward;
-	} else if key.pressed(KeyCode::KeyQ) {
+	}
+	else if key.pressed(KeyCode::KeyQ)
+	{
 		let rot = Quat::from_axis_angle(Vec3::Y, f32::to_radians(-config.speed) * time.delta_secs());
 		orbit.forward = rot * orbit.forward;
 	}
 
 	let mut cam_move = Vec3::ZERO;
 
-	if key.pressed(KeyCode::KeyA) {
+	if key.pressed(KeyCode::KeyA)
+	{
 		cam_move.x = 1.;
-	} else if key.pressed(KeyCode::KeyD) {
+	}
+	else if key.pressed(KeyCode::KeyD)
+	{
 		cam_move.x = -1.;
 	}
 
-	if key.pressed(KeyCode::KeyW) {
+	if key.pressed(KeyCode::KeyW)
+	{
 		cam_move.z = 1.;
-	} else if key.pressed(KeyCode::KeyS) {
+	}
+	else if key.pressed(KeyCode::KeyS)
+	{
 		cam_move.z = -1.;
 	}
 
-	let move_speed = if key.pressed(KeyCode::ShiftLeft) {
+	let move_speed = if key.pressed(KeyCode::ShiftLeft)
+	{
 		config.speed * 2.0
-	} else {
+	}
+	else
+	{
 		config.speed
 	};
 
-	if cam_move != Vec3::ZERO {
+	if cam_move != Vec3::ZERO
+	{
 		cam_move = cam_move.normalize();
 		let move_fwd = Vec3::new(orbit.forward.x, 0., orbit.forward.z).normalize();
 		let move_rot = Quat::from_rotation_arc(Vec3::NEG_Z, move_fwd);
@@ -143,8 +161,10 @@ fn orbit_camera_upate(
 	}
 
 	let mut scroll = 0.0;
-	for e in wheel.read() {
-		match e.unit {
+	for e in wheel.read()
+	{
+		match e.unit
+		{
 			MouseScrollUnit::Line => scroll += e.y * 5.,
 			MouseScrollUnit::Pixel => scroll += e.y,
 		}
@@ -166,23 +186,31 @@ fn orbit_camera_upate(
 	transform.look_at(target, Vec3::Y);
 }
 
-fn sample_ground(pos: Vec3, heightmap: &Map) -> f32 {
+fn sample_ground(pos: Vec3, heightmap: &Map) -> f32
+{
 	let tile_under = HexCoord::from_world_pos(pos);
 	let neighbors = heightmap.get_neighbors(&tile_under);
-	let mut ground_height = if heightmap.is_in_bounds(&tile_under) {
+	let mut ground_height = if heightmap.is_in_bounds(&tile_under)
+	{
 		heightmap.sample_height(&tile_under)
-	} else {
+	}
+	else
+	{
 		heightmap.sealevel
 	};
 
-	for n in neighbors {
-		if let Some(h) = n {
-			if h > ground_height {
+	for n in neighbors
+	{
+		if let Some(h) = n
+		{
+			if h > ground_height
+			{
 				ground_height = h;
 			}
 		}
 	}
-	if ground_height < heightmap.sealevel {
+	if ground_height < heightmap.sealevel
+	{
 		ground_height = heightmap.sealevel;
 	}
 	return ground_height;

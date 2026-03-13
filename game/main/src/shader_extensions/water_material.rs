@@ -5,23 +5,28 @@ use bevy::prelude::*;
 use bevy::reflect::Reflect;
 use bevy::render::render_resource::{AsBindGroup, ShaderType};
 use bevy::shader::ShaderRef;
+use world_generation::consts::{ATTRIBUTE_PACKED_VERTEX_DATA, ATTRIBUTE_VERTEX_HEIGHT};
 
 #[derive(Asset, Reflect, AsBindGroup, Debug, Clone, Default)]
-pub struct WaterMaterial {
+pub struct WaterMaterial
+{
 	#[uniform(100)]
 	pub settings: WaterSettings,
 }
 
 #[derive(Debug, Clone, ShaderType, Reflect)]
-pub struct WaterSettings {
+pub struct WaterSettings
+{
 	pub offset: f32,
 	pub scale: f32,
 	pub f_power: f32,
 	pub deep_color: LinearRgba,
 }
 
-impl Default for WaterSettings {
-	fn default() -> Self {
+impl Default for WaterSettings
+{
+	fn default() -> Self
+	{
 		Self {
 			offset: 0.0,
 			scale: 1.0,
@@ -31,18 +36,21 @@ impl Default for WaterSettings {
 	}
 }
 
-impl MaterialExtension for WaterMaterial {
-	fn fragment_shader() -> ShaderRef {
+impl MaterialExtension for WaterMaterial
+{
+	fn fragment_shader() -> ShaderRef
+	{
 		"shaders/world/water.wgsl".into()
 	}
 
 	// fn specialize(
-	// 	_pipeline: &bevy::pbr::MaterialExtensionPipeline,
+	// 	pipeline: &bevy::pbr::MaterialExtensionPipeline,
 	// 	descriptor: &mut bevy::render::render_resource::RenderPipelineDescriptor,
-	// 	layout: &bevy::render::mesh::MeshVertexBufferLayout,
-	// 	_key: bevy::pbr::MaterialExtensionKey<Self>,
-	// ) -> Result<(), bevy::render::render_resource::SpecializedMeshPipelineError> {
-	// 	let vertex_layout = layout.get_layout(&[
+	// 	layout: &bevy::mesh::MeshVertexBufferLayoutRef,
+	// 	key: bevy::pbr::MaterialExtensionKey<Self>,
+	// ) -> std::result::Result<(), bevy::render::render_resource::SpecializedMeshPipelineError>
+	// {
+	// 	let vertex_layout = layout.0.get_layout(&[
 	// 		// Mesh::ATTRIBUTE_POSITION.at_shader_location(0),
 	// 		// Mesh::ATTRIBUTE_UV_0.at_shader_location(1),
 	// 		// Mesh::ATTRIBUTE_NORMAL.at_shader_location(2),

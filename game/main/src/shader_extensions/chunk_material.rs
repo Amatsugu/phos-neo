@@ -7,35 +7,43 @@ use bevy::shader::ShaderRef;
 use world_generation::consts::{ATTRIBUTE_PACKED_VERTEX_DATA, ATTRIBUTE_VERTEX_HEIGHT};
 
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
-pub struct ChunkMaterial {
+pub struct ChunkMaterial
+{
 	#[texture(100, dimension = "2d_array")]
 	#[sampler(101)]
 	pub array_texture: Handle<Image>,
 }
 
-impl MaterialExtension for ChunkMaterial {
-	fn fragment_shader() -> ShaderRef {
+impl MaterialExtension for ChunkMaterial
+{
+	fn fragment_shader() -> ShaderRef
+	{
 		"shaders/world/chunk.wgsl".into()
 	}
 }
 
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
-pub struct PackedChunkMaterial {
+pub struct PackedChunkMaterial
+{
 	#[texture(100, dimension = "2d_array")]
 	#[sampler(101)]
 	pub array_texture: Handle<Image>,
 }
 
-impl Material for PackedChunkMaterial {
-	fn fragment_shader() -> ShaderRef {
+impl Material for PackedChunkMaterial
+{
+	fn fragment_shader() -> ShaderRef
+	{
 		"shaders/world/chunk.wgsl".into()
 	}
 
-	fn vertex_shader() -> ShaderRef {
+	fn vertex_shader() -> ShaderRef
+	{
 		"shaders/world/chunk_packed.wgsl".into()
 	}
 
-	fn prepass_vertex_shader() -> ShaderRef {
+	fn prepass_vertex_shader() -> ShaderRef
+	{
 		"shaders/world/chunk_packed.wgsl".into()
 	}
 
@@ -52,7 +60,8 @@ impl Material for PackedChunkMaterial {
 		descriptor: &mut bevy::render::render_resource::RenderPipelineDescriptor,
 		layout: &bevy::mesh::MeshVertexBufferLayoutRef,
 		key: bevy::pbr::MaterialPipelineKey<Self>,
-	) -> bevy::ecs::error::Result<(), bevy::render::render_resource::SpecializedMeshPipelineError> {
+	) -> bevy::ecs::error::Result<(), bevy::render::render_resource::SpecializedMeshPipelineError>
+	{
 		let vertex_layout = layout.0.get_layout(&[
 			// Mesh::ATTRIBUTE_POSITION.at_shader_location(0),
 			// Mesh::ATTRIBUTE_UV_0.at_shader_location(1),

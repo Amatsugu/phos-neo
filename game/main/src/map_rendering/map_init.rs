@@ -35,8 +35,10 @@ use super::{chunk_rebuild::ChunkRebuildPlugin, render_distance_system::RenderDis
 
 pub struct MapInitPlugin;
 
-impl Plugin for MapInitPlugin {
-	fn build(&self, app: &mut App) {
+impl Plugin for MapInitPlugin
+{
+	fn build(&self, app: &mut App)
+	{
 		app.insert_state(GeneratorState::Startup);
 		app.insert_state(AssetLoadState::Loading);
 
@@ -52,7 +54,7 @@ impl Plugin for MapInitPlugin {
 			ChunkRebuildPlugin,
 			// TerraFormingTestPlugin,
 			MaterialPlugin::<ExtendedMaterial<StandardMaterial, ChunkMaterial>>::default(),
-			MaterialPlugin::<ExtendedMaterial<StandardMaterial, WaterMaterial>> { ..Default::default() },
+			MaterialPlugin::<ExtendedMaterial<StandardMaterial, WaterMaterial>>::default(),
 		));
 
 		app.configure_loading_state(
@@ -86,7 +88,8 @@ impl Plugin for MapInitPlugin {
 fn setup_materials(
 	mut phos_assets: ResMut<PhosAssets>,
 	mut water_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, WaterMaterial>>>,
-) {
+)
+{
 	let water_material = water_materials.add(ExtendedMaterial {
 		base: StandardMaterial {
 			base_color: Color::srgb(0., 0.878, 1.),
@@ -112,7 +115,8 @@ fn finalize_biome_painter(
 	mut next_generator_state: ResMut<NextState<GeneratorState>>,
 	biome_painter: Res<BiomePainterAsset>,
 	biomes: Res<Assets<BiomeAsset>>,
-) {
+)
+{
 	let painter = biome_painter.build(&biomes);
 	commands.insert_resource(painter);
 	next_generator_state.set(GeneratorState::GenerateHeightmap);
@@ -123,11 +127,14 @@ fn finalize_texture(
 	mut images: ResMut<Assets<Image>>,
 	mut chunk_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, ChunkMaterial>>>,
 	mut next_load_state: ResMut<NextState<AssetLoadState>>,
-) {
+)
+{
 	let image = images.get_mut(atlas.handle.id()).unwrap();
 
 	let array_layers = image.height() / image.width();
-	image.reinterpret_stacked_2d_as_array(array_layers);
+	image
+		.reinterpret_stacked_2d_as_array(array_layers)
+		.expect("Failed to reinterpret as array");
 
 	let chunk_material = chunk_materials.add(ExtendedMaterial {
 		base: StandardMaterial::default(),
@@ -144,7 +151,8 @@ fn create_heightmap(
 	mut commands: Commands,
 	mut next_state: ResMut<NextState<GeneratorState>>,
 	biome_painter: Res<BiomePainter>,
-) {
+)
+{
 	let config = GenerationConfig {
 		biome_blend: 32,
 		biome_dither: 10.,
@@ -215,7 +223,8 @@ fn spawn_map(
 	mut game_state: ResMut<NextState<MenuState>>,
 	mut gameplay_state: ResMut<NextState<GameplayState>>,
 	biome_painter: Res<BiomePainter>,
-) {
+)
+{
 	paint_map(&mut heightmap, &biome_painter, &tile_assets, &tile_mappers);
 
 	//Prepare Mesh Data
@@ -246,7 +255,8 @@ fn spawn_map(
 			0.,
 			(Chunk::SIZE / 2) as f32 * 1.5,
 		);
-		for (chunk_mesh, water_mesh, collider, pos, index) in chunk_meshes {
+		for (chunk_mesh, water_mesh, collider, pos, index) in chunk_meshes
+		{
 			// let mesh_handle = meshes.a
 			let chunk = commands
 				.spawn((
@@ -275,7 +285,8 @@ fn spawn_map(
 
 	commands.insert_resource(registry);
 	generator_state.set(GeneratorState::Idle);
-	if cur_game_state.get() != &MenuState::InGame {
+	if cur_game_state.get() != &MenuState::InGame
+	{
 		game_state.set(MenuState::InGame);
 		gameplay_state.set(GameplayState::PlaceHQ);
 	}
@@ -289,8 +300,10 @@ fn despawn_map(
 	chunks: Query<Entity, With<PhosChunk>>,
 	mut next_state: ResMut<NextState<GeneratorState>>,
 	biome_painter: Res<BiomePainter>,
-) {
-	for chunk in chunks.iter() {
+)
+{
+	for chunk in chunks.iter()
+	{
 		commands.entity(chunk).despawn();
 	}
 

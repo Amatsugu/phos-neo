@@ -6,6 +6,7 @@ use bevy::prelude::*;
 use bevy::window::PresentMode;
 #[cfg(debug_assertions)]
 use bevy::window::WindowResolution;
+use bevy_inspector_egui::bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use phos::PhosGamePlugin;
 
@@ -17,7 +18,8 @@ mod shader_extensions;
 mod ui;
 mod utlis;
 
-fn main() {
+fn main()
+{
 	App::new()
 		.add_plugins((
 			DefaultPlugins
@@ -47,6 +49,7 @@ fn main() {
 					watch_for_changes_override: Some(true),
 					..Default::default()
 				}),
+			EguiPlugin::default(),
 			WorldInspectorPlugin::new(),
 			WireframePlugin::default(),
 			PhosGamePlugin,

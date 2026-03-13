@@ -2,10 +2,14 @@
 resolver = "2"
 members = [
     "game/main",
-	"game/buildings",
 	"game/shared",
+	"game/buildings",
+	"game/units",
+	"game/resources",
     "engine/world_generation",
-	"engine/asset_loader", "game/buildings", "game/shared", "game/units", "engine/data", "game/resources", "engine/asset_loader_proc"]
+	"engine/asset_loader",
+	"engine/data",
+]
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]
