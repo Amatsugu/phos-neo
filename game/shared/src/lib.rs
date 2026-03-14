@@ -2,6 +2,7 @@ use bevy::reflect::Reflect;
 use serde::{Deserialize, Serialize};
 
 pub mod building;
+pub mod coords;
 pub mod despawn;
 pub mod events;
 pub mod identifiers;
@@ -14,7 +15,8 @@ pub mod tags;
 // pub mod component_defination;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub enum Tier {
+pub enum Tier
+{
 	Zero,
 	One,
 	Two,
@@ -23,7 +25,8 @@ pub enum Tier {
 }
 
 #[derive(Serialize, Deserialize, Debug, Reflect)]
-pub enum StatusEffect {
+pub enum StatusEffect
+{
 	UnitRange(f32),
 	UnitAttack(f32),
 	UnitHealth(f32),
