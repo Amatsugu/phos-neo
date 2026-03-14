@@ -1,15 +1,17 @@
-
 use bevy::prelude::Resource;
+use hex::prelude::*;
 use shared::building::BuildingIdentifier;
-use world_generation::hex_utils::HexCoord;
 
 #[derive(Resource)]
-pub struct BuildQueue {
+pub struct BuildQueue
+{
 	pub queue: Vec<QueueEntry>,
 }
 
-impl Default for BuildQueue {
-	fn default() -> Self {
+impl Default for BuildQueue
+{
+	fn default() -> Self
+	{
 		Self {
 			queue: Default::default(),
 		}
@@ -17,7 +19,8 @@ impl Default for BuildQueue {
 }
 
 #[derive(PartialEq, Eq)]
-pub struct QueueEntry {
+pub struct QueueEntry
+{
 	pub building: BuildingIdentifier,
 	pub pos: HexCoord,
 }

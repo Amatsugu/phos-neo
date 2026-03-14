@@ -4,13 +4,14 @@ use bevy::{light::NotShadowCaster, pbr::ExtendedMaterial, prelude::*};
 use bevy_asset_loader::prelude::*;
 
 use bevy_inspector_egui::quick::ResourceInspectorPlugin;
+use hex::prelude::*;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use shared::states::{AssetLoadState, GameplayState, MenuState};
+
 use world_generation::{
 	biome_asset::{BiomeAsset, BiomeAssetPlugin},
 	biome_painter::*,
 	heightmap::generate_heightmap,
-	hex_utils::{offset_to_index, SHORT_DIAGONAL},
 	map::biome_map::BiomeMap,
 	prelude::*,
 	tile_manager::*,

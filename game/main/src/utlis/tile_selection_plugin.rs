@@ -1,10 +1,12 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_rapier3d::{plugin::ReadRapierContext, prelude::QueryFilter};
+use hex::prelude::*;
 use shared::{
 	resources::{TileContact, TileUnderCursor},
 	tags::MainCamera,
 };
-use world_generation::{hex_utils::HexCoord, prelude::Map, states::GeneratorState};
+use world_generation::{prelude::Map, states::GeneratorState};
+
 pub struct TileSelectionPlugin;
 
 impl Plugin for TileSelectionPlugin

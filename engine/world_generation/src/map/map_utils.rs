@@ -4,9 +4,9 @@ use bevy::{math::VectorSpace, prelude::*};
 use image::ImageBuffer;
 use rayon::prelude::*;
 
-use crate::hex_utils::HexCoord;
+use hex::prelude::*;
 
-use super::{biome_map::BiomeMap, chunk::Chunk, map::Map};
+use super::{biome_map::BiomeMap, map::Map};
 
 pub fn render_image(
 	size: UVec2,

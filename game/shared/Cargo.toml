@@ -9,6 +9,7 @@ edition = "2021"
 bevy = "0.18.0"
 serde = { version = "1.0.228", features = ["derive"] }
 world_generation = { path = "../../engine/world_generation" }
+hex = { path = "../../engine/hex" }
 
 
 [features]

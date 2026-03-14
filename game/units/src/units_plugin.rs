@@ -5,9 +5,10 @@ use bevy::{
 	prelude::*,
 	tasks::{futures, AsyncComputeTaskPool},
 };
+use hex::prelude::*;
 use pathfinding::prelude::astar;
 use shared::{events::TileModifiedEvent, resources::TileUnderCursor, sets::GameplaySet};
-use world_generation::{hex_utils::HexCoord, prelude::Map, states::GeneratorState};
+use world_generation::{prelude::Map, states::GeneratorState};
 
 #[cfg(debug_assertions)]
 use crate::units_debug_plugin::UnitsDebugPlugin;
@@ -20,8 +21,10 @@ use crate::{
 
 pub struct UnitsPlugin;
 
-impl Plugin for UnitsPlugin {
-	fn build(&self, app: &mut App) {
+impl Plugin for UnitsPlugin
+{
+	fn build(&self, app: &mut App)
+	{
 		app.init_resource::<PathBatchId>();
 		app.add_plugins(UnitAssetPlugin);
 
@@ -40,15 +43,20 @@ impl Plugin for UnitsPlugin {
 	}
 }
 
-fn build_navdata(mut commands: Commands, map: Res<Map>) {
+fn build_navdata(mut commands: Commands, map: Res<Map>)
+{
 	let nav_data = NavData::build(&map);
 	commands.insert_resource(nav_data);
 }
 
-fn update_navdata(mut tile_updates: MessageReader<TileModifiedEvent>, mut nav_data: ResMut<NavData>) {
-	for event in tile_updates.read() {
-		match event {
-			TileModifiedEvent::HeightChanged(coord, new_height) => {
+fn update_navdata(mut tile_updates: MessageReader<TileModifiedEvent>, mut nav_data: ResMut<NavData>)
+{
+	for event in tile_updates.read()
+	{
+		match event
+		{
+			TileModifiedEvent::HeightChanged(coord, new_height) =>
+			{
 				nav_data.update_tile(coord, *new_height, 1.0);
 			}
 			_ => (),
@@ -56,6 +64,7 @@ fn update_navdata(mut tile_updates: MessageReader<TileModifiedEvent>, mut nav_da
 	}
 }
 
+#[allow(unused)]
 fn units_control(tile_under_cursor: Res<TileUnderCursor>) {}
 
 fn move_unit(
@@ -63,22 +72,27 @@ fn move_unit(
 	time: Res<Time>,
 	map: Res<Map>,
 	mut commands: Commands,
-) {
-	for (mut t, mut path, entity) in units.iter_mut() {
-		if path.1 >= path.0.len() {
+)
+{
+	for (mut t, mut path, entity) in units.iter_mut()
+	{
+		if path.1 >= path.0.len()
+		{
 			commands.entity(entity).remove::<Path>();
 			continue;
 		}
 		let p = path.0[path.1];
 		let d = p - t.translation;
-		if d.length() < 0.1 {
+		if d.length() < 0.1
+		{
 			path.1 += 1;
 			continue;
 		}
 		let vel = d.normalize() * 10.0 * time.delta_secs();
 		t.translation += vel;
 		let coord = HexCoord::from_world_pos(t.translation);
-		if map.is_in_bounds(&coord) {
+		if map.is_in_bounds(&coord)
+		{
 			t.translation.y = map.sample_height(&coord);
 		}
 	}
@@ -90,22 +104,28 @@ fn dispatch_path_requests(
 	nav_data: Res<NavData>,
 	mut batch_id: ResMut<PathBatchId>,
 	mut commands: Commands,
-) {
-	if units.is_empty() {
+)
+{
+	if units.is_empty()
+	{
 		return;
 	}
 	let mut groups: HashMap<HexCoord, Vec<PathRequest>> = HashMap::new();
 
 	#[cfg(feature = "tracing")]
 	let _group_span = info_span!("Grouping").entered();
-	for (transform, target, entity) in units.iter() {
+	for (transform, target, entity) in units.iter()
+	{
 		let req = PathRequest {
 			entity,
 			from: HexCoord::from_world_pos(transform.translation),
 		};
-		if let Some(group) = groups.get_mut(&target.0) {
+		if let Some(group) = groups.get_mut(&target.0)
+		{
 			group.push(req);
-		} else {
+		}
+		else
+		{
 			groups.insert(target.0, vec![req]);
 		}
 	}
@@ -113,11 +133,13 @@ fn dispatch_path_requests(
 	drop(_group_span);
 
 	let pool = AsyncComputeTaskPool::get();
-	for (target, units) in groups {
+	for (target, units) in groups
+	{
 		let id = batch_id.0;
 		batch_id.0 += 1;
 
-		for req in &units {
+		for req in &units
+		{
 			commands
 				.entity(req.entity)
 				.insert(PathTaskPending(id))
@@ -136,17 +158,21 @@ fn dispatch_path_requests(
 		let batch_task = pool.spawn(async move {
 			let mut i = 0;
 			let mut queue = CommandQueue::default();
-			for entitiy_req in req.entities {
+			for entitiy_req in req.entities
+			{
 				let dst = req.destination[i];
 				i += 1;
 				#[cfg(feature = "tracing")]
 				let _path_span = info_span!("Path Finding").entered();
-				if let Some(path) = calculate_path(&entitiy_req.from, &dst, &local_nav_data) {
+				if let Some(path) = calculate_path(&entitiy_req.from, &dst, &local_nav_data)
+				{
 					queue.push(move |world: &mut World| {
 						let mut unit_e = world.entity_mut(entitiy_req.entity);
 
-						if let Some(pending_task) = unit_e.get::<PathTaskPending>() {
-							if pending_task.0 == id {
+						if let Some(pending_task) = unit_e.get::<PathTaskPending>()
+						{
+							if pending_task.0 == id
+							{
 								unit_e.insert(path);
 								unit_e.remove::<PathTaskPending>();
 							}
@@ -154,7 +180,8 @@ fn dispatch_path_requests(
 					});
 				}
 			}
-			if queue.is_empty() {
+			if queue.is_empty()
+			{
 				return None;
 			}
 			return Some(queue);
@@ -163,26 +190,36 @@ fn dispatch_path_requests(
 	}
 }
 
-fn get_end_points(coord: &HexCoord, count: usize, map: &Map) -> Vec<HexCoord> {
+fn get_end_points(coord: &HexCoord, count: usize, map: &Map) -> Vec<HexCoord>
+{
 	let mut result = Vec::with_capacity(count);
-	if count == 1 {
+	if count == 1
+	{
 		return vec![*coord];
 	}
 	result.push(*coord);
 	let mut r = 1;
-	while result.len() < count {
+	while result.len() < count
+	{
 		let tiles = HexCoord::select_ring(coord, r);
 		let needed = count - result.len();
-		if needed >= tiles.len() {
-			for t in tiles {
-				if map.is_in_bounds(&t) {
+		if needed >= tiles.len()
+		{
+			for t in tiles
+			{
+				if map.is_in_bounds(&t)
+				{
 					result.push(t);
 				}
 			}
-		} else {
-			for i in 0..needed {
+		}
+		else
+		{
+			for i in 0..needed
+			{
 				let t = tiles[i];
-				if map.is_in_bounds(&t) {
+				if map.is_in_bounds(&t)
+				{
 					result.push(t);
 				}
 			}
@@ -193,10 +230,14 @@ fn get_end_points(coord: &HexCoord, count: usize, map: &Map) -> Vec<HexCoord> {
 	return result;
 }
 
-fn resolve_path_task(mut tasks: Query<(&mut PathTask, Entity)>, mut commands: Commands) {
-	for (mut task, entity) in tasks.iter_mut() {
-		if let Some(c) = futures::check_ready(&mut task.0) {
-			if let Some(mut queue) = c {
+fn resolve_path_task(mut tasks: Query<(&mut PathTask, Entity)>, mut commands: Commands)
+{
+	for (mut task, entity) in tasks.iter_mut()
+	{
+		if let Some(c) = futures::check_ready(&mut task.0)
+		{
+			if let Some(mut queue) = c
+			{
 				commands.append(&mut queue);
 			}
 			commands.entity(entity).despawn();
@@ -204,32 +245,38 @@ fn resolve_path_task(mut tasks: Query<(&mut PathTask, Entity)>, mut commands: Co
 	}
 }
 
-fn calculate_path(from: &HexCoord, to: &HexCoord, nav: &NavData) -> Option<Path> {
+fn calculate_path(from: &HexCoord, to: &HexCoord, nav: &NavData) -> Option<Path>
+{
 	let path = astar(
 		from,
 		|n| nav.get_neighbors(n),
 		|n| nav.get(n).calculate_heuristic(to),
 		|n| n == to,
 	);
-	if let Some((nodes, _cost)) = path {
+	if let Some((nodes, _cost)) = path
+	{
 		let result: Vec<_> = nodes.iter().map(|f| f.to_world(nav.get_height(f))).collect();
 		return Some(Path(result, 1));
 	}
 	return None;
 }
 
-struct PathRequest {
+struct PathRequest
+{
 	pub entity: Entity,
 	pub from: HexCoord,
 }
 
-struct BatchPathRequest {
+struct BatchPathRequest
+{
 	pub entities: Vec<PathRequest>,
 	pub destination: Vec<HexCoord>,
 }
 
-impl BatchPathRequest {
-	pub fn new(entities: Vec<PathRequest>, dst: Vec<HexCoord>) -> Self {
+impl BatchPathRequest
+{
+	pub fn new(entities: Vec<PathRequest>, dst: Vec<HexCoord>) -> Self
+	{
 		return Self {
 			destination: dst,
 			entities,

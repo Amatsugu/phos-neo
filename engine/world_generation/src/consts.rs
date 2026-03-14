@@ -1,6 +1,7 @@
 use bevy::{mesh::MeshVertexAttribute, prelude::*, render::render_resource::VertexFormat};
+use hex::{INNER_RADIUS, OUTER_RADIUS};
 
-use crate::hex_utils::{INNER_RADIUS, OUTER_RADIUS};
+// use crate::hex_utils::{INNER_RADIUS, OUTER_RADIUS};
 
 pub const TEX_MULTI: Vec2 = Vec2::new(1000., 1.);
 

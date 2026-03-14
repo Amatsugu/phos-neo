@@ -2,9 +2,7 @@ use std::collections::VecDeque;
 
 use bevy::math::IVec2;
 
-use crate::hex_utils::HexCoord;
-
-use super::chunk::Chunk;
+use hex::prelude::*;
 
 pub struct MeshChunkData
 {

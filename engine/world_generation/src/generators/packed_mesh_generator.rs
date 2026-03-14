@@ -1,19 +1,22 @@
-use crate::hex_utils::HexCoord;
 use crate::prelude::*;
 use bevy::asset::RenderAssetUsages;
 use bevy::{
 	mesh::{Indices, PrimitiveTopology},
 	prelude::*,
 };
+use hex::prelude::*;
 
-pub fn generate_packed_chunk_mesh(chunk: &MeshChunkData) -> Mesh {
+pub fn generate_packed_chunk_mesh(chunk: &MeshChunkData) -> Mesh
+{
 	let vertex_count: usize = Chunk::SIZE * Chunk::SIZE * 6;
 	let mut packed_data = Vec::with_capacity(vertex_count);
 	let mut indices = Vec::with_capacity(vertex_count);
 	let mut heights = Vec::with_capacity(vertex_count);
 
-	for z in 0..Chunk::SIZE {
-		for x in 0..Chunk::SIZE {
+	for z in 0..Chunk::SIZE
+	{
+		for x in 0..Chunk::SIZE
+		{
 			let idx = x + z * Chunk::SIZE;
 			let height = chunk.heights[idx];
 			let coord = HexCoord::from_grid_pos(x, z);
@@ -51,12 +54,14 @@ fn create_packed_tile(
 	heights: &mut Vec<f32>,
 	texture_index: u32,
 	side_texture_index: u32,
-) {
+)
+{
 	let idx = packed_data.len() as u32;
 
 	packed_data.push(pack_vertex_data(offset, 0, texture_index));
 	heights.push(height);
-	for i in 0..6 {
+	for i in 0..6
+	{
 		packed_data.push(pack_vertex_data(offset, i + 1, texture_index));
 		indices.push(idx);
 		indices.push(idx + 1 + i as u32);
@@ -64,9 +69,11 @@ fn create_packed_tile(
 		heights.push(height);
 	}
 
-	for i in 0..neighbors.len() {
+	for i in 0..neighbors.len()
+	{
 		let n_height = neighbors[i];
-		if n_height < height {
+		if n_height < height
+		{
 			create_packed_tile_wall(
 				offset,
 				height,
@@ -90,7 +97,8 @@ fn create_packed_tile_wall(
 	indices: &mut Vec<u32>,
 	heights: &mut Vec<f32>,
 	side_texture_index: u32,
-) {
+)
+{
 	let idx = packed_data.len() as u32;
 
 	let side_2 = ((side + 1) % 6) + 1;
@@ -113,7 +121,8 @@ fn create_packed_tile_wall(
 	indices.push(idx + 3);
 }
 
-fn pack_vertex_data(offset: UVec2, vert: usize, tex: u32) -> u32 {
+fn pack_vertex_data(offset: UVec2, vert: usize, tex: u32) -> u32
+{
 	//6 + 6 bits offset
 	//4 bits vert
 	//12 bits texture

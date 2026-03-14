@@ -3,9 +3,9 @@ use bevy::core_pipeline::prepass::DepthPrepass;
 use bevy::input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
 use bevy::window::{CursorGrabMode, CursorOptions, PrimaryWindow};
+use hex::prelude::*;
 use shared::sets::GameplaySet;
 use shared::tags::MainCamera;
-use world_generation::hex_utils::HexCoord;
 use world_generation::prelude::Map;
 use world_generation::states::GeneratorState;
 

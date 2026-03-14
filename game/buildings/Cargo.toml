@@ -18,6 +18,7 @@ bevy_asset_loader = { version = "0.25.0", features = [
 	"standard_dynamic_assets",
 	"3d",
 ] }
+hex = { path = "../../engine/hex" }
 
 [features]
 tracing = []

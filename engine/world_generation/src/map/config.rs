@@ -2,11 +2,12 @@ use bevy::prelude::*;
 use bevy_inspector_egui::InspectorOptions;
 use serde::{Deserialize, Serialize};
 
-use super::chunk::Chunk;
+use hex::prelude::*;
 
 #[derive(Resource, Reflect, Default, Clone)]
 #[reflect(Resource)]
-pub struct GenerationConfig {
+pub struct GenerationConfig
+{
 	pub sea_level: f64,
 	pub border_size: f32,
 	pub biome_blend: usize,
@@ -17,23 +18,28 @@ pub struct GenerationConfig {
 	pub size: UVec2,
 }
 
-impl GenerationConfig {
-	pub fn get_total_width(&self) -> usize {
+impl GenerationConfig
+{
+	pub fn get_total_width(&self) -> usize
+	{
 		return self.size.x as usize * Chunk::SIZE;
 	}
-	pub fn get_total_height(&self) -> usize {
+	pub fn get_total_height(&self) -> usize
+	{
 		return self.size.y as usize * Chunk::SIZE;
 	}
 }
 
 #[derive(Serialize, Deserialize, Default, Reflect, Clone, Debug)]
-pub struct NoiseConfig {
+pub struct NoiseConfig
+{
 	pub scale: f64,
 	pub layers: Vec<GeneratorLayer>,
 }
 
 #[derive(Reflect, InspectorOptions, Serialize, Deserialize, Debug, Clone, Default)]
-pub struct GeneratorLayer {
+pub struct GeneratorLayer
+{
 	pub strength: f64,
 	pub min_value: f64,
 	pub base_roughness: f64,

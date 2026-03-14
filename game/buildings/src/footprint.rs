@@ -1,7 +1,7 @@
 use bevy::math::{IVec2, Vec3Swizzles};
+use hex::prelude::*;
 use serde::{Deserialize, Serialize};
 use shared::coords::CoordsCollection;
-use world_generation::hex_utils::HexCoord;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BuildingFootprint
@@ -21,7 +21,7 @@ impl BuildingFootprint
 		let n_points: Vec<IVec2> = self
 			.footprint
 			.iter()
-			.flat_map(|p| HexCoord::from_hex(*p).get_neighbors())
+			.flat_map(|p| HexCoord::from_axial(*p).get_neighbors())
 			.map(|c| c.hex.xy())
 			.filter(|p| !self.footprint.contains(p))
 			.collect();

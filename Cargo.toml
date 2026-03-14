@@ -9,6 +9,7 @@ members = [
     "engine/world_generation",
 	"engine/asset_loader",
 	"engine/data",
+	"engine/hex",
 ]
 
 # Enable a small amount of optimization in debug mode

@@ -1,18 +1,22 @@
-use crate::{hex_utils::*, prelude::*};
+use crate::prelude::*;
 #[cfg(feature = "tracing")]
 use bevy::log::*;
 use bevy::prelude::*;
+use hex::prelude::*;
 
 const CHUNK_TOTAL: usize = Chunk::SIZE * Chunk::SIZE;
 
-pub fn generate_chunk_collider(chunk: &MeshChunkData) -> (Vec<Vec3>, Vec<[u32; 3]>) {
+pub fn generate_chunk_collider(chunk: &MeshChunkData) -> (Vec<Vec3>, Vec<[u32; 3]>)
+{
 	#[cfg(feature = "tracing")]
 	let span = info_span!("generate_chunk_collider").entered();
 	let vertex_count: usize = CHUNK_TOTAL * 6;
 	let mut verts = Vec::with_capacity(vertex_count);
 	let mut indices = Vec::with_capacity(vertex_count);
-	for z in 0..Chunk::SIZE {
-		for x in 0..Chunk::SIZE {
+	for z in 0..Chunk::SIZE
+	{
+		for x in 0..Chunk::SIZE
+		{
 			let height = chunk.heights[x + z * Chunk::SIZE];
 			let coord = HexCoord::from_grid_pos(x, z);
 			let neighbors = chunk.get_neighbors(&coord);
@@ -24,9 +28,11 @@ pub fn generate_chunk_collider(chunk: &MeshChunkData) -> (Vec<Vec3>, Vec<[u32; 3
 	return (verts, indices);
 }
 
-fn create_tile_collider(pos: Vec3, verts: &mut Vec<Vec3>, indices: &mut Vec<[u32; 3]>, neighbors: &[f32; 6]) {
+fn create_tile_collider(pos: Vec3, verts: &mut Vec<Vec3>, indices: &mut Vec<[u32; 3]>, neighbors: &[f32; 6])
+{
 	let idx = verts.len() as u32;
-	for i in 0..6 {
+	for i in 0..6
+	{
 		let p = pos + HEX_CORNERS[i];
 		verts.push(p);
 	}
@@ -37,9 +43,11 @@ fn create_tile_collider(pos: Vec3, verts: &mut Vec<Vec3>, indices: &mut Vec<[u32
 	indices.push([idx + 2, idx + 4, idx + 5]);
 	indices.push([idx + 2, idx + 3, idx + 4]);
 
-	for i in 0..neighbors.len() {
+	for i in 0..neighbors.len()
+	{
 		let n_height = neighbors[i];
-		if n_height < pos.y {
+		if n_height < pos.y
+		{
 			create_tile_wall_collider(
 				idx,
 				Vec3::new(pos.x, n_height.min(pos.y - OUTER_RADIUS / 2.), pos.z),
@@ -51,7 +59,8 @@ fn create_tile_collider(pos: Vec3, verts: &mut Vec<Vec3>, indices: &mut Vec<[u32
 	}
 }
 
-fn create_tile_wall_collider(idx: u32, pos: Vec3, dir: usize, verts: &mut Vec<Vec3>, indices: &mut Vec<[u32; 3]>) {
+fn create_tile_wall_collider(idx: u32, pos: Vec3, dir: usize, verts: &mut Vec<Vec3>, indices: &mut Vec<[u32; 3]>)
+{
 	let idx2 = verts.len() as u32;
 
 	verts.push(pos + HEX_CORNERS[(dir) % 6]);

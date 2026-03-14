@@ -445,9 +445,9 @@ checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
 
 [[package]]
 name = "bevy"
-version = "0.18.0"
+version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec689b5a79452b6f777b889bbff22d3216b82a8d2ab7814d4a0eb571e9938d97"
+checksum = "1fd310426290cec560221f9750c2f4484be4a8eeea7de3483c423329b465c40e"
 dependencies = [
  "bevy_internal",
  "tracing",
@@ -1993,6 +1993,7 @@ dependencies = [
  "bevy",
  "bevy_asset_loader",
  "bevy_rapier3d",
+ "hex",
  "ron 0.12.0",
  "serde",
  "serde_json",
@@ -3494,6 +3495,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc0fef456e4baa96da950455cd02c081ca953b141298e41db3fc7e36b1da849c"
 
 [[package]]
+name = "hex"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "serde",
+]
+
+[[package]]
 name = "hexasphere"
 version = "16.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4933,6 +4942,7 @@ dependencies = [
  "bevy_asset_loader",
  "bevy_rapier3d",
  "buildings",
+ "hex",
  "image",
  "noise",
  "rayon",
@@ -5714,6 +5724,7 @@ name = "shared"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "hex",
  "serde",
  "world_generation",
 ]
@@ -6321,6 +6332,7 @@ dependencies = [
  "bevy",
  "bevy_asset_loader",
  "bevy_rapier3d",
+ "hex",
  "ordered-float",
  "pathfinding",
  "quadtree_rs",
@@ -7515,6 +7527,7 @@ dependencies = [
  "bevy",
  "bevy-inspector-egui",
  "bevy_asset_loader",
+ "hex",
  "image",
  "noise",
  "num 0.4.3",

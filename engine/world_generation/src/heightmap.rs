@@ -3,6 +3,7 @@ use core::f32;
 use bevy::math::{IVec2, UVec2};
 use bevy::prelude::{FloatExt, Vec2};
 use bevy::utils::default;
+use hex::prelude::*;
 use noise::{NoiseFn, Simplex, SuperSimplex};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
@@ -10,7 +11,8 @@ use crate::biome_painter::BiomePainter;
 use crate::map::biome_map::{BiomeChunk, BiomeData, BiomeMap};
 use crate::prelude::*;
 
-pub fn generate_heightmap(cfg: &GenerationConfig, seed: u32, painter: &BiomePainter) -> (Map, BiomeMap) {
+pub fn generate_heightmap(cfg: &GenerationConfig, seed: u32, painter: &BiomePainter) -> (Map, BiomeMap)
+{
 	let biomes = generate_biomes(cfg, seed, painter);
 	let biomes_borrow = &biomes;
 	// let mut chunks: Vec<Chunk> = Vec::with_capacity(cfg.size.length_squared() as usize);
@@ -25,11 +27,14 @@ pub fn generate_heightmap(cfg: &GenerationConfig, seed: u32, painter: &BiomePain
 		.collect();
 	let mut min = f32::MAX;
 	let mut max = f32::MIN;
-	for chunk in &chunks {
-		if chunk.min_level < min {
+	for chunk in &chunks
+	{
+		if chunk.min_level < min
+		{
 			min = chunk.min_level;
 		}
-		if chunk.max_level > max {
+		if chunk.max_level > max
+		{
 			max = chunk.max_level;
 		}
 	}
@@ -48,7 +53,8 @@ pub fn generate_heightmap(cfg: &GenerationConfig, seed: u32, painter: &BiomePain
 	);
 }
 
-pub fn generate_biomes(cfg: &GenerationConfig, seed: u32, biome_painter: &BiomePainter) -> BiomeMap {
+pub fn generate_biomes(cfg: &GenerationConfig, seed: u32, biome_painter: &BiomePainter) -> BiomeMap
+{
 	let mut map = BiomeMap::new(cfg.size, biome_painter.biomes.len());
 	map.chunks = (0..cfg.size.y)
 		.into_par_iter()
@@ -68,7 +74,8 @@ pub fn generate_biome_chunk(
 	cfg: &GenerationConfig,
 	seed: u32,
 	biome_painter: &BiomePainter,
-) -> BiomeChunk {
+) -> BiomeChunk
+{
 	let mut chunk = BiomeChunk {
 		offset: UVec2::new(chunk_x as u32, chunk_y as u32),
 		data: [BiomeData::default(); Chunk::AREA],
@@ -78,8 +85,10 @@ pub fn generate_biome_chunk(
 	let noise_t = Simplex::new(seed + 2);
 	let noise_c = Simplex::new(seed + 3);
 
-	for z in 0..Chunk::SIZE {
-		for x in 0..Chunk::SIZE {
+	for z in 0..Chunk::SIZE
+	{
+		for x in 0..Chunk::SIZE
+		{
 			let moisture = sample_point(
 				x as f64 + chunk_x as f64 * Chunk::SIZE as f64,
 				z as f64 + chunk_y as f64 * Chunk::SIZE as f64,
@@ -123,14 +132,16 @@ pub fn generate_biome_chunk(
 	return chunk;
 }
 
-pub fn generate_noise_map(size: UVec2, seed: u32, cfg: &NoiseConfig, border_size: f32) -> Vec<f32> {
+pub fn generate_noise_map(size: UVec2, seed: u32, cfg: &NoiseConfig, border_size: f32) -> Vec<f32>
+{
 	let noise = SuperSimplex::new(seed);
 
 	let data: Vec<_> = (0..(size.y as usize * Chunk::SIZE))
 		.into_par_iter()
 		.flat_map(|y| {
 			let mut row = Vec::with_capacity(size.x as usize * Chunk::SIZE);
-			for x in 0..row.capacity() {
+			for x in 0..row.capacity()
+			{
 				row.push(sample_point(
 					x as f64,
 					y as f64,
@@ -154,21 +165,26 @@ pub fn generate_chunk(
 	seed: u32,
 	biome_chunk: &BiomeChunk,
 	biome_painter: &BiomePainter,
-) -> Chunk {
+) -> Chunk
+{
 	let mut result: [f32; Chunk::SIZE * Chunk::SIZE] = [0.; Chunk::AREA];
 	let mut data = [BiomeData::default(); Chunk::AREA];
 	let mut biome_ids = [0; Chunk::AREA];
 	let noise = Simplex::new(seed);
 	let mut min = f32::MAX;
 	let mut max = f32::MIN;
-	for z in 0..Chunk::SIZE {
-		for x in 0..Chunk::SIZE {
+	for z in 0..Chunk::SIZE
+	{
+		for x in 0..Chunk::SIZE
+		{
 			let biome_data = biome_chunk.get_biome_data(x, z);
 			let biome_blend = biome_chunk.get_biome(x, z);
 			let mut sample = 0.;
-			for i in 0..biome_blend.len() {
+			for i in 0..biome_blend.len()
+			{
 				let blend = biome_blend[i];
-				if blend == 0. {
+				if blend == 0.
+				{
 					continue;
 				}
 				let biome = &biome_painter.biomes[i];
@@ -185,10 +201,12 @@ pub fn generate_chunk(
 			let idx = x + z * Chunk::SIZE;
 			biome_ids[idx] = biome_chunk.get_biome_id_dithered(x, z, &noise, cfg.biome_dither);
 			result[idx] = sample;
-			if sample > max {
+			if sample > max
+			{
 				max = sample;
 			}
-			if sample < min {
+			if sample < min
+			{
 				min = sample;
 			}
 			data[idx] = biome_data.clone();
@@ -212,23 +230,29 @@ fn sample_point(
 	size: Vec2,
 	border_size: f32,
 	border_value: f32,
-) -> f32 {
+) -> f32
+{
 	let x_s = x / cfg.scale;
 	let z_s = z / cfg.scale;
 
 	let mut elevation: f64 = 0.;
-	for i in 0..cfg.layers.len() {
+	for i in 0..cfg.layers.len()
+	{
 		let value: f64;
 		let layer = &cfg.layers[i];
-		if layer.is_rigid {
+		if layer.is_rigid
+		{
 			value = sample_rigid(x_s, z_s, layer, noise);
-		} else {
+		}
+		else
+		{
 			value = sample_simple(x_s, z_s, layer, noise);
 		}
 		elevation += value;
 	}
 
-	if border_size == 0.0 {
+	if border_size == 0.0
+	{
 		return elevation as f32;
 	}
 
@@ -243,12 +267,14 @@ fn sample_point(
 	return border_value.lerp(elevation as f32, d);
 }
 
-fn sample_simple(x: f64, z: f64, cfg: &GeneratorLayer, noise: &impl NoiseFn<f64, 2>) -> f64 {
+fn sample_simple(x: f64, z: f64, cfg: &GeneratorLayer, noise: &impl NoiseFn<f64, 2>) -> f64
+{
 	let mut freq: f64 = cfg.base_roughness;
 	let mut amp: f64 = 1.;
 	let mut value = 0.;
 
-	for _ in 0..cfg.layers {
+	for _ in 0..cfg.layers
+	{
 		let v = noise.get([x * freq, z * freq]);
 		value += (v + 1.) * 0.5 * amp;
 		freq *= cfg.roughness;
@@ -257,12 +283,14 @@ fn sample_simple(x: f64, z: f64, cfg: &GeneratorLayer, noise: &impl NoiseFn<f64,
 	value -= cfg.min_value;
 	return value * cfg.strength;
 }
-fn sample_rigid(x: f64, z: f64, cfg: &GeneratorLayer, noise: &impl NoiseFn<f64, 2>) -> f64 {
+fn sample_rigid(x: f64, z: f64, cfg: &GeneratorLayer, noise: &impl NoiseFn<f64, 2>) -> f64
+{
 	let mut freq: f64 = cfg.base_roughness;
 	let mut amp: f64 = 1.;
 	let mut value = 0.;
 	let mut weight = 1.;
-	for _ in 0..cfg.layers {
+	for _ in 0..cfg.layers
+	{
 		let mut v = 1. - noise.get([x * freq, z * freq]).abs();
 		v *= v;
 		v *= weight;

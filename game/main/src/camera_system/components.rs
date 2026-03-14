@@ -1,6 +1,6 @@
 use bevy::prelude::*;
+use hex::prelude::*;
 use rayon::str;
-use world_generation::prelude::Chunk;
 
 #[derive(Component, Reflect)]
 #[reflect(Component)]

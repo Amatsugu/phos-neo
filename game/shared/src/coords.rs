@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use world_generation::hex_utils::HexCoord;
+use hex::prelude::*;
 
 #[derive(Default, Debug, Reflect)]
 pub struct CoordsCollection
@@ -51,11 +51,11 @@ impl CoordsCollection
 
 	pub fn get_coords(&self) -> Vec<HexCoord>
 	{
-		let center = HexCoord::from_hex(self.origin);
+		let center = HexCoord::from_axial(self.origin);
 		return self
 			.points
 			.iter()
-			.map(|p| HexCoord::from_hex(p + self.origin).rotate_around(&center, self.rotation))
+			.map(|p| HexCoord::from_axial(p + self.origin).rotate_around(&center, self.rotation))
 			.collect();
 	}
 }

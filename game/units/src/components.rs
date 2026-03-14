@@ -1,6 +1,6 @@
 use bevy::{ecs::world::CommandQueue, prelude::*, tasks::Task};
+use hex::prelude::*;
 use serde::{Deserialize, Serialize};
-use world_generation::hex_utils::HexCoord;
 
 #[derive(Component, Debug)]
 pub struct Unit;
@@ -13,7 +13,8 @@ pub struct LandUnit;
 pub struct NavalUnit;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
-pub enum UnitDomain {
+pub enum UnitDomain
+{
 	Land,
 	Air,
 	Naval,
