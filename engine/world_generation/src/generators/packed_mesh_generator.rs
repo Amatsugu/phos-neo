@@ -19,7 +19,7 @@ pub fn generate_packed_chunk_mesh(chunk: &MeshChunkData) -> Mesh
 		{
 			let idx = x + z * Chunk::SIZE;
 			let height = chunk.heights[idx];
-			let coord = HexCoord::from_grid_pos(x, z);
+			let coord = HexCoord::from_offset_pos(x, z);
 			let n = chunk.get_neighbors(&coord);
 
 			create_packed_tile(

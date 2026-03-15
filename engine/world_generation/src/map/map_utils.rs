@@ -64,7 +64,7 @@ pub fn render_map(map: &Map, smooth: f32) -> ImageBuffer<image::Rgba<u8>, Vec<u8
 pub fn update_map(map: &Map, smooth: f32, image: &mut ImageBuffer<image::Rgba<u8>, Vec<u8>>)
 {
 	image.par_enumerate_pixels_mut().for_each(|(x, y, pixel)| {
-		let coord = HexCoord::from_grid_pos(x as usize, y as usize);
+		let coord = HexCoord::from_offset_pos(x as usize, y as usize);
 		let right = coord.get_neighbor(1);
 		let height = map.sample_height(&coord);
 
@@ -155,7 +155,7 @@ pub fn update_biome_map(map: &Map, biome_map: &BiomeMap, image: &mut ImageBuffer
 {
 	let map_biome_count = map.biome_count as f32;
 	image.par_enumerate_pixels_mut().for_each(|(x, y, pixel)| {
-		let coord = HexCoord::from_grid_pos(x as usize, y as usize);
+		let coord = HexCoord::from_offset_pos(x as usize, y as usize);
 		let biome_blend = biome_map.get_biome(x as i32, y as i32).unwrap();
 		let right = coord.get_neighbor(1);
 		let mut color = Oklaba::BLACK;

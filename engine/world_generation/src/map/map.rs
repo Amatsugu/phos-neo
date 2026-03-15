@@ -58,7 +58,7 @@ impl Map
 		{
 			for x in 0..Chunk::SIZE
 			{
-				let coord = HexCoord::from_grid_pos(x + cx, z + cz);
+				let coord = HexCoord::from_offset_pos(x + cx, z + cz);
 				let index = coord.to_chunk_local_index();
 
 				if !self.is_in_bounds(&coord)

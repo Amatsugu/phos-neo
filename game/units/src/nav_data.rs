@@ -55,7 +55,7 @@ impl NavData
 		{
 			for x in 0..w
 			{
-				let coord = HexCoord::from_grid_pos(x, y);
+				let coord = HexCoord::from_offset_pos(x, y);
 				let height = map.sample_height(&coord);
 				let tile = NavTile {
 					coord,
@@ -83,7 +83,7 @@ impl NavData
 		{
 			for x in 0..w
 			{
-				let coord = HexCoord::from_grid_pos(x, y);
+				let coord = HexCoord::from_offset_pos(x, y);
 				let height = map.sample_height(&coord);
 				let tile = NavTile {
 					coord,

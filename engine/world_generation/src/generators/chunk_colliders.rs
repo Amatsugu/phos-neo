@@ -18,7 +18,7 @@ pub fn generate_chunk_collider(chunk: &MeshChunkData) -> (Vec<Vec3>, Vec<[u32; 3
 		for x in 0..Chunk::SIZE
 		{
 			let height = chunk.heights[x + z * Chunk::SIZE];
-			let coord = HexCoord::from_grid_pos(x, z);
+			let coord = HexCoord::from_offset_pos(x, z);
 			let neighbors = chunk.get_neighbors(&coord);
 			let off_pos = Vec3::new(x as f32, height, z as f32);
 			let tile_pos = offset3d_to_world(off_pos);

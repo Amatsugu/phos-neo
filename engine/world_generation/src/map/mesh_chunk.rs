@@ -74,7 +74,7 @@ impl MeshChunkData
 		{
 			for x in 0..Chunk::SIZE
 			{
-				let coord = HexCoord::from_grid_pos(x + offset_x, z + offset_z);
+				let coord = HexCoord::from_offset_pos(x + offset_x, z + offset_z);
 				let idx = coord.to_chunk_local_index();
 				let h = self.heights[idx];
 				self.distance_to_land[idx] = if h > self.sealevel { 0.0 } else { 4.0 };

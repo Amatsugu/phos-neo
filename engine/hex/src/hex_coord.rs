@@ -103,7 +103,7 @@ impl HexCoord
 		};
 	}
 
-	pub fn from_grid_pos(x: usize, z: usize) -> Self
+	pub fn from_offset_pos(x: usize, z: usize) -> Self
 	{
 		return HexCoord::new(x as i32 - (z as i32 / 2), z as i32);
 	}
@@ -250,9 +250,9 @@ impl HexCoord
 		return (hex * -1).zxy();
 	}
 
-	pub fn scale(&self, dir: i32, radius: usize) -> HexCoord
+	pub fn scale(&self, dir: usize, radius: usize) -> HexCoord
 	{
-		let s = Self::DIRECTIONS[(dir % 6) as usize] * radius as i32;
+		let s = Self::DIRECTIONS[dir % 6] * radius as i32;
 		return Self::from_axial(self.hex.xy() + s.xy());
 	}
 

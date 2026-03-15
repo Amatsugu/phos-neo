@@ -25,7 +25,7 @@ pub fn generate_chunk_mesh(chunk: &MeshChunkData) -> Mesh
 			let height = chunk.heights[idx];
 			let off_pos = Vec3::new(x as f32, height, z as f32);
 			let tile_pos = offset3d_to_world(off_pos);
-			let coord = HexCoord::from_grid_pos(x, z);
+			let coord = HexCoord::from_offset_pos(x, z);
 			let n = chunk.get_neighbors(&coord);
 
 			create_tile(
@@ -121,7 +121,7 @@ pub fn generate_chunk_water_mesh(chunk: &MeshChunkData, sealevel: f32, map_width
 			}
 			let off_pos = Vec3::new(x as f32, sealevel, z as f32);
 			let tile_pos = offset3d_to_world(off_pos);
-			let coord = HexCoord::from_grid_pos(x, z);
+			let coord = HexCoord::from_offset_pos(x, z);
 			let (n, neighbor_has_land) = chunk.get_neighbors_with_water_info(&coord);
 
 			create_tile_water_surface(
