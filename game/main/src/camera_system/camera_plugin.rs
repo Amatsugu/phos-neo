@@ -1,4 +1,5 @@
 use bevy::anti_alias::taa::TemporalAntiAliasing;
+use bevy::camera::visibility::RenderLayers;
 use bevy::core_pipeline::prepass::DepthPrepass;
 use bevy::input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
@@ -53,8 +54,8 @@ fn setup(mut commands: Commands)
 			PhosOrbitCamera::default(),
 			TemporalAntiAliasing::default(),
 		))
-		.insert(Msaa::Off);
-	// .insert(RenderLayers::layer(0))
+		.insert(Msaa::Off)
+		.insert(RenderLayers::default());
 
 	// *msaa = Msaa::Off;
 }

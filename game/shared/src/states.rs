@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
-pub enum MenuState {
+pub enum MenuState
+{
 	Loading,
 	Startup,
 	MainMenu,
@@ -10,14 +11,16 @@ pub enum MenuState {
 }
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
-pub enum GameplayState {
+pub enum GameplayState
+{
 	Waiting,
 	PlaceHQ,
 	Playing,
 }
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
-pub enum AssetLoadState {
+pub enum AssetLoadState
+{
 	Loading,
 	FinalizeAssets,
 	LoadComplete,
