@@ -1,6 +1,6 @@
 use bevy::asset::RenderAssetUsages;
 use bevy::prelude::*;
-use bevy_inspector_egui::bevy_egui::EguiContexts;
+use bevy_inspector_egui::bevy_egui::{EguiContexts, EguiTextureHandle};
 use bevy_inspector_egui::egui::{self};
 use image::{ImageBuffer, Rgba};
 use world_generation::biome_asset::BiomeAsset;
@@ -18,10 +18,10 @@ impl Plugin for EditorPlugin
 		app.init_resource::<UIState>();
 
 		app.add_systems(PostUpdate, prepare_image.run_if(in_state(GeneratorState::SpawnMap)));
-		app.add_systems(
-			Update,
-			(render_map_ui, update_map_render, asset_reloaded).run_if(in_state(GeneratorState::Idle)),
-		);
+		// app.add_systems(
+		// 	Update,
+		// 	(render_map_ui, update_map_render, asset_reloaded).run_if(in_state(GeneratorState::Idle)),
+		// );
 	}
 }
 
@@ -92,14 +92,14 @@ fn asset_reloaded(
 }
 
 fn render_map_ui(
-	// image: Res<MapImage>,
+	image: Res<MapImage>,
 	heightmap: Res<Map>,
 	biome_map: Res<BiomeMap>,
 	mut contexts: EguiContexts,
 	mut state: ResMut<UIState>,
 )
 {
-	// let id = contexts.add_image(image.0.);
+	let id = contexts.add_image(EguiTextureHandle::Strong(image.0.clone()));
 	let mut map_type = state.target_map_type;
 	let ctx = contexts.ctx_mut().expect("Failed to get egui context");
 	egui::Window::new("Map").open(&mut state.is_open).show(ctx, |ui| {
@@ -127,10 +127,10 @@ fn render_map_ui(
 				);
 			});
 
-		// ui.add(egui::widgets::Image::new(egui::load::SizedTexture::new(
-		// 	id,
-		// 	[512.0, 512.0],
-		// )));
+		ui.add(egui::widgets::Image::new(egui::load::SizedTexture::new(
+			id,
+			[512.0, 512.0],
+		)));
 
 		if ui.button("Save Image").clicked()
 		{

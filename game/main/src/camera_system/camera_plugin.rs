@@ -56,8 +56,6 @@ fn setup(mut commands: Commands)
 		))
 		.insert(Msaa::Off)
 		.insert(RenderLayers::default());
-
-	// *msaa = Msaa::Off;
 }
 
 fn orbit_camera_upate(

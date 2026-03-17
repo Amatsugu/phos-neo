@@ -1,5 +1,5 @@
 use bevy::{
-	camera::{visibility::RenderLayers, CameraOutputMode, Viewport},
+	camera::{visibility::RenderLayers, CameraOutputMode},
 	prelude::*,
 	render::render_resource::BlendState,
 };
@@ -7,6 +7,8 @@ use shared::states::AssetLoadState;
 
 use crate::ui::states::BuildUIState;
 pub struct BuildUIPlugin;
+#[derive(Component)]
+pub struct BuildUIItem;
 
 impl Plugin for BuildUIPlugin
 {
@@ -18,6 +20,7 @@ impl Plugin for BuildUIPlugin
 			Update,
 			spawn_ui.run_if(in_state(AssetLoadState::LoadComplete).and(in_state(BuildUIState::Init))),
 		);
+		app.add_systems(PostUpdate, cleanup_ui.run_if(in_state(BuildUIState::Cleanup)));
 	}
 }
 
@@ -58,18 +61,59 @@ fn spawn_ui(mut commands: Commands, mut next_state: ResMut<NextState<BuildUIStat
 				..default()
 			},
 			RenderLayers::layer(1),
+			Name::new("Build UI Root"),
+			BuildUIItem,
 		))
 		// .insert(PickingBehavior::IGNORE)
-		.with_children(|parent| {
-			parent.spawn((
-				Node {
-					width: Val::Px(500.),
-					height: Val::Px(100.),
-					..Default::default()
-				},
-				BackgroundColor(LinearRgba::GREEN.into()),
-			));
+		.with_children(|build_root| {
+			build_root
+				.spawn((
+					Name::new("Build UI"),
+					Node {
+						width: Val::Px(500.),
+						height: Val::Px(100.),
+						justify_content: JustifyContent::Stretch,
+						..default()
+					},
+					BackgroundColor(LinearRgba::GREEN.into()),
+				))
+				.with_children(|build_ui| {
+					build_ui
+						.spawn((
+							Name::new("Toolbar"),
+							Node {
+								width: Val::Percent(100.),
+								height: Val::Px(80.),
+								padding: UiRect::horizontal(Val::Px(10.)),
+								justify_content: JustifyContent::Stretch,
+								..default()
+							},
+							BackgroundColor(LinearRgba::BLUE.into()),
+						))
+						.with_children(|toolbar| {
+							for i in 0..6
+							{
+								toolbar.spawn((
+									Name::new(format!("Button {}", i)),
+									Node {
+										height: Val::Percent(100.),
+										width: Val::Auto,
+										..default()
+									},
+									BackgroundColor(LinearRgba::WHITE.into()),
+								));
+							}
+						});
+				});
 		});
 
 	next_state.set(BuildUIState::Update);
+}
+
+fn cleanup_ui(mut commands: Commands, ui_items: Query<Entity, With<BuildUIItem>>)
+{
+	for item in ui_items.iter()
+	{
+		commands.entity(item).despawn();
+	}
 }
