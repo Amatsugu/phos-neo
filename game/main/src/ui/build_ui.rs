@@ -7,18 +7,44 @@ use shared::states::AssetLoadState;
 
 use crate::ui::states::BuildUIState;
 pub struct BuildUIPlugin;
-#[derive(Component)]
-pub struct BuildUIItem;
+
+#[derive(Component, Default)]
+struct BuildUIItem;
+
+#[derive(Component, Default)]
+#[require(BuildUIItem)]
+struct BuildUIMenuItem;
+
+#[derive(Component, Default)]
+struct BuildMenuRoot;
+
+#[derive(Resource, Reflect, Debug, Default)]
+struct BuildUIInfo
+{
+	menu: BuildUIMenu,
+}
+
+#[derive(Default, Reflect, Debug)]
+enum BuildUIMenu
+{
+	#[default]
+	Structure,
+	Defense,
+}
 
 impl Plugin for BuildUIPlugin
 {
 	fn build(&self, app: &mut App)
 	{
 		app.add_systems(Startup, setup_cameras);
+		app.init_resource::<BuildUIInfo>();
 		app.insert_state(BuildUIState::Init);
 		app.add_systems(
 			Update,
-			spawn_ui.run_if(in_state(AssetLoadState::LoadComplete).and(in_state(BuildUIState::Init))),
+			(
+				spawn_ui.run_if(in_state(AssetLoadState::LoadComplete).and(in_state(BuildUIState::Init))),
+				draw_menu_ui.run_if(in_state(AssetLoadState::LoadComplete).and(in_state(BuildUIState::DrawMenu))),
+			),
 		);
 		app.add_systems(PostUpdate, cleanup_ui.run_if(in_state(BuildUIState::Cleanup)));
 	}
@@ -69,11 +95,25 @@ fn spawn_ui(mut commands: Commands, mut next_state: ResMut<NextState<BuildUIStat
 						width: Val::Px(500.),
 						height: Val::Px(100.),
 						justify_content: JustifyContent::Stretch,
+						flex_direction: FlexDirection::Column,
 						..default()
 					},
 					BackgroundColor(LinearRgba::GREEN.into()),
 				))
 				.with_children(|build_ui| {
+					build_ui.spawn((
+						Name::new("Menu Root"),
+						BuildMenuRoot,
+						Node {
+							width: Val::Percent(100.),
+							height: Val::Px(70.),
+							column_gap: Val::Px(5.),
+							padding: UiRect::all(Val::Px(2.)),
+							flex_direction: FlexDirection::Row,
+							overflow: Overflow::scroll_x(),
+							..default()
+						},
+					));
 					build_ui
 						.spawn((
 							Name::new("Toolbar"),
@@ -120,13 +160,64 @@ fn spawn_ui(mut commands: Commands, mut next_state: ResMut<NextState<BuildUIStat
 				});
 		});
 
-	next_state.set(BuildUIState::Update);
+	next_state.set(BuildUIState::DrawMenu);
+}
+
+fn draw_menu_ui(
+	mut commands: Commands,
+	menu_root: Single<Entity, With<BuildMenuRoot>>,
+	menu_items: Query<Entity, With<BuildUIMenuItem>>,
+	menu_info: Res<BuildUIInfo>,
+	mut next: ResMut<NextState<BuildUIState>>,
+)
+{
+	for entity in menu_items.iter()
+	{
+		commands.entity(entity).despawn();
+	}
+	info!("Draw Menu");
+	match menu_info.menu
+	{
+		BuildUIMenu::Structure => draw_structure_ui(commands, menu_root.into_inner()),
+		BuildUIMenu::Defense => (),
+	}
+	next.set(BuildUIState::Update);
+}
+
+fn draw_structure_ui(mut commands: Commands, root: Entity)
+{
+	commands.entity(root).with_children(|root| {
+		for i in 0..10
+		{
+			root.spawn((
+				BuildUIMenuItem,
+				Node {
+					height: Val::Percent(100.),
+					width: Val::Px(100.),
+					display: Display::Grid,
+					grid_template_rows: vec![RepeatedGridTrack::px(1, 100.), RepeatedGridTrack::fr(1, 1.)],
+					..default()
+				},
+				children![
+					(
+						Node {
+							height: Val::Px(100.),
+							width: Val::Px(100.),
+							..default()
+						},
+						BackgroundColor(LinearRgba::RED.into())
+					),
+					(Text::new(format!("Icon {}", i))),
+				],
+			));
+		}
+	});
 }
 
 fn cleanup_ui(mut commands: Commands, ui_items: Query<Entity, With<BuildUIItem>>)
 {
-	for item in ui_items.iter()
+	for entity in ui_items.iter()
 	{
-		commands.entity(item).despawn();
+		commands.entity(entity).despawn();
 	}
 }

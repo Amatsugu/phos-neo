@@ -12,13 +12,9 @@ use bevy_asset_loader::prelude::*;
 use bevy_rapier3d::dynamics::{Ccd, RigidBody, Velocity};
 use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
-// use buildings::BuildingPugin;
-// use iyes_perf_ui::prelude::*;
-// use shared::animation_plugin::SimpleAnimationPlugin;
 use shared::sets::GameplaySet;
 use shared::states::{GameplayState, MenuState};
 use shared::{despawn::DespawnPuglin, states::AssetLoadState};
-// use units::units_plugin::UnitsPlugin;
 use world_generation::states::GeneratorState;
 
 pub struct PhosGamePlugin;

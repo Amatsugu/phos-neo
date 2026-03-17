@@ -4,6 +4,7 @@ use bevy::prelude::*;
 pub enum BuildUIState
 {
 	Init,
+	DrawMenu,
 	Update,
 	Cleanup,
 }
