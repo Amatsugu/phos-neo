@@ -33,10 +33,6 @@ fn setup_cameras(mut commands: Commands)
 				order: 1,
 				clear_color: ClearColorConfig::None,
 				msaa_writeback: MsaaWriteback::Always,
-				// viewport: Some(Viewport {
-				// 	physical_size: UVec2::new(800, 800),
-				// 	..default()
-				// }),
 				output_mode: CameraOutputMode::Write {
 					blend_state: Some(BlendState::ALPHA_BLENDING),
 					clear_color: ClearColorConfig::None,
@@ -83,9 +79,11 @@ fn spawn_ui(mut commands: Commands, mut next_state: ResMut<NextState<BuildUIStat
 							Name::new("Toolbar"),
 							Node {
 								width: Val::Percent(100.),
-								height: Val::Px(80.),
+								height: Val::Px(30.),
+								column_gap: Val::Px(5.),
 								padding: UiRect::horizontal(Val::Px(10.)),
 								justify_content: JustifyContent::Stretch,
+								align_self: AlignSelf::End,
 								..default()
 							},
 							BackgroundColor(LinearRgba::BLUE.into()),
@@ -95,12 +93,27 @@ fn spawn_ui(mut commands: Commands, mut next_state: ResMut<NextState<BuildUIStat
 							{
 								toolbar.spawn((
 									Name::new(format!("Button {}", i)),
+									Button,
 									Node {
 										height: Val::Percent(100.),
-										width: Val::Auto,
+										width: Val::Percent(100.),
+										align_items: AlignItems::Center,
+										justify_content: JustifyContent::Center,
 										..default()
 									},
 									BackgroundColor(LinearRgba::WHITE.into()),
+									children![(
+										Text::new(format!("Button {}", i)),
+										TextFont {
+											font_size: 15.,
+											..default()
+										},
+										TextColor(LinearRgba::BLACK.into()),
+										TextShadow {
+											offset: Vec2::splat(2.),
+											..default()
+										}
+									)],
 								));
 							}
 						});

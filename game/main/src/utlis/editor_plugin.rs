@@ -18,10 +18,10 @@ impl Plugin for EditorPlugin
 		app.init_resource::<UIState>();
 
 		app.add_systems(PostUpdate, prepare_image.run_if(in_state(GeneratorState::SpawnMap)));
-		// app.add_systems(
-		// 	Update,
-		// 	(render_map_ui, update_map_render, asset_reloaded).run_if(in_state(GeneratorState::Idle)),
-		// );
+		app.add_systems(
+			Update,
+			(render_map_ui, update_map_render, asset_reloaded).run_if(in_state(GeneratorState::Idle)),
+		);
 	}
 }
 
@@ -99,7 +99,7 @@ fn render_map_ui(
 	mut state: ResMut<UIState>,
 )
 {
-	let id = contexts.add_image(EguiTextureHandle::Strong(image.0.clone()));
+	let id = contexts.add_image(EguiTextureHandle::Weak(image.0.id()));
 	let mut map_type = state.target_map_type;
 	let ctx = contexts.ctx_mut().expect("Failed to get egui context");
 	egui::Window::new("Map").open(&mut state.is_open).show(ctx, |ui| {

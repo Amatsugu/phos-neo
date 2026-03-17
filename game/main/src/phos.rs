@@ -45,8 +45,8 @@ impl Plugin for PhosGamePlugin
 			// UnitsPlugin,
 			DespawnPuglin,
 			TileSelectionPlugin,
-			#[cfg(debug_assertions)]
-			EditorPlugin,
+			// #[cfg(debug_assertions)]
+			// EditorPlugin,
 			#[cfg(debug_assertions)]
 			DebugPlugin,
 		));
