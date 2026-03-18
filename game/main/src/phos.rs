@@ -2,7 +2,6 @@ use crate::camera_system::components::PhosCamera;
 use crate::map_rendering::map_init::MapInitPlugin;
 use crate::map_rendering::render_distance_system::RenderDistancePlugin;
 use crate::ui::build_ui::BuildUIPlugin;
-use crate::utlis::editor_plugin::EditorPlugin;
 use crate::utlis::tile_selection_plugin::TileSelectionPlugin;
 use crate::{camera_system::camera_plugin::PhosCameraPlugin, utlis::debug_plugin::DebugPlugin};
 use bevy::diagnostic::{EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin};
@@ -41,8 +40,8 @@ impl Plugin for PhosGamePlugin
 			// UnitsPlugin,
 			DespawnPuglin,
 			TileSelectionPlugin,
-			// #[cfg(debug_assertions)]
-			// EditorPlugin,
+			#[cfg(feature = "editor")]
+			crate::utlis::editor_plugin::EditorPlugin,
 			#[cfg(debug_assertions)]
 			DebugPlugin,
 		));
@@ -142,8 +141,7 @@ fn spawn_sphere(
 	mat: Res<SphereMat>,
 )
 {
-	if keyboard_input.just_pressed(KeyCode::KeyF)
-	{
+	if keyboard_input.just_pressed(KeyCode::KeyF) {
 		commands.spawn((
 			Mesh3d(meshes.add(Sphere::new(0.3))),
 			MeshMaterial3d(mat.0.clone()),

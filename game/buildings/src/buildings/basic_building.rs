@@ -1,3 +1,6 @@
 use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
-pub struct BasicBuildingInfo {}
+pub struct BasicBuildingInfo
+{
+	health: u32,
+}

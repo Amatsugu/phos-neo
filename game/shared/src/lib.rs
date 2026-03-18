@@ -1,18 +1,18 @@
 use bevy::reflect::Reflect;
 use serde::{Deserialize, Serialize};
 
+pub mod animation_plugin;
 pub mod building;
+pub mod component_defination;
 pub mod coords;
 pub mod despawn;
 pub mod events;
 pub mod identifiers;
+pub mod prefab_defination;
 pub mod resources;
 pub mod sets;
 pub mod states;
 pub mod tags;
-// pub mod prefab_defination;
-// pub mod animation_plugin;
-// pub mod component_defination;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Tier

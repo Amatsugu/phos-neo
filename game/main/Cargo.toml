@@ -32,6 +32,7 @@ hex = { path = "../../engine/hex" }
 # bevy_lunex = "0.2.4"
 
 [features]
+editor = []
 tracing = [
 	"bevy/trace_tracy",
 	"world_generation/tracing",

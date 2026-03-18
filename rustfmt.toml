@@ -1,4 +1,3 @@
 hard_tabs = true
 max_width = 120
 brace_style = "AlwaysNextLine"
-control_brace_style = "AlwaysNextLine"

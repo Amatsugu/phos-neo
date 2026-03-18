@@ -1,17 +1,20 @@
 use asset_loader::create_asset_loader;
 use bevy::{
+	ecs::relationship::RelatedSpawnerCommands,
 	gltf::{GltfMesh, GltfNode},
 	prelude::*,
 };
 use serde::{Deserialize, Serialize};
-use shared::identifiers::ResourceIdentifier;
+use shared::{component_defination::ComponentDefination, identifiers::ResourceIdentifier};
 
 use crate::{
 	buildings::{
-		conduit_building::ResourceConduitInfo, factory_building::FactoryBuildingInfo,
-		resource_gathering::ResourceGatheringBuildingInfo,
+		basic_building::BasicBuildingInfo, conduit_building::ResourceConduitInfo,
+		factory_building::FactoryBuildingInfo, resource_gathering::ResourceGatheringBuildingInfo,
+		tech_building::TechBuildingInfo,
 	},
 	footprint::BuildingFootprint,
+	prelude::Building,
 };
 
 #[derive(Asset, TypePath, Debug, Serialize, Deserialize)]
@@ -32,7 +35,7 @@ pub struct BuildingAsset
 	pub health: u32,
 
 	pub building_type: BuildingType,
-	// pub components: Option<Vec<ComponentDefination>>,
+	pub components: Option<Vec<ComponentDefination>>,
 }
 
 impl BuildingAsset
@@ -48,87 +51,101 @@ impl BuildingAsset
 		nodes: &Assets<GltfNode>,
 	) -> Option<Entity>
 	{
-		todo!("Update building spawning");
-		// let base_node = &gltf.named_nodes[&self.base_mesh_path.clone().into_boxed_str()];
-		// if let Some(node) = nodes.get(base_node.id()) {
-		// 	if let Some(mesh_handle) = &node.mesh {
-		// 		if let Some(gltf_mesh) = meshes.get(mesh_handle.id()) {
-		// 			let (mesh, mat) = gltf_mesh.unpack();
-		// 			let mut entity = commands.spawn((
-		// 				Mesh3d(mesh),
-		// 				MeshMaterial3d(mat),
-		// 				Transform::from_translation(pos).with_rotation(rot),
-		// 				Building,
-		// 			));
-		// 			entity.with_children(|b| {
-		// 				for child in &node.children {
-		// 					let child_node = nodes.get(child.id());
-		// 					if child_node.is_none() {
-		// 						continue;
-		// 					}
-		// 					self.process_node(child_node.unwrap(), meshes, nodes, b, &node.name);
-		// 				}
-		// 			});
-		// 			if let Some(component) = self.get_component_def(&format!("/{0}", &node.name)) {
-		// 				component.apply(&mut entity);
-		// 			}
-		// 			return Some(entity.id());
-		// 		}
-		// 	}
-		// }
-		// return None;
+		let base_node = &gltf.named_nodes[&self.base_mesh_path.clone().into_boxed_str()];
+		if let Some(node) = nodes.get(base_node.id()) {
+			if let Some(mesh_handle) = &node.mesh {
+				if let Some(gltf_mesh) = meshes.get(mesh_handle.id()) {
+					if let Some(primitive) = gltf_mesh.primitives.first() {
+						let mesh = primitive.mesh.clone();
+						let mat = primitive
+							.material
+							.clone()
+							.expect(format!("Mesh '{}' does not have a meterial", primitive.name.as_str()).as_str());
+						let mut entity = commands.spawn((
+							Mesh3d(mesh),
+							MeshMaterial3d(mat),
+							Transform::from_translation(pos).with_rotation(rot),
+							Building,
+						));
+						entity.with_children(|b| {
+							for child in &node.children {
+								let child_node = nodes.get(child.id());
+								if child_node.is_none() {
+									continue;
+								}
+								self.process_node(child_node.unwrap(), meshes, nodes, b, &node.name);
+							}
+						});
+						if let Some(component) = self.get_component_def(&format!("/{0}", &node.name)) {
+							component.apply(&mut entity);
+						}
+						return Some(entity.id());
+					}
+				}
+			}
+		}
+		return None;
 	}
 
-	// fn process_node(
-	// 	&self,
-	// 	node: &GltfNode,
-	// 	meshes: &Assets<GltfMesh>,
-	// 	nodes: &Assets<GltfNode>,
-	// 	commands: &mut ChildBuilder,
-	// 	parent: &String,
-	// ) -> Option<Entity> {
-	// 	let path = format!("{0}/{1}", parent, node.name);
-	// 	if let Some(mesh) = &node.mesh {
-	// 		if let Some(gltf_mesh) = meshes.get(mesh.id()) {
-	// 			let (mesh, mat) = gltf_mesh.unpack();
-	// 			let mut entity = commands.spawn((Mesh3d(mesh), MeshMaterial3d(mat), node.transform, Building));
-	// 			entity.with_children(|b| {
-	// 				for child in &node.children {
-	// 					let child_node = nodes.get(child.id());
-	// 					if child_node.is_none() {
-	// 						continue;
-	// 					}
-	// 					self.process_node(child_node.unwrap(), meshes, nodes, b, &path);
-	// 				}
-	// 			});
-	// 			if let Some(component) = self.get_component_def(&path) {
-	// 				component.apply(&mut entity);
-	// 			}
-	// 			return Some(entity.id());
-	// 		}
-	// 	}
-	// 	return None;
-	// }
+	fn process_node(
+		&self,
+		node: &GltfNode,
+		meshes: &Assets<GltfMesh>,
+		nodes: &Assets<GltfNode>,
+		commands: &mut RelatedSpawnerCommands<ChildOf>,
+		parent: &String,
+	) -> Option<Entity>
+	{
+		let path = format!("{0}/{1}", parent, node.name);
+		if let Some(mesh) = &node.mesh {
+			if let Some(gltf_mesh) = meshes.get(mesh.id()) {
+				if let Some(primitive) = gltf_mesh.primitives.first() {
+					let mesh = primitive.mesh.clone();
+					let mat = primitive
+						.material
+						.clone()
+						.expect(format!("Mesh '{}' does not have a meterial", primitive.name.as_str()).as_str());
+					let mut entity = commands.spawn((Mesh3d(mesh), MeshMaterial3d(mat), node.transform, Building));
+					entity.with_children(|b| {
+						for child in &node.children {
+							let child_node = nodes.get(child.id());
+							if child_node.is_none() {
+								continue;
+							}
+							self.process_node(child_node.unwrap(), meshes, nodes, b, &path);
+						}
+					});
+					if let Some(component) = self.get_component_def(&path) {
+						component.apply(&mut entity);
+					}
+					return Some(entity.id());
+				}
+			}
+		}
+		return None;
+	}
 
-	// fn get_component_def(&self, path: &String) -> Option<&ComponentDefination> {
-	// 	if let Some(components) = &self.components {
-	// 		for c in components {
-	// 			if c.path.ends_with(path) {
-	// 				return Some(c);
-	// 			}
-	// 		}
-	// 	}
-	// 	return None;
-	// }
+	fn get_component_def(&self, path: &String) -> Option<&ComponentDefination>
+	{
+		if let Some(components) = &self.components {
+			for c in components {
+				if c.path.ends_with(path) {
+					return Some(c);
+				}
+			}
+		}
+		return None;
+	}
 }
 
 #[derive(Serialize, Deserialize, Debug, TypePath)]
 pub enum BuildingType
 {
-	Basic,
+	Basic(BasicBuildingInfo),
 	Gathering(ResourceGatheringBuildingInfo),
 	FactoryBuildingInfo(FactoryBuildingInfo),
 	ResourceConduit(ResourceConduitInfo),
+	Tech(TechBuildingInfo),
 }
 
 create_asset_loader!(
