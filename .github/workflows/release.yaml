@@ -21,14 +21,14 @@ concurrency:
 # Configure the release workflow by editing the following values.
 env:
     # The base filename of the binary produced by `cargo build`.
-    cargo_build_binary_name: space-game
+    cargo_build_binary_name: phos
 
     # The path to the assets directory.
     assets_path: assets
 
     # Whether to build and package a release for a given target platform.
     build_for_web: false
-    build_for_linux: false
+    build_for_linux: true
     build_for_windows: true
     build_for_macos: false
 
@@ -37,7 +37,7 @@ env:
 
     # The itch.io project to upload to in the format `user-name/project-name`.
     # There will be no upload to itch.io if this is commented out.
-    # upload_to_itch: amatsugu/space-game
+    # upload_to_itch: amatsugu/phos
 
     ############
     # ADVANCED #
@@ -46,7 +46,7 @@ env:
     # The ID of the app produced by this workflow.
     # Applies to macOS releases.
     # Must contain only A-Z, a-z, 0-9, hyphen, and period: <https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundleidentifier>.
-    app_id: amatsugu.space-game
+    app_id: amatsugu.phos
 
     # The base filename of the binary in the package produced by this workflow.
     # Applies to Windows, macOS, and Linux releases.
@@ -60,13 +60,13 @@ env:
     # The display name of the app produced by this workflow.
     # Applies to macOS releases.
     # Defaults to `app_package_name` if commented out.
-    app_display_name: space-game
+    app_display_name: phos
 
     # The short display name of the app produced by this workflow.
     # Applies to macOS releases.
     # Must be 15 or fewer characters: <https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundlename>.
     # Defaults to `app_display_name` if commented out.
-    #app_short_name: Bevy New 2D
+    #app_short_name: Phos
 
     # Before enabling LFS, please take a look at GitHub's documentation for costs and quota limits:
     # <https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-storage-and-bandwidth-usage>
