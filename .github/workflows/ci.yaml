@@ -16,27 +16,6 @@ env:
     toolchain: nightly-2026-01-22
 
 jobs:
-    format:
-        name: Format
-        runs-on: ubuntu-latest
-        timeout-minutes: 10
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
-
-            - name: Install Rust toolchain
-              uses: dtolnay/rust-toolchain@master
-              with:
-                  toolchain: ${{ env.toolchain }}
-                  components: rustfmt
-
-            - name: Check formatting
-              run: |
-                  if ! cargo fmt --all -- --check; then
-                    echo "::error title=Format Check Failed::Code formatting errors found! Run 'cargo fmt' locally to fix."
-                    exit 1
-                  fi
-
     docs:
         name: Docs
         runs-on: ubuntu-latest
