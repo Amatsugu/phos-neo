@@ -2,8 +2,8 @@ use crate::camera_system::components::PhosCamera;
 use crate::map_rendering::map_init::MapInitPlugin;
 use crate::map_rendering::render_distance_system::RenderDistancePlugin;
 use crate::ui::build_ui::BuildUIPlugin;
-use crate::utlis::tile_selection_plugin::TileSelectionPlugin;
-use crate::{camera_system::camera_plugin::PhosCameraPlugin, utlis::debug_plugin::DebugPlugin};
+use crate::utils::tile_selection_plugin::TileSelectionPlugin;
+use crate::{camera_system::camera_plugin::PhosCameraPlugin, utils::debug_plugin::DebugPlugin};
 use bevy::diagnostic::{EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin};
 use bevy::light::CascadeShadowConfig;
 use bevy::{pbr::wireframe::WireframeConfig, prelude::*};
@@ -41,7 +41,7 @@ impl Plugin for PhosGamePlugin
 			DespawnPuglin,
 			TileSelectionPlugin,
 			#[cfg(feature = "editor")]
-			crate::utlis::editor_plugin::EditorPlugin,
+			crate::utils::editor_plugin::EditorPlugin,
 			#[cfg(debug_assertions)]
 			DebugPlugin,
 		));

@@ -14,7 +14,7 @@ mod phos;
 mod prelude;
 mod shader_extensions;
 mod ui;
-mod utlis;
+mod utils;
 
 fn main()
 {

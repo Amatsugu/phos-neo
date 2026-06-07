@@ -12,7 +12,7 @@ use crate::prelude::RebuildChunk;
 use crate::prelude::WaterMesh;
 use crate::{
 	prelude::{PhosChunk, PhosChunkRegistry},
-	utlis::chunk_utils::prepare_chunk_mesh,
+	utils::chunk_utils::prepare_chunk_mesh,
 };
 
 pub struct ChunkRebuildPlugin;
@@ -38,8 +38,7 @@ fn chunk_rebuilder(
 	let pool = AsyncComputeTaskPool::get();
 	let map_size = UVec2::new(heightmap.width as u32, heightmap.height as u32);
 
-	for (chunk_entity, idx) in &chunk_query
-	{
+	for (chunk_entity, idx) in &chunk_query {
 		#[cfg(feature = "tracing")]
 		let _spawn_span = info_span!("Rebuild Chunk").entered();
 		info!("Rebuilding Chunk");
@@ -83,10 +82,8 @@ fn collider_task_resolver(
 	mut meshes: ResMut<Assets<Mesh>>,
 )
 {
-	for (mut task, mesh_handle, water_mesh_handle) in &mut chunks
-	{
-		if let Some((mut c, chunk_mesh, water_mesh)) = futures::check_ready(&mut task.task)
-		{
+	for (mut task, mesh_handle, water_mesh_handle) in &mut chunks {
+		if let Some((mut c, chunk_mesh, water_mesh)) = futures::check_ready(&mut task.task) {
 			commands.append(&mut c);
 			meshes
 				.insert(mesh_handle.id(), chunk_mesh)

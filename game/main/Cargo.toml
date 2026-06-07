@@ -7,15 +7,14 @@ build = "build.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "0.18.0", features = ["file_watcher"] }
+bevy = { version = "0.18.1" }
 bevy-inspector-egui = "0.36.0"
 # iyes_perf_ui = "0.3.0"
 noise = "0.9.0"
 world_generation = { path = "../../engine/world_generation" }
-bevy_rapier3d = { version = "0.33.0", features = [
+bevy_rapier3d = { version = "0.34.0", features = [
 	"simd-stable",
 	"parallel",
-	"debug-render-3d",
 ] }
 rayon = "1.11.0"
 buildings = { path = "../buildings" }
@@ -32,6 +31,7 @@ hex = { path = "../../engine/hex" }
 # bevy_lunex = "0.2.4"
 
 [features]
+default = ["dev"]
 editor = []
 tracing = [
 	"bevy/trace_tracy",
@@ -40,3 +40,29 @@ tracing = [
 	"units/tracing",
 	"shared/tracing",
 ]
+dev = [
+	"bevy/bevy_dev_tools",
+	"bevy/bevy_ui_debug",
+	# Improve error messages coming from Bevy
+	"bevy/track_location",
+	"inspect"
+	"bevy/file_watcher",
+	"bevy/embedded_watcher",
+]
+phys = ["dev", "bevy_rapier3d/debug-render-3d"]
+inspect = ["dev"]
+
+[lints.clippy]
+# Bevy supplies arguments to systems via dependency injection, so it's natural for systems to
+# request more than 7 arguments, which would undesirably trigger this lint.
+too_many_arguments = "allow"
+# Queries may access many components, which would undesirably trigger this lint.
+type_complexity = "allow"
+# Make sure macros use their standard braces, such as `[]` for `bevy_ecs::children!`.
+nonstandard_macro_braces = "warn"
+# That's dumb
+needless_return = "allow"
+
+[package.metadata.bevy_cli.release]
+# Disable dev features for release builds.
+default-features = false

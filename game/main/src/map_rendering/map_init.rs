@@ -24,7 +24,7 @@ use crate::{
 		chunk_material::ChunkMaterial,
 		water_material::{WaterMaterial, WaterSettings},
 	},
-	utlis::chunk_utils::{paint_map, prepare_chunk_mesh_with_collider},
+	utils::chunk_utils::{paint_map, prepare_chunk_mesh_with_collider},
 };
 
 use super::{chunk_rebuild::ChunkRebuildPlugin, render_distance_system::RenderDistanceVisibility};
@@ -251,8 +251,7 @@ fn spawn_map(
 			0.,
 			(Chunk::SIZE / 2) as f32 * 1.5,
 		);
-		for (chunk_mesh, water_mesh, collider, pos, index) in chunk_meshes
-		{
+		for (chunk_mesh, water_mesh, collider, pos, index) in chunk_meshes {
 			// let mesh_handle = meshes.a
 			let water_mesh_handle = meshes.add(water_mesh);
 			let chunk = commands
@@ -283,8 +282,7 @@ fn spawn_map(
 
 	commands.insert_resource(registry);
 	generator_state.set(GeneratorState::Idle);
-	if cur_game_state.get() != &MenuState::InGame
-	{
+	if cur_game_state.get() != &MenuState::InGame {
 		game_state.set(MenuState::InGame);
 		gameplay_state.set(GameplayState::PlaceHQ);
 	}
@@ -300,8 +298,7 @@ fn despawn_map(
 	biome_painter: Res<BiomePainter>,
 )
 {
-	for chunk in chunks.iter()
-	{
+	for chunk in chunks.iter() {
 		commands.entity(chunk).despawn();
 	}
 
