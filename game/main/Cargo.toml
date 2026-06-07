@@ -45,7 +45,7 @@ dev = [
 	"bevy/bevy_ui_debug",
 	# Improve error messages coming from Bevy
 	"bevy/track_location",
-	"inspect"
+	"inspect",
 	"bevy/file_watcher",
 	"bevy/embedded_watcher",
 ]
