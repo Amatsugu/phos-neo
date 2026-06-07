@@ -1,6 +1,6 @@
 use bevy::{
 	math::{UVec2, Vec3},
-	prelude::Resource,
+	prelude::*,
 };
 use noise::NoiseFn;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
@@ -45,7 +45,8 @@ impl BiomeMap
 {
 	pub fn new(size: UVec2, biome_count: usize) -> Self
 	{
-		let len = size.x as usize * size.y as usize * Chunk::AREA;
+		let len = size.x as usize * size.y as usize;
+		info!("Creating biome map with size: {} with length {}", size, len);
 		return BiomeMap {
 			size,
 			height: size.y as usize * Chunk::SIZE,
@@ -58,8 +59,7 @@ impl BiomeMap
 	pub fn blend(&mut self, count: usize)
 	{
 		assert!(count != 0, "Count cannot be 0");
-		for _ in 0..count
-		{
+		for _ in 0..count {
 			self.blend_once();
 		}
 	}
@@ -74,8 +74,7 @@ impl BiomeMap
 					.into_par_iter()
 					.map(|y| {
 						let mut new_tiles = Vec::with_capacity(self.width);
-						for x in 0..Chunk::SIZE
-						{
+						for x in 0..Chunk::SIZE {
 							let tx = x as u32 + chunk.offset.x * Chunk::SIZE as u32;
 							let ty = y as u32 + chunk.offset.y * Chunk::SIZE as u32;
 							let kernel = self.get_kernel(tx as i32, ty as i32);
@@ -88,8 +87,7 @@ impl BiomeMap
 								});
 
 							let sum: f32 = r.iter().sum();
-							if sum == 0.
-							{
+							if sum == 0. {
 								new_tiles.push(vec![0.; self.biome_count]);
 								continue;
 							}
@@ -126,12 +124,10 @@ impl BiomeMap
 
 	pub fn get_biome(&self, x: i32, y: i32) -> Option<&Vec<f32>>
 	{
-		if x < 0 || y < 0
-		{
+		if x < 0 || y < 0 {
 			return None;
 		}
-		if x >= self.width as i32 || y >= self.height as i32
-		{
+		if x >= self.width as i32 || y >= self.height as i32 {
 			return None;
 		}
 
@@ -198,11 +194,9 @@ impl BiomeChunk
 		let b = self.get_biome(x, y);
 		let mut max = 0.;
 		let mut idx = 0;
-		for i in 0..b.len()
-		{
+		for i in 0..b.len() {
 			let blend = b[i];
-			if blend > max
-			{
+			if blend > max {
 				max = blend;
 				idx = i;
 			}
@@ -216,15 +210,12 @@ impl BiomeChunk
 		let b = self.get_biome(x, y);
 		let n = (noise.get([x as f64 / scale, y as f64 / scale]) as f32 - 0.5) / 2.0;
 		let mut max = b[cur_id] + n;
-		for i in 0..b.len()
-		{
+		for i in 0..b.len() {
 			let blend = b[i];
-			if blend == 0.
-			{
+			if blend == 0. {
 				continue;
 			}
-			if blend > max
-			{
+			if blend > max {
 				max = blend + n;
 				cur_id = i;
 			}
@@ -247,10 +238,8 @@ mod tests
 		let w = biome.size.x as usize;
 		let h = biome.size.y as usize;
 
-		for y in 0..h
-		{
-			for x in 0..w
-			{
+		for y in 0..h {
+			for x in 0..w {
 				let mut b = vec![0.; biome.biome_count];
 				let idx = (x + y) % biome.biome_count;
 				b[idx] = 1.;
