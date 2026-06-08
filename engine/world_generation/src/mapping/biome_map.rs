@@ -25,19 +25,19 @@ pub struct BiomeData
 	pub continentality: f32,
 }
 
-impl Into<Vec3> for &BiomeData
+impl From<&BiomeData> for Vec3
 {
-	fn into(self) -> Vec3
+	fn from(value: &BiomeData) -> Self
 	{
-		return Vec3::new(self.moisture, self.temperature, self.continentality);
+		return Vec3::new(value.moisture, value.temperature, value.continentality);
 	}
 }
 
-impl Into<Vec3> for BiomeData
+impl From<BiomeData> for Vec3
 {
-	fn into(self) -> Vec3
+	fn from(value: BiomeData) -> Self
 	{
-		return Vec3::new(self.moisture, self.temperature, self.continentality);
+		return Vec3::new(value.moisture, value.temperature, value.continentality);
 	}
 }
 
@@ -194,10 +194,9 @@ impl BiomeChunk
 		let b = self.get_biome(x, y);
 		let mut max = 0.;
 		let mut idx = 0;
-		for i in 0..b.len() {
-			let blend = b[i];
-			if blend > max {
-				max = blend;
+		for (i, blend) in b.iter().enumerate() {
+			if *blend > max {
+				max = *blend;
 				idx = i;
 			}
 		}
@@ -210,12 +209,11 @@ impl BiomeChunk
 		let b = self.get_biome(x, y);
 		let n = (noise.get([x as f64 / scale, y as f64 / scale]) as f32 - 0.5) / 2.0;
 		let mut max = b[cur_id] + n;
-		for i in 0..b.len() {
-			let blend = b[i];
-			if blend == 0. {
+		for (i, blend) in b.iter().enumerate() {
+			if *blend == 0. {
 				continue;
 			}
-			if blend > max {
+			if *blend > max {
 				max = blend + n;
 				cur_id = i;
 			}

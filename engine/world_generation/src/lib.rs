@@ -3,7 +3,7 @@ pub mod biome_painter;
 pub mod consts;
 pub mod generators;
 pub mod heightmap;
-pub mod map;
+pub mod mapping;
 pub mod prelude;
 pub mod states;
 pub mod tile_manager;

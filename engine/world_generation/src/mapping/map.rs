@@ -41,8 +41,8 @@ impl Map
 		return MeshChunkData {
 			min_height: self.min_level,
 			sealevel: self.sealevel,
-			heights: chunk.heights.clone(),
-			textures: chunk.textures.clone(),
+			heights: chunk.heights,
+			textures: chunk.textures,
 			distance_to_land: self.get_distance_from_land(chunk.chunk_offset, 4),
 		};
 	}
@@ -54,38 +54,30 @@ impl Map
 		let mut dists = [0.0; Chunk::AREA];
 		let cx = chunk_offset.x as usize * Chunk::SIZE;
 		let cz = chunk_offset.y as usize * Chunk::SIZE;
-		for z in 0..Chunk::SIZE
-		{
-			for x in 0..Chunk::SIZE
-			{
+		for z in 0..Chunk::SIZE {
+			for x in 0..Chunk::SIZE {
 				let coord = HexCoord::from_offset_pos(x + cx, z + cz);
 				let index = coord.to_chunk_local_index();
 
-				if !self.is_in_bounds(&coord)
-				{
+				if !self.is_in_bounds(&coord) {
 					warn!("Coord is not in bounds!?");
 				}
 
 				//Current tile is land tile
-				if self.sample_height(&coord) > self.sealevel
-				{
+				if self.sample_height(&coord) > self.sealevel {
 					dists[index] = 0.0;
 					continue;
 				}
 
 				//Find closest land tile
 				if let Some(d) = self.hex_select_first(&coord, range, false, |_t, h, r| {
-					if h > self.sealevel
-					{
+					if h > self.sealevel {
 						return Some(r as f32);
 					}
 					return None;
-				})
-				{
+				}) {
 					dists[index] = d;
-				}
-				else
-				{
+				} else {
 					dists[index] = range as f32;
 				}
 			}
@@ -99,11 +91,9 @@ impl Map
 		let w = self.width * Chunk::SIZE;
 		let h = self.height * Chunk::SIZE;
 		let n_tiles = pos.get_neighbors();
-		for i in 0..6
-		{
+		for i in 0..6 {
 			let n_tile = n_tiles[i];
-			if !n_tile.is_in_bounds(h, w)
-			{
+			if !n_tile.is_in_bounds(h, w) {
 				continue;
 			}
 			let c_idx = n_tile.to_chunk_index(self.width);
@@ -209,30 +199,22 @@ impl Map
 	{
 		assert!(radius != 0, "Radius cannot be zero");
 
-		let mut result = if include_center
-		{
+		let mut result = if include_center {
 			Vec::with_capacity(get_tile_count_in_range(radius) + 1)
-		}
-		else
-		{
+		} else {
 			Vec::with_capacity(get_tile_count_in_range(radius))
 		};
-		if include_center
-		{
-			let h = self.sample_height(&center);
+		if include_center {
+			let h = self.sample_height(center);
 			result.push((op)(center, h, 0));
 		}
 
-		for k in 0..(radius + 1)
-		{
+		for k in 0..(radius + 1) {
 			let mut p = center.scale(4, k);
-			for i in 0..6
-			{
-				for _j in 0..k
-				{
+			for i in 0..6 {
+				for _j in 0..k {
 					p = p.get_neighbor(i);
-					if self.is_in_bounds(&p)
-					{
+					if self.is_in_bounds(&p) {
 						let h = self.sample_height(&p);
 						result.push((op)(&p, h, k));
 					}
@@ -255,30 +237,23 @@ impl Map
 	{
 		assert!(radius != 0, "Radius cannot be zero");
 
-		if include_center
-		{
-			let h = self.sample_height(&center);
+		if include_center {
+			let h = self.sample_height(center);
 			let r = (op)(center, h, 0);
-			if r.is_some()
-			{
+			if r.is_some() {
 				return r;
 			}
 		}
 
-		for k in 0..(radius + 1)
-		{
+		for k in 0..(radius + 1) {
 			let mut p = center.scale(4, k);
-			for i in 0..6
-			{
-				for _j in 0..k
-				{
+			for i in 0..6 {
+				for _j in 0..k {
 					p = p.get_neighbor(i);
-					if self.is_in_bounds(&p)
-					{
+					if self.is_in_bounds(&p) {
 						let h = self.sample_height(&p);
 						let r = (op)(&p, h, k);
-						if r.is_some()
-						{
+						if r.is_some() {
 							return r;
 						}
 					}
@@ -305,20 +280,15 @@ impl Map
 			"Start radius cannot be lower than end radius"
 		);
 
-		for k in start_radius..(end_radius + 1)
-		{
+		for k in start_radius..(end_radius + 1) {
 			let mut p = center.scale(4, k);
-			for i in 0..6
-			{
-				for _j in 0..k
-				{
+			for i in 0..6 {
+				for _j in 0..k {
 					p = p.get_neighbor(i);
-					if self.is_in_bounds(&p)
-					{
+					if self.is_in_bounds(&p) {
 						let h = self.sample_height(&p);
 						let r = (op)(&p, h, k);
-						if r.is_some()
-						{
+						if r.is_some() {
 							return r;
 						}
 					}
@@ -341,30 +311,22 @@ impl Map
 	{
 		assert!(radius != 0, "Radius cannot be zero");
 
-		let mut result = if include_center
-		{
+		let mut result = if include_center {
 			Vec::with_capacity(get_tile_count_in_range(radius) + 1)
-		}
-		else
-		{
+		} else {
 			Vec::with_capacity(get_tile_count_in_range(radius))
 		};
-		if include_center
-		{
-			let h = self.sample_height_mut(&center);
+		if include_center {
+			let h = self.sample_height_mut(center);
 			result.push((op)(center, h, 0));
 		}
 
-		for k in 0..(radius + 1)
-		{
+		for k in 0..(radius + 1) {
 			let mut p = center.scale(4, k);
-			for i in 0..6
-			{
-				for _j in 0..k
-				{
+			for i in 0..6 {
+				for _j in 0..k {
 					p = p.get_neighbor(i);
-					if self.is_in_bounds(&p)
-					{
+					if self.is_in_bounds(&p) {
 						let h = self.sample_height_mut(&p);
 						result.push((op)(&p, h, k));
 					}

@@ -13,7 +13,7 @@ use shared::{
 	resources::TileUnderCursor,
 	states::{AssetLoadState, GameplayState},
 };
-use world_generation::{map::map::Map, prelude::GenerationConfig, states::GeneratorState};
+use world_generation::{mapping::map::Map, prelude::GenerationConfig, states::GeneratorState};
 
 use crate::{
 	assets::{
@@ -64,8 +64,7 @@ fn prepare_building_map(mut commands: Commands, cfg: Res<GenerationConfig>)
 
 fn regernerate(mut commands: Commands, buildings: Query<Entity, With<Building>>, cfg: Res<GenerationConfig>)
 {
-	for e in buildings.iter()
-	{
+	for e in buildings.iter() {
 		commands.entity(e).despawn();
 	}
 	commands.insert_resource(BuildingMap::new(cfg.size));
@@ -92,13 +91,11 @@ fn hq_placement(
 	mut next_state: ResMut<NextState<GameplayState>>,
 )
 {
-	if let Some(contact) = tile_under_cursor.0
-	{
+	if let Some(contact) = tile_under_cursor.0 {
 		let positions = map.hex_select(&contact.tile, 3, true, |pos, h, _| pos.to_world(h));
 		show_indicators(positions, &mut commands, &indicator);
 
-		if mouse.just_pressed(MouseButton::Left)
-		{
+		if mouse.just_pressed(MouseButton::Left) {
 			build_queue.queue.push(QueueEntry {
 				building: 0.into(),
 				pos: contact.tile,
@@ -111,8 +108,7 @@ fn hq_placement(
 
 fn show_indicators(positions: Vec<Vec3>, commands: &mut Commands, indicator: &IndicatorCube)
 {
-	for p in positions
-	{
+	for p in positions {
 		commands.spawn((
 			Mesh3d(indicator.0.clone()),
 			MeshMaterial3d(indicator.1.clone()),
@@ -134,15 +130,12 @@ fn process_build_queue(
 	heightmap: Res<Map>,
 )
 {
-	for item in &queue.queue
-	{
+	for item in &queue.queue {
 		let handle = &db.buildings[item.building.0];
-		if let Some(building) = building_assets.get(handle.id())
-		{
+		if let Some(building) = building_assets.get(handle.id()) {
 			let h = heightmap.sample_height(&item.pos);
 			println!("Spawning {} at {}", building.name, item.pos);
-			if let Some(gltf) = gltf_assets.get(building.prefab.id())
-			{
+			if let Some(gltf) = gltf_assets.get(building.prefab.id()) {
 				let e = building.spawn(
 					item.pos.to_world(h),
 					Quat::IDENTITY,
@@ -151,13 +144,10 @@ fn process_build_queue(
 					&gltf_meshes,
 					&gltf_nodes,
 				);
-				if let Some(b) = e
-				{
+				if let Some(b) = e {
 					building_map.add_building(BuildingEntry::new(item.pos, b));
 				}
-			}
-			else
-			{
+			} else {
 				warn!("Failed to spawn building");
 			}
 		}
@@ -171,29 +161,21 @@ fn update_building_heights(
 	mut commands: Commands,
 )
 {
-	for event in tile_updates.read()
-	{
-		match event
-		{
-			TileModifiedEvent::HeightChanged(coord, new_height) =>
-			{
-				if let Some(building) = building_map.get_building(coord)
-				{
-					let mut queue = CommandQueue::default();
-					let e = building.entity.clone();
-					let h = *new_height;
-					queue.push(move |world: &mut World| {
-						let mut emut = world.entity_mut(e);
-						if let Some(mut transform) = emut.get_mut::<Transform>()
-						{
-							transform.translation.y = h;
-						}
-					});
+	for event in tile_updates.read() {
+		if let TileModifiedEvent::HeightChanged(coord, new_height) = event {
+			if let Some(building) = building_map.get_building(coord) {
+				let mut queue = CommandQueue::default();
+				let e = building.entity;
+				let h = *new_height;
+				queue.push(move |world: &mut World| {
+					let mut emut = world.entity_mut(e);
+					if let Some(mut transform) = emut.get_mut::<Transform>() {
+						transform.translation.y = h;
+					}
+				});
 
-					commands.append(&mut queue);
-				}
+				commands.append(&mut queue);
 			}
-			_ => (),
 		}
 	}
 }

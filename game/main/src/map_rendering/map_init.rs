@@ -12,7 +12,7 @@ use world_generation::{
 	biome_asset::{BiomeAsset, BiomeAssetPlugin},
 	biome_painter::*,
 	heightmap::generate_heightmap,
-	map::biome_map::BiomeMap,
+	mapping::biome_map::BiomeMap,
 	prelude::*,
 	tile_manager::*,
 	tile_mapper::*,
@@ -74,7 +74,8 @@ impl Plugin for MapInitPlugin
 		app.add_systems(Update, despawn_map.run_if(in_state(GeneratorState::Regenerate)));
 		app.add_systems(
 			Update,
-			spawn_map.run_if(in_state(AssetLoadState::LoadComplete).and(in_state(GeneratorState::SpawnMap))),
+			(spawn_map, configure_water_material)
+				.run_if(in_state(AssetLoadState::LoadComplete).and(in_state(GeneratorState::SpawnMap))),
 		);
 
 		app.insert_resource(TileManager::default());
@@ -95,12 +96,11 @@ fn setup_materials(
 		},
 		extension: WaterMaterial {
 			settings: WaterSettings {
-				offset: -4.97,
-				scale: 1.,
-				deep_color: LinearRgba::rgb(0.0, 0.04, 0.085).into(),
+				scale: 10.,
+				f_power: 0.2,
+				deep_color: LinearRgba::rgb(0.0, 0.04, 0.085),
 				..Default::default()
 			},
-			..default()
 		},
 	});
 	phos_assets.water_material = water_material;
@@ -205,6 +205,17 @@ fn create_heightmap(
 	commands.insert_resource(biome_map);
 	commands.insert_resource(config);
 	next_state.set(GeneratorState::SpawnMap);
+}
+
+fn configure_water_material(
+	mut water_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, WaterMaterial>>>,
+	atlas: Res<PhosAssets>,
+	heightmap: Res<Map>,
+)
+{
+	if let Some(material) = water_materials.get_mut(atlas.water_material.id()) {
+		material.extension.settings.surface_level = heightmap.sealevel;
+	}
 }
 
 fn spawn_map(

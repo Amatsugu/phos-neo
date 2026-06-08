@@ -10,7 +10,7 @@ use super::{biome_map::BiomeMap, map::Map};
 
 pub fn render_image(
 	size: UVec2,
-	data: &Vec<f32>,
+	data: &[f32],
 	color1: LinearRgba,
 	color2: LinearRgba,
 ) -> ImageBuffer<image::Rgba<u8>, Vec<u8>>
@@ -23,7 +23,7 @@ pub fn render_image(
 
 pub fn update_image(
 	size: UVec2,
-	data: &Vec<f32>,
+	data: &[f32],
 	color1: LinearRgba,
 	color2: LinearRgba,
 	image: &mut ImageBuffer<image::Rgba<u8>, Vec<u8>>,
@@ -69,13 +69,11 @@ pub fn update_map(map: &Map, smooth: f32, image: &mut ImageBuffer<image::Rgba<u8
 		let height = map.sample_height(&coord);
 
 		let mut color = Hsla::hsl(138.0, 1.0, 0.4);
-		if height < map.sealevel
-		{
+		if height < map.sealevel {
 			color.hue = 217.0;
 		}
 
-		if map.is_in_bounds(&right)
-		{
+		if map.is_in_bounds(&right) {
 			let h2 = map.sample_height(&right);
 			color = get_height_color_blend(color, height, h2, smooth);
 		}
@@ -88,29 +86,19 @@ fn get_height_color_blend(base_color: Hsla, height: f32, height2: f32, smooth: f
 {
 	let mut color = base_color;
 	let mut d = height2 - height;
-	if smooth == 0.0 || d.abs() > smooth
-	{
-		if d > 0.0
-		{
+	if smooth == 0.0 || d.abs() > smooth {
+		if d > 0.0 {
 			color.lightness += 0.1;
-		}
-		else if d < 0.0
-		{
+		} else if d < 0.0 {
 			color.lightness -= 0.1;
 		}
-	}
-	else
-	{
-		if d.abs() <= smooth
-		{
+	} else {
+		if d.abs() <= smooth {
 			d /= smooth;
-			if d > 0.0
-			{
+			if d > 0.0 {
 				let c2: LinearRgba = color.with_lightness(color.lightness + 0.1).into();
 				color = LinearRgba::lerp(color.into(), c2, d).into();
-			}
-			else
-			{
+			} else {
 				let c2: LinearRgba = color.with_lightness(color.lightness - 0.1).into();
 				color = LinearRgba::lerp(color.into(), c2, d.abs()).into();
 			}
@@ -159,14 +147,12 @@ pub fn update_biome_map(map: &Map, biome_map: &BiomeMap, image: &mut ImageBuffer
 		let biome_blend = biome_map.get_biome(x as i32, y as i32).unwrap();
 		let right = coord.get_neighbor(1);
 		let mut color = Oklaba::BLACK;
-		for i in 0..biome_blend.len()
-		{
+		for (i, blend) in biome_blend.iter().enumerate() {
 			let mut c: Oklaba = Hsla::hsl((i as f32 / map_biome_count) * 360.0, 0.8, 0.7).into();
-			c *= biome_blend[i];
-			color = Oklaba::add(c, color.into()).into();
+			c *= *blend;
+			color = Oklaba::add(c, color);
 		}
-		if map.is_in_bounds(&right)
-		{
+		if map.is_in_bounds(&right) {
 			let h1 = map.sample_height(&coord);
 			let h2 = map.sample_height(&right);
 			color = get_height_color_blend(color.into(), h1, h2, 0.5).into();

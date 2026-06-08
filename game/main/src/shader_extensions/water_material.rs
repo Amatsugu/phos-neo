@@ -15,7 +15,7 @@ pub struct WaterMaterial
 #[derive(Debug, Clone, ShaderType, Reflect)]
 pub struct WaterSettings
 {
-	pub offset: f32,
+	pub surface_level: f32,
 	pub scale: f32,
 	pub f_power: f32,
 	pub deep_color: LinearRgba,
@@ -26,9 +26,9 @@ impl Default for WaterSettings
 	fn default() -> Self
 	{
 		Self {
-			offset: 0.0,
 			scale: 1.0,
 			f_power: 2.0,
+			surface_level: 0.0,
 			deep_color: default(),
 		}
 	}

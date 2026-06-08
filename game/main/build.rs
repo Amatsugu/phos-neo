@@ -32,7 +32,7 @@ where
 	}
 }
 
-const COPY_DIR: &'static str = "assets";
+const COPY_DIR: &str = "assets";
 
 fn main()
 {

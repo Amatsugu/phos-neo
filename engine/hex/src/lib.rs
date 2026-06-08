@@ -11,7 +11,7 @@ pub const OUTER_RADIUS: f32 = 1.;
 pub const INNER_RADIUS: f32 = OUTER_RADIUS * (SQRT_3 / 2.);
 pub const SHORT_DIAGONAL: f32 = 1. * SQRT_3;
 pub const LONG_DIAGONAL: f32 = 2. * OUTER_RADIUS;
-pub const SQRT_3: f32 = 1.7320508076;
+pub const SQRT_3: f32 = 1.732_050_8;
 
 #[cfg(test)]
 mod tests;

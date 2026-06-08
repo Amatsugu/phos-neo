@@ -13,10 +13,8 @@ pub fn generate_packed_chunk_mesh(chunk: &MeshChunkData) -> Mesh
 	let mut indices = Vec::with_capacity(vertex_count);
 	let mut heights = Vec::with_capacity(vertex_count);
 
-	for z in 0..Chunk::SIZE
-	{
-		for x in 0..Chunk::SIZE
-		{
+	for z in 0..Chunk::SIZE {
+		for x in 0..Chunk::SIZE {
 			let idx = x + z * Chunk::SIZE;
 			let height = chunk.heights[idx];
 			let coord = HexCoord::from_offset_pos(x, z);
@@ -60,8 +58,7 @@ fn create_packed_tile(
 
 	packed_data.push(pack_vertex_data(offset, 0, texture_index));
 	heights.push(height);
-	for i in 0..6
-	{
+	for i in 0..6 {
 		packed_data.push(pack_vertex_data(offset, i + 1, texture_index));
 		indices.push(idx);
 		indices.push(idx + 1 + i as u32);
@@ -69,15 +66,12 @@ fn create_packed_tile(
 		heights.push(height);
 	}
 
-	for i in 0..neighbors.len()
-	{
-		let n_height = neighbors[i];
-		if n_height < height
-		{
+	for (i, n_height) in neighbors.iter().enumerate() {
+		if *n_height < height {
 			create_packed_tile_wall(
 				offset,
 				height,
-				n_height,
+				*n_height,
 				i,
 				packed_data,
 				indices,

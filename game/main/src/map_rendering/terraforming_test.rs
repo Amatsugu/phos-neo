@@ -36,31 +36,24 @@ fn deform(
 )
 {
 	let mut multi = 0.;
-	if mouse.just_pressed(MouseButton::Left)
-	{
+	if mouse.just_pressed(MouseButton::Left) {
 		multi = 1.;
-	}
-	else if mouse.just_pressed(MouseButton::Right)
-	{
+	} else if mouse.just_pressed(MouseButton::Right) {
 		multi = -1.;
 	}
 
-	if multi == 0.
-	{
+	if multi == 0. {
 		return;
 	}
 
-	if let Some(contact) = tile_under_cursor.0
-	{
+	if let Some(contact) = tile_under_cursor.0 {
 		#[cfg(feature = "tracing")]
-		let span = info_span!("Deform Mesh").entered();
+		let _span = info_span!("Deform Mesh").entered();
 		let modified_tiles = heightmap.create_crater(&contact.tile, 5, 5. * multi);
 		let mut chunk_set: HashSet<usize> = HashSet::new();
-		for (tile, height) in modified_tiles
-		{
+		for (tile, height) in modified_tiles {
 			let chunk = tile.to_chunk_index(heightmap.width);
-			if !chunk_set.contains(&chunk)
-			{
+			if !chunk_set.contains(&chunk) {
 				chunk_modified.write(ChunkModifiedEvent { index: chunk });
 				chunk_set.insert(chunk);
 				commands.entity(chunks.chunks[chunk]).insert(RebuildChunk);

@@ -5,7 +5,8 @@ use serde::{Deserialize, Serialize};
 use crate::components::{AirUnit, LandUnit, NavalUnit, Unit, UnitDomain};
 
 #[derive(Asset, TypePath, Debug, Serialize, Deserialize)]
-pub struct UnitAsset {
+pub struct UnitAsset
+{
 	pub name: String,
 	pub description: String,
 	pub size: u32,
@@ -16,12 +17,14 @@ pub struct UnitAsset {
 	pub domain: UnitDomain,
 }
 
-impl UnitAsset {
-	pub fn spawn(&self, transform: Transform) -> CommandQueue {
+impl UnitAsset
+{
+	pub fn spawn(&self, transform: Transform) -> CommandQueue
+	{
 		let mut commands = CommandQueue::default();
 
 		let bundle = (transform, Unit);
-		let domain = self.domain.clone();
+		let domain = self.domain;
 		commands.push(move |world: &mut World| {
 			let mut e = world.spawn(bundle);
 			match domain {
@@ -45,7 +48,8 @@ create_asset_loader!(
 );
 
 #[derive(Debug, Serialize, Deserialize)]
-pub enum UnitType {
+pub enum UnitType
+{
 	Basic,
 	Turret,
 }

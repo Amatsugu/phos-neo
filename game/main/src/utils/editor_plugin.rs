@@ -5,9 +5,9 @@ use bevy_inspector_egui::egui::{self};
 use image::{ImageBuffer, Rgba};
 use world_generation::biome_asset::BiomeAsset;
 use world_generation::biome_painter::BiomePainterAsset;
-use world_generation::map::biome_map::BiomeMap;
-use world_generation::map::map_utils::{render_biome_map, render_biome_noise_map};
-use world_generation::{map::map_utils::render_map, prelude::Map, states::GeneratorState};
+use world_generation::mapping::biome_map::BiomeMap;
+use world_generation::mapping::map_utils::{render_biome_map, render_biome_noise_map};
+use world_generation::{mapping::map_utils::render_map, prelude::Map, states::GeneratorState};
 
 pub struct EditorPlugin;
 
@@ -76,16 +76,12 @@ fn asset_reloaded(
 )
 {
 	let mut rebuild = false;
-	for event in asset_events.read()
-	{
-		match event
-		{
-			AssetEvent::Modified { .. } => rebuild = true,
-			_ => (),
+	for event in asset_events.read() {
+		if let AssetEvent::Modified { .. } = event {
+			rebuild = true
 		}
 	}
-	if rebuild
-	{
+	if rebuild {
 		let painter = biome_painter.build(&biomes);
 		commands.insert_resource(painter);
 	}
@@ -132,8 +128,7 @@ fn render_map_ui(
 			[512.0, 512.0],
 		)));
 
-		if ui.button("Save Image").clicked()
-		{
+		if ui.button("Save Image").clicked() {
 			let img = get_map_image(&heightmap, &biome_map, map_type);
 			_ = img.save(format!("{:?}.png", map_type));
 		}
@@ -150,8 +145,7 @@ fn update_map_render(
 	image: Res<MapImage>,
 )
 {
-	if state.cur_map_type == state.target_map_type
-	{
+	if state.cur_map_type == state.target_map_type {
 		return;
 	}
 
@@ -168,13 +162,12 @@ fn update_map_render(
 
 fn get_map_image(heightmap: &Map, biome_map: &BiomeMap, map_type: MapDisplayType) -> ImageBuffer<Rgba<u8>, Vec<u8>>
 {
-	return match map_type
-	{
-		MapDisplayType::HeightMap => render_map(&heightmap, 0.1),
-		MapDisplayType::Biomes => render_biome_map(&heightmap, &biome_map),
-		MapDisplayType::BiomeNoise => render_biome_noise_map(&biome_map, Vec3::ONE),
-		MapDisplayType::BiomeNoiseTemp => render_biome_noise_map(&biome_map, Vec3::X),
-		MapDisplayType::BiomeNoiseContinent => render_biome_noise_map(&biome_map, Vec3::Y),
-		MapDisplayType::BiomeNoiseMoisture => render_biome_noise_map(&biome_map, Vec3::Z),
+	return match map_type {
+		MapDisplayType::HeightMap => render_map(heightmap, 0.1),
+		MapDisplayType::Biomes => render_biome_map(heightmap, biome_map),
+		MapDisplayType::BiomeNoise => render_biome_noise_map(biome_map, Vec3::ONE),
+		MapDisplayType::BiomeNoiseTemp => render_biome_noise_map(biome_map, Vec3::X),
+		MapDisplayType::BiomeNoiseContinent => render_biome_noise_map(biome_map, Vec3::Y),
+		MapDisplayType::BiomeNoiseMoisture => render_biome_noise_map(biome_map, Vec3::Z),
 	};
 }

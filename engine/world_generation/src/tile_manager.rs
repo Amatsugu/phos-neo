@@ -1,19 +1,16 @@
 use asset_loader::create_asset_loader;
 use bevy::{asset::Asset, reflect::TypePath};
 use serde::{Deserialize, Serialize};
-#[derive(Resource, Debug)]
-pub struct TileManager {
+#[derive(Resource, Default, Debug)]
+pub struct TileManager
+{
 	pub tiles: Vec<Handle<TileAsset>>,
 }
 
-impl Default for TileManager {
-	fn default() -> Self {
-		Self { tiles: vec![] }
-	}
-}
-
-impl TileManager {
-	pub fn register_tile(&mut self, tile: Handle<TileAsset>) -> usize {
+impl TileManager
+{
+	pub fn register_tile(&mut self, tile: Handle<TileAsset>) -> usize
+	{
 		let id = self.tiles.len();
 		self.tiles.push(tile);
 		return id;
@@ -21,7 +18,8 @@ impl TileManager {
 }
 
 #[derive(Serialize, Deserialize, Debug, TypePath, Asset, Clone)]
-pub struct TileAsset {
+pub struct TileAsset
+{
 	#[serde(skip)]
 	pub id: usize,
 	pub name: String,

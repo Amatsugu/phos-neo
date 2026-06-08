@@ -31,7 +31,7 @@ impl PrefabDefination
 				let mat = primitive
 					.material
 					.clone()
-					.expect(format!("Mesh '{}' does not have a meterial", primitive.name.as_str()).as_str());
+					.unwrap_or_else(|| panic!("Mesh '{}' does not have a meterial", primitive.name.as_str()));
 				let mut entity = commands.spawn((
 					Mesh3d(mesh),
 					MeshMaterial3d(mat),
@@ -92,7 +92,7 @@ impl AnimationComponent
 	{
 		match self {
 			AnimationComponent::Rotation(comp) => {
-				commands.insert(comp.clone());
+				commands.insert(*comp);
 			}
 			AnimationComponent::Slider => todo!(),
 		};

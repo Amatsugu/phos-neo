@@ -5,7 +5,8 @@ use shared::tags::Faction;
 use crate::{components::UnitDomain, UnitType};
 
 #[derive(Clone, Copy)]
-pub struct UnitEntity {
+pub struct UnitEntity
+{
 	pub entity: Entity,
 	pub domain: UnitDomain,
 	pub unit_type: UnitType,
@@ -13,28 +14,30 @@ pub struct UnitEntity {
 	pub position: Vec3,
 }
 
-pub struct UnitSpacialSet {
+pub struct UnitSpacialSet
+{
 	tree: Quadtree<usize, UnitEntity>,
 }
 
-impl UnitSpacialSet {
-	pub fn new(map_size: f32) -> Self {
+impl UnitSpacialSet
+{
+	pub fn new(map_size: f32) -> Self
+	{
 		let n = f32::log2(map_size) / f32::log2(2.0);
 		return Self {
 			tree: Quadtree::new(n.ceil() as usize),
 		};
 	}
 
-	pub fn add_unit(&mut self, unit: UnitEntity, pos: Vec3) -> Option<u64> {
+	pub fn add_unit(&mut self, unit: UnitEntity, pos: Vec3) -> Option<u64>
+	{
 		return self.tree.insert_pt(convert_to_point(pos.xz()), unit);
 	}
 
-	pub fn move_unit(&mut self, handle: u64, pos: Vec3) -> Option<u64> {
-		if let Some(existing) = self.tree.get(handle) {
-			if existing.anchor() == convert_to_point(pos.xz()) {
-				return None;
-			}
-		} else {
+	pub fn move_unit(&mut self, handle: u64, pos: Vec3) -> Option<u64>
+	{
+		let existing = self.tree.get(handle)?;
+		if existing.anchor() == convert_to_point(pos.xz()) {
 			return None;
 		}
 
@@ -47,7 +50,8 @@ impl UnitSpacialSet {
 		return None;
 	}
 
-	pub fn get_units_in_circle(self, center: Vec3, radius: f32) -> Vec<Entity> {
+	pub fn get_units_in_circle(self, center: Vec3, radius: f32) -> Vec<Entity>
+	{
 		let anchor = center.xz() - Vec2::new(radius, radius);
 		let d = (radius * 2.0) as usize;
 		let area = AreaBuilder::default()
@@ -62,7 +66,8 @@ impl UnitSpacialSet {
 			.collect();
 	}
 
-	pub fn get_units_in_rect(self, anchor: Vec2, size: Vec2) -> Vec<Entity> {
+	pub fn get_units_in_rect(self, anchor: Vec2, size: Vec2) -> Vec<Entity>
+	{
 		let area = AreaBuilder::default()
 			.anchor(convert_to_point(anchor))
 			.dimensions((size.x as usize, size.y as usize))
@@ -73,7 +78,8 @@ impl UnitSpacialSet {
 	}
 }
 
-fn convert_to_point(pos: Vec2) -> Point<usize> {
+fn convert_to_point(pos: Vec2) -> Point<usize>
+{
 	let p = pos.as_uvec2();
 	return Point {
 		x: p.x as usize,

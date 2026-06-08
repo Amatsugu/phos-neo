@@ -41,10 +41,9 @@ impl Chunk
 	{
 		let mut data = [0.; Chunk::SIZE];
 
-		for x in 0..Chunk::SIZE
-		{
+		for (x, height) in data.iter_mut().enumerate().take(Chunk::SIZE) {
 			let idx = x + (Chunk::SIZE - 1) * Chunk::SIZE;
-			data[x] = self.heights[idx];
+			*height = self.heights[idx];
 		}
 
 		return data;
@@ -53,12 +52,9 @@ impl Chunk
 	pub fn get_neg_z_edge(&self) -> [f32; Chunk::SIZE]
 	{
 		let mut data = [0.; Chunk::SIZE];
-
-		for x in 0..Chunk::SIZE
-		{
-			data[x] = self.heights[x];
+		for (x, height) in data.iter_mut().enumerate().take(Chunk::SIZE) {
+			*height = self.heights[x];
 		}
-
 		return data;
 	}
 
@@ -66,10 +62,9 @@ impl Chunk
 	{
 		let mut data = [0.; Chunk::SIZE];
 
-		for z in 0..Chunk::SIZE
-		{
-			let idx = (Chunk::SIZE - 1) + z * Chunk::SIZE;
-			data[z] = self.heights[idx];
+		for (i, height) in data.iter_mut().enumerate().take(Chunk::SIZE) {
+			let idx = (Chunk::SIZE - 1) + i * Chunk::SIZE;
+			*height = self.heights[idx];
 		}
 
 		return data;
@@ -78,11 +73,9 @@ impl Chunk
 	pub fn get_neg_x_edge(&self) -> [f32; Chunk::SIZE]
 	{
 		let mut data = [0.; Chunk::SIZE];
-
-		for z in 0..Chunk::SIZE
-		{
-			let idx = z * Chunk::SIZE;
-			data[z] = self.heights[idx];
+		for (i, height) in data.iter_mut().enumerate().take(Chunk::SIZE) {
+			let idx = i * Chunk::SIZE;
+			*height = self.heights[idx];
 		}
 
 		return data;

@@ -9,7 +9,7 @@ use hex::prelude::*;
 pub fn generate_chunk_mesh(chunk: &MeshChunkData) -> Mesh
 {
 	#[cfg(feature = "tracing")]
-	let span = info_span!("generate_chunk_mesh").entered();
+	let _span = info_span!("generate_chunk_mesh").entered();
 
 	let vertex_count: usize = Chunk::SIZE * Chunk::SIZE * 6;
 	let mut verts = Vec::with_capacity(vertex_count);
@@ -17,10 +17,8 @@ pub fn generate_chunk_mesh(chunk: &MeshChunkData) -> Mesh
 	let mut indices = Vec::with_capacity(vertex_count);
 	let mut normals = Vec::with_capacity(vertex_count);
 
-	for z in 0..Chunk::SIZE
-	{
-		for x in 0..Chunk::SIZE
-		{
+	for z in 0..Chunk::SIZE {
+		for x in 0..Chunk::SIZE {
 			let idx = x + z * Chunk::SIZE;
 			let height = chunk.heights[idx];
 			let off_pos = Vec3::new(x as f32, height, z as f32);
@@ -69,16 +67,14 @@ fn create_tile(
 	let side_tex_off = Vec2::new(side_texture_index as f32, 0.);
 
 	let idx = verts.len() as u32;
-	for i in 0..6
-	{
-		let p = pos + HEX_CORNERS[i];
+	for corner in HEX_CORNERS {
+		let p = pos + corner;
 		verts.push(p);
-		let uv = (HEX_CORNERS[i].xz() / 2.) + uv_offset;
+		let uv = (corner.xz() / 2.) + uv_offset;
 		uvs.push((uv / TEX_MULTI) + tex_off);
 		normals.push(Vec3::Y);
 	}
-	for i in 0..3
-	{
+	for i in 0..3 {
 		let off = i * 2;
 		indices.push(off + idx);
 		indices.push(((off + 1) % 6) + idx);
@@ -88,12 +84,9 @@ fn create_tile(
 	indices.push(idx + 2);
 	indices.push(idx + 4);
 
-	for i in 0..neighbors.len()
-	{
-		let n_height = neighbors[i];
-		if n_height < pos.y
-		{
-			create_tile_wall(pos, i, n_height, verts, uvs, indices, normals, side_tex_off);
+	for (i, n_height) in neighbors.iter().enumerate() {
+		if *n_height < pos.y {
+			create_tile_wall(pos, i, *n_height, verts, uvs, indices, normals, side_tex_off);
 		}
 	}
 }
@@ -109,14 +102,11 @@ pub fn generate_chunk_water_mesh(chunk: &MeshChunkData, sealevel: f32, map_width
 	let mut indices = Vec::with_capacity(vertex_count);
 	let mut normals = Vec::with_capacity(vertex_count);
 
-	for z in 0..Chunk::SIZE
-	{
-		for x in 0..Chunk::SIZE
-		{
+	for z in 0..Chunk::SIZE {
+		for x in 0..Chunk::SIZE {
 			let idx = x + z * Chunk::SIZE;
 			let height = chunk.heights[idx];
-			if height > sealevel
-			{
+			if height > sealevel {
 				continue;
 			}
 			let off_pos = Vec3::new(x as f32, sealevel, z as f32);
@@ -158,8 +148,7 @@ fn create_tile_water_surface(
 	normals: &mut Vec<Vec3>,
 )
 {
-	if !neighbor_has_land
-	{
+	if !neighbor_has_land {
 		crate_tile_water_inner_surface(pos, dist_to_land, neighbors, verts, uvs, indices, normals);
 		return;
 	}
@@ -178,25 +167,20 @@ fn crate_tile_water_inner_surface(
 {
 	//todo: share verts
 	let idx = verts.len() as u32;
-	for i in 0..6
-	{
-		let p = pos + HEX_CORNERS[i];
+	for (i, corner) in HEX_CORNERS.iter().enumerate() {
+		let p = pos + corner;
 		verts.push(p);
 		let n1 = if let Some(v) = neighbors[i].1 { v } else { dist_to_land };
-		let n2 = if let Some(v) = neighbors[(i + 5) % 6].1
-		{
+		let n2 = if let Some(v) = neighbors[(i + 5) % 6].1 {
 			v
-		}
-		else
-		{
+		} else {
 			dist_to_land
 		};
 		let d = (n1 + n2 + dist_to_land) / 3.0;
 		uvs.push(Vec2::new(0.0, d.remap(0., 4., 1.0, 0.0)));
 		normals.push(Vec3::Y);
 	}
-	for i in 0..3
-	{
+	for i in 0..3 {
 		let off = i * 2;
 		indices.push(off + idx);
 		indices.push(((off + 1) % 6) + idx);
@@ -222,30 +206,24 @@ fn crate_tile_water_shore_surface(
 	verts.push(pos);
 	uvs.push(Vec2::new(0.0, dist_to_land.remap(0., 4., 1.0, 0.0)));
 	normals.push(Vec3::Y);
-	for i in 0..12
-	{
-		let p = pos + WATER_HEX_CORNERS[i];
+	for (i, corner) in WATER_HEX_CORNERS.iter().enumerate() {
+		let p = pos + corner;
 		verts.push(p);
 		let ni = i / 2;
 		let n = neighbors[ni];
 		let nn = neighbors[(ni + 5) % 6];
 		let mut uv = Vec2::new(0.0, dist_to_land.remap(0., 4., 1.0, 0.0));
 
-		if nn.0 > pos.y || n.0 > pos.y
-		{
+		if nn.0 > pos.y || n.0 > pos.y {
 			uv.x = 1.0;
 		}
-		if ni * 2 != i
-		{
-			if n.0 <= pos.y
-			{
+		if ni * 2 != i {
+			if n.0 <= pos.y {
 				uv.x = 0.0;
 			}
 			let d = if let Some(v) = n.1 { v } else { dist_to_land };
 			uv.y = ((d + dist_to_land) / 2.0).remap(0., 4., 1.0, 0.0);
-		}
-		else
-		{
+		} else {
 			let d = if let Some(v) = n.1 { v } else { dist_to_land };
 			let d2 = if let Some(v) = nn.1 { v } else { dist_to_land };
 			uv.y = ((d + d2 + dist_to_land) / 3.0).remap(0., 4., 1.0, 0.0);

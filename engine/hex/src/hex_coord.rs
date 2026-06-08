@@ -132,13 +132,11 @@ impl HexCoord
 	pub fn is_in_bounds(&self, map_height: usize, map_width: usize) -> bool
 	{
 		let off = self.to_offset();
-		if off.x < 0 || off.y < 0
-		{
+		if off.x < 0 || off.y < 0 {
 			return false;
 		}
 
-		if off.x >= map_width as i32 || off.y >= map_height as i32
-		{
+		if off.x >= map_width as i32 || off.y >= map_height as i32 {
 			return false;
 		}
 
@@ -214,26 +212,20 @@ impl HexCoord
 
 	pub fn rotate_around(&self, center: &HexCoord, angle: i32) -> HexCoord
 	{
-		if self == center || angle == 0
-		{
-			return self.clone();
+		if self == center || angle == 0 {
+			return *self;
 		}
 
 		let mut a = angle % 6;
 		let mut pc = self.hex - center.hex;
 
-		if a > 0
-		{
-			for _ in 0..a
-			{
+		if a > 0 {
+			for _ in 0..a {
 				pc = Self::slide_right(pc);
 			}
-		}
-		else
-		{
+		} else {
 			a = a.abs();
-			for _ in 0..a
-			{
+			for _ in 0..a {
 				pc = Self::slide_left(pc);
 			}
 		}
@@ -279,18 +271,14 @@ impl HexCoord
 		assert!(radius != 0, "Radius cannot be zero");
 		let mut result = Vec::with_capacity(get_tile_count_in_range(radius));
 
-		if include_center
-		{
+		if include_center {
 			result.push(*self);
 		}
 
-		for k in 0..(radius + 1)
-		{
+		for k in 0..(radius + 1) {
 			let mut p = self.scale(4, k);
-			for i in 0..6
-			{
-				for _j in 0..k
-				{
+			for i in 0..6 {
+				for _j in 0..k {
 					p = p.get_neighbor(i);
 					result.push(p);
 				}
@@ -306,24 +294,16 @@ impl HexCoord
 		assert!(radius != 0, "Radius cannot be zero");
 		let mut result = Vec::with_capacity(get_tile_count_in_range(radius));
 
-		if include_center
-		{
-			if self.is_in_bounds(height, width)
-			{
-				result.push(*self);
-			}
+		if include_center && self.is_in_bounds(height, width) {
+			result.push(*self);
 		}
 
-		for k in 0..(radius + 1)
-		{
+		for k in 0..(radius + 1) {
 			let mut p = self.scale(4, k);
-			for i in 0..6
-			{
-				for _j in 0..k
-				{
+			for i in 0..6 {
+				for _j in 0..k {
 					p = p.get_neighbor(i);
-					if p.is_in_bounds(height, width)
-					{
+					if p.is_in_bounds(height, width) {
 						result.push(p);
 					}
 				}
@@ -345,10 +325,8 @@ impl HexCoord
 		// 	return result;
 		// }
 
-		for i in 0..6
-		{
-			for _j in 0..radius
-			{
+		for i in 0..6 {
+			for _j in 0..radius {
 				result.push(p);
 				p = p.get_neighbor(i);
 			}

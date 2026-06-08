@@ -8,7 +8,7 @@ use noise::{NoiseFn, Simplex, SuperSimplex};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 use crate::biome_painter::BiomePainter;
-use crate::map::biome_map::{BiomeChunk, BiomeData, BiomeMap};
+use crate::mapping::biome_map::{BiomeChunk, BiomeData, BiomeMap};
 use crate::prelude::*;
 
 pub fn generate_heightmap(cfg: &GenerationConfig, seed: u32, painter: &BiomePainter) -> (Map, BiomeMap)
@@ -21,20 +21,17 @@ pub fn generate_heightmap(cfg: &GenerationConfig, seed: u32, painter: &BiomePain
 		.flat_map(|z| {
 			(0..cfg.size.x).into_par_iter().map(move |x| {
 				let biome_chunk = &biomes_borrow.chunks[x as usize + z as usize * cfg.size.x as usize];
-				return generate_chunk(x, z, cfg, seed, &biome_chunk, painter);
+				return generate_chunk(x, z, cfg, seed, biome_chunk, painter);
 			})
 		})
 		.collect();
 	let mut min = f32::MAX;
 	let mut max = f32::MIN;
-	for chunk in &chunks
-	{
-		if chunk.min_level < min
-		{
+	for chunk in &chunks {
+		if chunk.min_level < min {
 			min = chunk.min_level;
 		}
-		if chunk.max_level > max
-		{
+		if chunk.max_level > max {
 			max = chunk.max_level;
 		}
 	}
@@ -85,10 +82,8 @@ pub fn generate_biome_chunk(
 	let noise_t = Simplex::new(seed + 2);
 	let noise_c = Simplex::new(seed + 3);
 
-	for z in 0..Chunk::SIZE
-	{
-		for x in 0..Chunk::SIZE
-		{
+	for z in 0..Chunk::SIZE {
+		for x in 0..Chunk::SIZE {
 			let moisture = sample_point(
 				x as f64 + chunk_x as f64 * Chunk::SIZE as f64,
 				z as f64 + chunk_y as f64 * Chunk::SIZE as f64,
@@ -140,8 +135,7 @@ pub fn generate_noise_map(size: UVec2, seed: u32, cfg: &NoiseConfig, border_size
 		.into_par_iter()
 		.flat_map(|y| {
 			let mut row = Vec::with_capacity(size.x as usize * Chunk::SIZE);
-			for x in 0..row.capacity()
-			{
+			for x in 0..row.capacity() {
 				row.push(sample_point(
 					x as f64,
 					y as f64,
@@ -173,18 +167,13 @@ pub fn generate_chunk(
 	let noise = Simplex::new(seed);
 	let mut min = f32::MAX;
 	let mut max = f32::MIN;
-	for z in 0..Chunk::SIZE
-	{
-		for x in 0..Chunk::SIZE
-		{
+	for z in 0..Chunk::SIZE {
+		for x in 0..Chunk::SIZE {
 			let biome_data = biome_chunk.get_biome_data(x, z);
 			let biome_blend = biome_chunk.get_biome(x, z);
 			let mut sample = 0.;
-			for i in 0..biome_blend.len()
-			{
-				let blend = biome_blend[i];
-				if blend == 0.
-				{
+			for (i, blend) in biome_blend.iter().enumerate() {
+				if *blend == 0. {
 					continue;
 				}
 				let biome = &biome_painter.biomes[i];
@@ -201,15 +190,13 @@ pub fn generate_chunk(
 			let idx = x + z * Chunk::SIZE;
 			biome_ids[idx] = biome_chunk.get_biome_id_dithered(x, z, &noise, cfg.biome_dither);
 			result[idx] = sample;
-			if sample > max
-			{
+			if sample > max {
 				max = sample;
 			}
-			if sample < min
-			{
+			if sample < min {
 				min = sample;
 			}
-			data[idx] = biome_data.clone();
+			data[idx] = *biome_data;
 		}
 	}
 	return Chunk {
@@ -236,23 +223,17 @@ fn sample_point(
 	let z_s = z / cfg.scale;
 
 	let mut elevation: f64 = 0.;
-	for i in 0..cfg.layers.len()
-	{
-		let value: f64;
+	for i in 0..cfg.layers.len() {
 		let layer = &cfg.layers[i];
-		if layer.is_rigid
-		{
-			value = sample_rigid(x_s, z_s, layer, noise);
-		}
-		else
-		{
-			value = sample_simple(x_s, z_s, layer, noise);
-		}
+		let value: f64 = if layer.is_rigid {
+			sample_rigid(x_s, z_s, layer, noise)
+		} else {
+			sample_simple(x_s, z_s, layer, noise)
+		};
 		elevation += value;
 	}
 
-	if border_size == 0.0
-	{
+	if border_size == 0.0 {
 		return elevation as f32;
 	}
 
@@ -273,8 +254,7 @@ fn sample_simple(x: f64, z: f64, cfg: &GeneratorLayer, noise: &impl NoiseFn<f64,
 	let mut amp: f64 = 1.;
 	let mut value = 0.;
 
-	for _ in 0..cfg.layers
-	{
+	for _ in 0..cfg.layers {
 		let v = noise.get([x * freq, z * freq]);
 		value += (v + 1.) * 0.5 * amp;
 		freq *= cfg.roughness;
@@ -289,8 +269,7 @@ fn sample_rigid(x: f64, z: f64, cfg: &GeneratorLayer, noise: &impl NoiseFn<f64, 
 	let mut amp: f64 = 1.;
 	let mut value = 0.;
 	let mut weight = 1.;
-	for _ in 0..cfg.layers
-	{
+	for _ in 0..cfg.layers {
 		let mut v = 1. - noise.get([x * freq, z * freq]).abs();
 		v *= v;
 		v *= weight;

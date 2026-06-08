@@ -60,10 +60,10 @@ impl CoordsCollection
 	}
 }
 
-impl Into<Vec<HexCoord>> for CoordsCollection
+impl From<CoordsCollection> for Vec<HexCoord>
 {
-	fn into(self) -> Vec<HexCoord>
+	fn from(value: CoordsCollection) -> Self
 	{
-		self.get_coords()
+		value.get_coords()
 	}
 }

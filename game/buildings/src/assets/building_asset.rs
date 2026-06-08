@@ -60,7 +60,7 @@ impl BuildingAsset
 						let mat = primitive
 							.material
 							.clone()
-							.expect(format!("Mesh '{}' does not have a meterial", primitive.name.as_str()).as_str());
+							.unwrap_or_else(|| panic!("Mesh '{}' does not have a material", primitive.name.as_str()));
 						let mut entity = commands.spawn((
 							Mesh3d(mesh),
 							MeshMaterial3d(mat),
@@ -76,9 +76,8 @@ impl BuildingAsset
 								self.process_node(child_node.unwrap(), meshes, nodes, b, &node.name);
 							}
 						});
-						if let Some(component) = self.get_component_def(&format!("/{0}", &node.name)) {
-							component.apply(&mut entity);
-						}
+						let component = self.get_component_def(&format!("/{0}", node.name))?;
+						component.apply(&mut entity);
 						return Some(entity.id());
 					}
 				}
@@ -104,7 +103,7 @@ impl BuildingAsset
 					let mat = primitive
 						.material
 						.clone()
-						.expect(format!("Mesh '{}' does not have a meterial", primitive.name.as_str()).as_str());
+						.unwrap_or_else(|| panic!("Mesh '{}' does not have a meterial", primitive.name.as_str()));
 					let mut entity = commands.spawn((Mesh3d(mesh), MeshMaterial3d(mat), node.transform, Building));
 					entity.with_children(|b| {
 						for child in &node.children {

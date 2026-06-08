@@ -1,17 +1,20 @@
 use bevy::prelude::*;
 use bevy::render::render_resource::encase::rts_array::Length;
 
-use crate::{biome_asset::BiomeAsset, map::biome_map::BiomeData};
+use crate::{biome_asset::BiomeAsset, mapping::biome_map::BiomeData};
 use bevy_asset_loader::prelude::*;
 
 #[derive(AssetCollection, Debug, Clone, Resource)]
-pub struct BiomePainterAsset {
+pub struct BiomePainterAsset
+{
 	#[asset(key = "biomes", collection(typed))]
 	pub biomes: Vec<Handle<BiomeAsset>>,
 }
 
-impl BiomePainterAsset {
-	pub fn sample_biome(&self, assets: &Assets<BiomeAsset>, data: &BiomeData) -> AssetId<BiomeAsset> {
+impl BiomePainterAsset
+{
+	pub fn sample_biome(&self, assets: &Assets<BiomeAsset>, data: &BiomeData) -> AssetId<BiomeAsset>
+	{
 		assert!(self.biomes.length() != 0, "There are no biomes");
 		let mut biome = self.biomes.first().unwrap().id();
 		let mut dist = f32::INFINITY;
@@ -28,7 +31,8 @@ impl BiomePainterAsset {
 		return biome;
 	}
 
-	pub fn build(&self, assets: &Assets<BiomeAsset>) -> BiomePainter {
+	pub fn build(&self, assets: &Assets<BiomeAsset>) -> BiomePainter
+	{
 		let mut biomes = Vec::with_capacity(self.biomes.len());
 		for b in &self.biomes {
 			let asset = assets.get(b.id()).unwrap();
@@ -39,12 +43,15 @@ impl BiomePainterAsset {
 }
 
 #[derive(Resource, Clone)]
-pub struct BiomePainter {
+pub struct BiomePainter
+{
 	pub biomes: Vec<BiomeAsset>,
 }
 
-impl BiomePainter {
-	pub fn sample_biome(&self, data: &BiomeData) -> &BiomeAsset {
+impl BiomePainter
+{
+	pub fn sample_biome(&self, data: &BiomeData) -> &BiomeAsset
+	{
 		assert!(self.biomes.length() != 0, "There are no biomes");
 		let mut biome = &self.biomes[0];
 		let mut dist = f32::INFINITY;
@@ -60,7 +67,8 @@ impl BiomePainter {
 		return biome;
 	}
 
-	pub fn sample_biome_index(&self, data: &BiomeData) -> usize {
+	pub fn sample_biome_index(&self, data: &BiomeData) -> usize
+	{
 		assert!(self.biomes.length() != 0, "There are no biomes");
 		let mut biome = 0;
 		let mut dist = f32::INFINITY;
