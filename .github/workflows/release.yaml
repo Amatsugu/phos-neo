@@ -33,7 +33,7 @@ concurrency:
 
 env:
     cargo_build_binary_name: phos
-    assets_path: assets
+    assets_path: game/main/assets
     libs_path: lib
     app_package_name: phos
     git_lfs: true
