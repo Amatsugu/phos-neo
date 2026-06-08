@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use shared::{resources::TileUnderCursor, sets::GameplaySet, states::AssetLoadState};
+use shared::{resources::TileUnderCursor, sets::GameplaySystems, states::AssetLoadState};
 
 use crate::components::{LandUnit, Path, Target, Unit};
 
@@ -11,8 +11,8 @@ impl Plugin for UnitsDebugPlugin
 	{
 		app.add_systems(Update, init.run_if(in_state(AssetLoadState::Loading)));
 
-		app.add_systems(Update, (spawn_test_unit, set_unit_target).in_set(GameplaySet));
-		app.add_systems(FixedUpdate, (visualize_paths).in_set(GameplaySet));
+		app.add_systems(Update, (spawn_test_unit, set_unit_target).in_set(GameplaySystems));
+		app.add_systems(FixedUpdate, (visualize_paths).in_set(GameplaySystems));
 	}
 }
 

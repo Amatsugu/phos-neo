@@ -7,7 +7,7 @@ use bevy::{
 };
 use hex::prelude::*;
 use pathfinding::prelude::astar;
-use shared::{events::TileModifiedEvent, resources::TileUnderCursor, sets::GameplaySet};
+use shared::{events::TileModifiedEvent, resources::TileUnderCursor, sets::GameplaySystems};
 use world_generation::{prelude::Map, states::GeneratorState};
 
 #[cfg(debug_assertions)]
@@ -34,11 +34,11 @@ impl Plugin for UnitsPlugin
 		// app.configure_loading_state(LoadingStateConfig::new(AssetLoadState::Loading).load_collection::<UnitDatabase>());
 		app.add_systems(PostUpdate, build_navdata.run_if(in_state(GeneratorState::SpawnMap)));
 
-		app.add_systems(Update, units_control.in_set(GameplaySet));
-		app.add_systems(Update, (move_unit, update_navdata).in_set(GameplaySet));
+		app.add_systems(Update, units_control.in_set(GameplaySystems));
+		app.add_systems(Update, (move_unit, update_navdata).in_set(GameplaySystems));
 		app.add_systems(
 			FixedPreUpdate,
-			(dispatch_path_requests, resolve_path_task).in_set(GameplaySet),
+			(dispatch_path_requests, resolve_path_task).in_set(GameplaySystems),
 		);
 	}
 }

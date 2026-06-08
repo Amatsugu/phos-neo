@@ -13,7 +13,7 @@ concurrency:
 env:
     RUSTFLAGS: -Dwarnings -Zshare-generics=y -Zthreads=0
     RUSTDOCFLAGS: -Dwarnings -Zshare-generics=y -Zthreads=0
-    toolchain: nightly-2026-01-22
+    toolchain: nightly-2026-06-08
 
 jobs:
     clippy-lints:
@@ -99,7 +99,7 @@ jobs:
               uses: dtolnay/rust-toolchain@nightly
               with:
                   toolchain: ${{ env.toolchain }}
-                  components: rustc-codegen-cranelift-nightly
+                  components: rustc-codegen-cranelift-preview
 
             - name: Restore Rust cache
               uses: Swatinem/rust-cache@v2
