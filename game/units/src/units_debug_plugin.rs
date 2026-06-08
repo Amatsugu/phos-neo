@@ -5,8 +5,10 @@ use crate::components::{LandUnit, Path, Target, Unit};
 
 pub struct UnitsDebugPlugin;
 
-impl Plugin for UnitsDebugPlugin {
-	fn build(&self, app: &mut App) {
+impl Plugin for UnitsDebugPlugin
+{
+	fn build(&self, app: &mut App)
+	{
 		app.add_systems(Update, init.run_if(in_state(AssetLoadState::Loading)));
 
 		app.add_systems(Update, (spawn_test_unit, set_unit_target).in_set(GameplaySet));
@@ -17,7 +19,8 @@ impl Plugin for UnitsDebugPlugin {
 #[derive(Resource)]
 struct TestUnit(pub Handle<Mesh>);
 
-fn init(mut meshes: ResMut<Assets<Mesh>>, mut commands: Commands) {
+fn init(mut meshes: ResMut<Assets<Mesh>>, mut commands: Commands)
+{
 	let mesh_handle = meshes.add(Cuboid::from_length(1.0));
 	commands.insert_resource(TestUnit(mesh_handle));
 }
@@ -27,7 +30,8 @@ fn spawn_test_unit(
 	input: Res<ButtonInput<KeyCode>>,
 	tile_under_cursor: Res<TileUnderCursor>,
 	unit: Res<TestUnit>,
-) {
+)
+{
 	if !input.just_pressed(KeyCode::KeyT) {
 		return;
 	}
@@ -46,7 +50,8 @@ fn set_unit_target(
 	units: Query<Entity, With<Unit>>,
 	input: Res<ButtonInput<MouseButton>>,
 	tile_under_cursor: Res<TileUnderCursor>,
-) {
+)
+{
 	if !input.just_pressed(MouseButton::Right) {
 		return;
 	}
@@ -59,7 +64,8 @@ fn set_unit_target(
 	}
 }
 
-fn visualize_paths(units: Query<&Path, With<Unit>>, mut gizmos: Gizmos) {
+fn visualize_paths(units: Query<&Path, With<Unit>>, mut gizmos: Gizmos)
+{
 	for path in units.iter() {
 		if path.1 > path.0.len() {
 			continue;

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use shared::states::GameplayState;
-use shared::{resources::TileUnderCursor, sets::GameplaySet};
+use shared::{resources::TileUnderCursor, sets::GameplaySystems};
 use world_generation::{
 	consts::{HEX_CORNERS, WATER_HEX_CORNERS},
 	prelude::Map,
@@ -31,7 +31,7 @@ impl Plugin for DebugPlugin
 				.run_if(in_state(DebugState::Verbose)),
 		);
 
-		app.add_systems(Update, camera_debug.in_set(GameplaySet));
+		app.add_systems(Update, camera_debug.in_set(GameplaySystems));
 		app.add_systems(Update, regenerate_map.run_if(in_state(GeneratorState::Idle)));
 
 		app.insert_resource(Shape(Polyline3d::new([
@@ -63,8 +63,7 @@ fn regenerate_map(
 	input: Res<ButtonInput<KeyCode>>,
 )
 {
-	if input.just_pressed(KeyCode::KeyR)
-	{
+	if input.just_pressed(KeyCode::KeyR) {
 		generator_state.set(GeneratorState::Regenerate);
 		gameplay_state.set(GameplayState::PlaceHQ);
 	}
@@ -72,8 +71,7 @@ fn regenerate_map(
 
 fn show_tile_heights(map: Res<Map>, mut gizmos: Gizmos, shape: Res<Shape>, tile_under_cursor: Res<TileUnderCursor>)
 {
-	if let Some(contact) = tile_under_cursor.0
-	{
+	if let Some(contact) = tile_under_cursor.0 {
 		let height = map.sample_height(&contact.tile);
 		gizmos.primitive_3d(&shape.0, contact.tile.to_world(height + 0.01), Color::WHITE);
 
@@ -88,8 +86,7 @@ fn show_tile_heights(map: Res<Map>, mut gizmos: Gizmos, shape: Res<Shape>, tile_
 #[allow(dead_code)]
 fn show_water_corners(pos: Vec3, gizmos: &mut Gizmos)
 {
-	for i in 0..WATER_HEX_CORNERS.len()
-	{
+	for i in 0..WATER_HEX_CORNERS.len() {
 		let p = pos + WATER_HEX_CORNERS[i];
 		let p2 = pos + WATER_HEX_CORNERS[(i + 1) % WATER_HEX_CORNERS.len()];
 

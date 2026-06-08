@@ -1,7 +1,7 @@
 use crate::states::MenuState;
 use bevy::prelude::*;
 
-pub struct DespawnPuglin;
+pub struct DespawnPlugin;
 
 #[derive(Component)]
 pub struct DespawnAt(f32);
@@ -12,8 +12,10 @@ pub struct DespawnAfter(Timer);
 #[derive(Component)]
 pub struct Despawn;
 
-impl Plugin for DespawnPuglin {
-	fn build(&self, app: &mut App) {
+impl Plugin for DespawnPlugin
+{
+	fn build(&self, app: &mut App)
+	{
 		app.add_systems(PostUpdate, despawn_at);
 		app.add_systems(
 			PreUpdate,
@@ -22,7 +24,8 @@ impl Plugin for DespawnPuglin {
 	}
 }
 
-fn despawn_at(mut commands: Commands, time: Res<Time>, entities: Query<(Entity, &DespawnAt), Without<DespawnAfter>>) {
+fn despawn_at(mut commands: Commands, time: Res<Time>, entities: Query<(Entity, &DespawnAt), Without<DespawnAfter>>)
+{
 	for (entity, at) in entities.iter() {
 		let d = at.0 - time.elapsed_secs();
 		commands
@@ -31,7 +34,8 @@ fn despawn_at(mut commands: Commands, time: Res<Time>, entities: Query<(Entity, 
 	}
 }
 
-fn despawn_after(mut commands: Commands, mut entities: Query<(&mut DespawnAfter, Entity)>, time: Res<Time>) {
+fn despawn_after(mut commands: Commands, mut entities: Query<(&mut DespawnAfter, Entity)>, time: Res<Time>)
+{
 	for (mut after, entity) in &mut entities.iter_mut() {
 		after.0.tick(time.delta());
 		if after.0.is_finished() {
@@ -40,7 +44,8 @@ fn despawn_after(mut commands: Commands, mut entities: Query<(&mut DespawnAfter,
 	}
 }
 
-fn despawn(mut commands: Commands, entities: Query<Entity, With<Despawn>>) {
+fn despawn(mut commands: Commands, entities: Query<Entity, With<Despawn>>)
+{
 	for entity in entities.iter() {
 		commands.entity(entity).despawn();
 	}

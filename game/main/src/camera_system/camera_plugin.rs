@@ -5,7 +5,7 @@ use bevy::input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
 use bevy::window::{CursorGrabMode, CursorOptions, PrimaryWindow};
 use hex::prelude::*;
-use shared::sets::GameplaySet;
+use shared::sets::GameplaySystems;
 use shared::tags::MainCamera;
 use world_generation::prelude::Map;
 use world_generation::states::GeneratorState;
@@ -23,7 +23,7 @@ impl Plugin for PhosCameraPlugin
 
 		app.add_systems(PreStartup, setup);
 
-		app.add_systems(Update, orbit_camera_upate.in_set(GameplaySet));
+		app.add_systems(Update, orbit_camera_upate.in_set(GameplaySystems));
 
 		app.add_systems(Update, init_bounds.run_if(in_state(GeneratorState::SpawnMap)));
 	}

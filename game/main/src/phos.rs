@@ -13,9 +13,9 @@ use bevy_asset_loader::prelude::*;
 use bevy_rapier3d::dynamics::{Ccd, RigidBody, Velocity};
 use bevy_rapier3d::geometry::Collider;
 use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
-use shared::sets::GameplaySet;
+use shared::sets::GameplaySystems;
 use shared::states::{GameplayState, MenuState};
-use shared::{despawn::DespawnPuglin, states::AssetLoadState};
+use shared::{despawn::DespawnPlugin, states::AssetLoadState};
 use world_generation::states::GeneratorState;
 
 pub struct PhosGamePlugin;
@@ -40,7 +40,7 @@ impl Plugin for PhosGamePlugin
 			BuildUIPlugin,
 			// SimpleAnimationPlugin,
 			// UnitsPlugin,
-			DespawnPuglin,
+			DespawnPlugin,
 			TileSelectionPlugin,
 			#[cfg(feature = "editor")]
 			crate::utils::editor_plugin::EditorPlugin,
@@ -77,28 +77,28 @@ fn configure_gameplay_set(app: &mut App)
 {
 	app.configure_sets(
 		Update,
-		GameplaySet.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
+		GameplaySystems.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
 	);
 	app.configure_sets(
 		PreUpdate,
-		GameplaySet.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
+		GameplaySystems.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
 	);
 	app.configure_sets(
 		PostUpdate,
-		GameplaySet.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
+		GameplaySystems.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
 	);
 
 	app.configure_sets(
 		FixedUpdate,
-		GameplaySet.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
+		GameplaySystems.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
 	);
 	app.configure_sets(
 		FixedPreUpdate,
-		GameplaySet.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
+		GameplaySystems.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
 	);
 	app.configure_sets(
 		FixedPostUpdate,
-		GameplaySet.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
+		GameplaySystems.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
 	);
 }
 

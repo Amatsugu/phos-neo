@@ -99,7 +99,7 @@ jobs:
               uses: dtolnay/rust-toolchain@nightly
               with:
                   toolchain: ${{ env.toolchain }}
-                  components: rustc-codegen-cranelift-preview
+                  components: rustc-codegen-cranelift-nightly
 
             - name: Restore Rust cache
               uses: Swatinem/rust-cache@v2

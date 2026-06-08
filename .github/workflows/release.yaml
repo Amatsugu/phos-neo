@@ -32,10 +32,10 @@ concurrency:
     cancel-in-progress: true
 
 env:
-    cargo_build_binary_name: target-locked
+    cargo_build_binary_name: phos
     assets_path: assets
     libs_path: lib
-    app_package_name: target-locked
+    app_package_name: phos
     git_lfs: true
     continuous_deployment_to_itch: true
 
