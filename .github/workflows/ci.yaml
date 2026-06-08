@@ -25,7 +25,7 @@ jobs:
               uses: actions/checkout@v4
 
             - name: Install Rust toolchain
-              uses: dtolnay/rust-toolchain@master
+              uses: dtolnay/rust-toolchain@nightly
               with:
                   toolchain: ${{ env.toolchain }}
                   components: clippy
@@ -96,7 +96,7 @@ jobs:
               run: echo "RUSTFLAGS=${RUSTFLAGS:+$RUSTFLAGS }-Zcodegen-backend=cranelift" >> "${GITHUB_ENV}"
 
             - name: Install Rust toolchain
-              uses: dtolnay/rust-toolchain@master
+              uses: dtolnay/rust-toolchain@nightly
               with:
                   toolchain: ${{ env.toolchain }}
                   components: rustc-codegen-cranelift-preview
