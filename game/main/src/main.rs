@@ -29,7 +29,7 @@ fn main()
 						resolution: WindowResolution::new(1920, 1080),
 						present_mode: PresentMode::AutoNoVsync,
 						#[cfg(not(debug_assertions))]
-						mode: bevy::window::WindowMode::BorderlessFullscreen,
+						mode: bevy::window::WindowMode::BorderlessFullscreen(MonitorSelection::Current),
 						..default()
 					}),
 					..default()

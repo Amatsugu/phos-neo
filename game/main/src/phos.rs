@@ -1,9 +1,11 @@
+use crate::camera_system::camera_plugin::PhosCameraPlugin;
 use crate::camera_system::components::PhosCamera;
 use crate::map_rendering::map_init::MapInitPlugin;
 use crate::map_rendering::render_distance_system::RenderDistancePlugin;
 use crate::ui::build_ui::BuildUIPlugin;
+#[cfg(debug_assertions)]
+use crate::utils::debug_plugin::DebugPlugin;
 use crate::utils::tile_selection_plugin::TileSelectionPlugin;
-use crate::{camera_system::camera_plugin::PhosCameraPlugin, utils::debug_plugin::DebugPlugin};
 use bevy::diagnostic::{EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin};
 use bevy::light::CascadeShadowConfig;
 use bevy::{pbr::wireframe::WireframeConfig, prelude::*};
