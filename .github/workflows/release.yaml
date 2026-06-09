@@ -34,10 +34,10 @@ concurrency:
 env:
     cargo_build_binary_name: phos
     assets_path: game/main/assets
-    libs_path: lib
+    libs_path: game/main/lib
     app_package_name: phos
     git_lfs: true
-    continuous_deployment_to_itch: true
+    continuous_deployment_to_itch: false
 
 jobs:
     get-version:
@@ -221,11 +221,11 @@ jobs:
 
             - name: Add assets to app
               if: ${{ env.is_platform_enabled == 'true' }}
-              run: cp -R ./'${{ env.assets_path }}' '${{ env.app }}' || true
+              run: cp -R '${{ env.assets_path }}' '${{ env.app }}' || true
 
             - name: Add platform libraries
               if: ${{ env.is_platform_enabled == 'true' }}
-              run: cp -R ./'${{ env.libs_path }}'/'${{ matrix.platform }}'/* '${{ env.app }}' || true
+              run: cp -R '${{ env.libs_path }}'/'${{ matrix.platform }}'/* '${{ env.app }}' || true
 
             - name: Package app
               if: ${{ env.is_platform_enabled == 'true' }}
