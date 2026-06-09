@@ -8,7 +8,7 @@ use shared::states::AssetLoadState;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::ui::{components::*, states::BuildUIState};
+use crate::ui::{components::*, events::Press, states::BuildUIState};
 pub struct BuildUIPlugin;
 
 #[derive(Component, Default)]
@@ -27,7 +27,10 @@ struct BuildUIInfo
 	menu: BuildUIMenu,
 }
 
-#[derive(Default, Reflect, Debug, EnumIter, Component, Clone, Copy)]
+#[derive(Debug, Reflect, Component)]
+struct ToolbarButton(pub BuildUIMenu);
+
+#[derive(Default, Reflect, Debug, EnumIter, Clone, Copy)]
 enum BuildUIMenu
 {
 	#[default]
@@ -45,6 +48,7 @@ impl Plugin for BuildUIPlugin
 		app.add_systems(Startup, setup_cameras);
 		app.init_resource::<BuildUIInfo>().init_resource::<InputFocus>();
 		app.insert_state(BuildUIState::Init);
+		app.add_observer(toolbar_click);
 		app.add_systems(
 			Update,
 			(
@@ -112,7 +116,7 @@ fn spawn_ui(mut commands: Commands, mut next_state: ResMut<NextState<BuildUIStat
 						BuildMenuRoot,
 						Node {
 							width: Val::Percent(100.),
-							height: Val::Px(70.),
+							height: Val::Px(72.),
 							column_gap: Val::Px(5.),
 							padding: UiRect::all(Val::Px(2.)),
 							flex_direction: FlexDirection::Row,
@@ -139,7 +143,7 @@ fn spawn_ui(mut commands: Commands, mut next_state: ResMut<NextState<BuildUIStat
 								toolbar.spawn((
 									Name::new(format!("{:?}", btn)),
 									Button,
-									btn,
+									ToolbarButton(btn),
 									Node {
 										height: Val::Percent(100.),
 										width: Val::Percent(100.),
@@ -170,6 +174,19 @@ fn spawn_ui(mut commands: Commands, mut next_state: ResMut<NextState<BuildUIStat
 		});
 
 	next_state.set(BuildUIState::DrawMenu);
+}
+
+fn toolbar_click(
+	click: On<Press>,
+	button: Query<&ToolbarButton>,
+	mut menu_info: ResMut<BuildUIInfo>,
+	mut next: ResMut<NextState<BuildUIState>>,
+)
+{
+	if let Ok(btn) = button.get(click.0) {
+		menu_info.menu = btn.0;
+		next.set(BuildUIState::DrawMenu);
+	}
 }
 
 fn draw_menu_ui(

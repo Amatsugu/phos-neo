@@ -20,7 +20,7 @@ rayon = "1.11.0"
 buildings = { path = "../buildings" }
 units = { path = "../units" }
 shared = { path = "../shared" }
-bevy_asset_loader = { version = "0.25.0", features = [
+bevy_asset_loader = { version = "0.26.0", features = [
 	"standard_dynamic_assets",
 	"3d",
 ] }

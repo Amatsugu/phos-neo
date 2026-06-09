@@ -43,19 +43,6 @@ impl Material for PackedChunkMaterial
 		"shaders/world/chunk_packed.wgsl".into()
 	}
 
-	fn prepass_vertex_shader() -> ShaderRef
-	{
-		"shaders/world/chunk_packed.wgsl".into()
-	}
-
-	// fn deferred_vertex_shader() -> ShaderRef {
-	// 	"shaders/world/chunk_packed.wgsl".into()
-	// }
-
-	// fn opaque_render_method(&self) -> bevy::pbr::OpaqueRendererMethod {
-	// 	return OpaqueRendererMethod::Auto;
-	// }
-
 	fn specialize(
 		_pipeline: &bevy::pbr::MaterialPipeline,
 		descriptor: &mut bevy::render::render_resource::RenderPipelineDescriptor,
