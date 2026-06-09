@@ -98,7 +98,7 @@ jobs:
             - name: Install Rust toolchain
               uses: dtolnay/rust-toolchain@nightly
               with:
-                  toolchain: ${{ env.toolchain }}
+                  toolchain: nightly
                   components: rustc-codegen-cranelift-preview
 
             - name: Restore Rust cache
@@ -107,6 +107,11 @@ jobs:
                   shared-key: test
                   cache-directories: ${{ env.LD_LIBRARY_PATH }}
                   save-if: ${{ github.ref == 'refs/heads/main' }}
+
+            # Append the backend flag ONLY right before running the tests
+            - name: Enable Cranelift Backend
+              run: |
+                  echo "RUSTFLAGS=${RUSTFLAGS} -Zcodegen-backend=cranelift" >> "${GITHUB_ENV}"
 
             - name: Install build dependencies
               run: sudo apt-get update; sudo apt-get install -y --no-install-recommends libasound2-dev libudev-dev libwayland-dev
