@@ -1,11 +1,14 @@
 use bevy::{
 	camera::{visibility::RenderLayers, CameraOutputMode},
+	input_focus::InputFocus,
 	prelude::*,
 	render::render_resource::BlendState,
 };
 use shared::states::AssetLoadState;
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
-use crate::ui::states::BuildUIState;
+use crate::ui::{components::*, states::BuildUIState};
 pub struct BuildUIPlugin;
 
 #[derive(Component, Default)]
@@ -24,12 +27,15 @@ struct BuildUIInfo
 	menu: BuildUIMenu,
 }
 
-#[derive(Default, Reflect, Debug)]
+#[derive(Default, Reflect, Debug, EnumIter, Component, Clone, Copy)]
 enum BuildUIMenu
 {
 	#[default]
 	Structure,
 	Defense,
+	Energy,
+	Production,
+	Tech,
 }
 
 impl Plugin for BuildUIPlugin
@@ -37,7 +43,7 @@ impl Plugin for BuildUIPlugin
 	fn build(&self, app: &mut App)
 	{
 		app.add_systems(Startup, setup_cameras);
-		app.init_resource::<BuildUIInfo>();
+		app.init_resource::<BuildUIInfo>().init_resource::<InputFocus>();
 		app.insert_state(BuildUIState::Init);
 		app.add_systems(
 			Update,
@@ -129,11 +135,11 @@ fn spawn_ui(mut commands: Commands, mut next_state: ResMut<NextState<BuildUIStat
 							BackgroundColor(LinearRgba::BLUE.into()),
 						))
 						.with_children(|toolbar| {
-							for i in 0..6
-							{
+							for btn in BuildUIMenu::iter() {
 								toolbar.spawn((
-									Name::new(format!("Button {}", i)),
+									Name::new(format!("{:?}", btn)),
 									Button,
+									btn,
 									Node {
 										height: Val::Percent(100.),
 										width: Val::Percent(100.),
@@ -141,14 +147,17 @@ fn spawn_ui(mut commands: Commands, mut next_state: ResMut<NextState<BuildUIStat
 										justify_content: JustifyContent::Center,
 										..default()
 									},
-									BackgroundColor(LinearRgba::WHITE.into()),
+									BaseColor(LinearRgba::WHITE.into()),
+									HoverColor(Color::linear_rgb(1.0, 1.0, 0.0)),
+									PressedColor(Color::linear_rgb(1.0, 0.5, 1.0)),
 									children![(
-										Text::new(format!("Button {}", i)),
+										Text::new(format!("{:?}", btn)),
 										TextFont {
 											font_size: 15.,
 											..default()
 										},
-										TextColor(LinearRgba::BLACK.into()),
+										BaseTextColor(LinearRgba::BLACK.into()),
+										HoverTextColor(Color::linear_rgb(0.0, 1.0, 0.0)),
 										TextShadow {
 											offset: Vec2::splat(2.),
 											..default()
@@ -171,15 +180,16 @@ fn draw_menu_ui(
 	mut next: ResMut<NextState<BuildUIState>>,
 )
 {
-	for entity in menu_items.iter()
-	{
+	for entity in menu_items.iter() {
 		commands.entity(entity).despawn();
 	}
 	info!("Draw Menu");
-	match menu_info.menu
-	{
+	match menu_info.menu {
 		BuildUIMenu::Structure => draw_structure_ui(commands, menu_root.into_inner()),
 		BuildUIMenu::Defense => (),
+		BuildUIMenu::Energy => (),
+		BuildUIMenu::Production => (),
+		BuildUIMenu::Tech => (),
 	}
 	next.set(BuildUIState::Update);
 }
@@ -187,13 +197,12 @@ fn draw_menu_ui(
 fn draw_structure_ui(mut commands: Commands, root: Entity)
 {
 	commands.entity(root).with_children(|root| {
-		for i in 0..10
-		{
+		for i in 0..10 {
 			root.spawn((
 				BuildUIMenuItem,
 				Node {
 					height: Val::Percent(100.),
-					width: Val::Px(100.),
+					width: Val::Px(70.),
 					display: Display::Grid,
 					grid_template_rows: vec![RepeatedGridTrack::px(1, 100.), RepeatedGridTrack::fr(1, 1.)],
 					..default()
@@ -201,11 +210,13 @@ fn draw_structure_ui(mut commands: Commands, root: Entity)
 				children![
 					(
 						Node {
-							height: Val::Px(100.),
-							width: Val::Px(100.),
+							height: Val::Px(70.),
+							width: Val::Px(70.),
 							..default()
 						},
-						BackgroundColor(LinearRgba::RED.into())
+						Button,
+						BaseColor(LinearRgba::RED.into()),
+						HoverColor(LinearRgba::BLUE.into())
 					),
 					(Text::new(format!("Icon {}", i))),
 				],
@@ -216,8 +227,7 @@ fn draw_structure_ui(mut commands: Commands, root: Entity)
 
 fn cleanup_ui(mut commands: Commands, ui_items: Query<Entity, With<BuildUIItem>>)
 {
-	for entity in ui_items.iter()
-	{
+	for entity in ui_items.iter() {
 		commands.entity(entity).despawn();
 	}
 }
