@@ -25,9 +25,9 @@ use crate::{
 	prelude::Building,
 };
 
-pub struct BuildingPugin;
+pub struct BuildingPlugin;
 
-impl Plugin for BuildingPugin
+impl Plugin for BuildingPlugin
 {
 	fn build(&self, app: &mut App)
 	{
