@@ -81,6 +81,9 @@ fn setup_cameras(mut commands: Commands)
 		.insert(Msaa::Off);
 }
 
+const ITEM_SIZE: f32 = 50.0;
+const TOOLBAR_SIZE: f32 = 20.0;
+
 fn spawn_ui(mut commands: Commands, mut next_state: ResMut<NextState<BuildUIState>>)
 {
 	commands
@@ -90,11 +93,13 @@ fn spawn_ui(mut commands: Commands, mut next_state: ResMut<NextState<BuildUIStat
 				height: Val::Percent(100.),
 				justify_content: JustifyContent::Center,
 				align_items: AlignItems::End,
+				bottom: Val::Px(5.0),
 				..default()
 			},
 			RenderLayers::layer(1),
 			Name::new("Build UI Root"),
 			BuildUIItem,
+			// Interaction::None,
 		))
 		// .insert(PickingBehavior::IGNORE)
 		.with_children(|build_root| {
@@ -103,12 +108,13 @@ fn spawn_ui(mut commands: Commands, mut next_state: ResMut<NextState<BuildUIStat
 					Name::new("Build UI"),
 					Node {
 						width: Val::Px(500.),
-						height: Val::Px(100.),
+						height: Val::Px(TOOLBAR_SIZE + ITEM_SIZE),
 						justify_content: JustifyContent::Stretch,
 						flex_direction: FlexDirection::Column,
+						bottom: Val::Px(5.0),
 						..default()
 					},
-					BackgroundColor(LinearRgba::GREEN.into()),
+					Interaction::None,
 				))
 				.with_children(|build_ui| {
 					build_ui.spawn((
@@ -116,7 +122,7 @@ fn spawn_ui(mut commands: Commands, mut next_state: ResMut<NextState<BuildUIStat
 						BuildMenuRoot,
 						Node {
 							width: Val::Percent(100.),
-							height: Val::Px(72.),
+							height: Val::Px(ITEM_SIZE + 4.0),
 							column_gap: Val::Px(5.),
 							padding: UiRect::all(Val::Px(2.)),
 							flex_direction: FlexDirection::Row,
@@ -129,7 +135,7 @@ fn spawn_ui(mut commands: Commands, mut next_state: ResMut<NextState<BuildUIStat
 							Name::new("Toolbar"),
 							Node {
 								width: Val::Percent(100.),
-								height: Val::Px(30.),
+								height: Val::Px(TOOLBAR_SIZE),
 								column_gap: Val::Px(5.),
 								padding: UiRect::horizontal(Val::Px(10.)),
 								justify_content: JustifyContent::Stretch,
@@ -149,6 +155,7 @@ fn spawn_ui(mut commands: Commands, mut next_state: ResMut<NextState<BuildUIStat
 										width: Val::Percent(100.),
 										align_items: AlignItems::Center,
 										justify_content: JustifyContent::Center,
+										padding: UiRect::horizontal(Val::Px(5.0)),
 										..default()
 									},
 									BaseColor(LinearRgba::WHITE.into()),
@@ -219,7 +226,7 @@ fn draw_structure_ui(mut commands: Commands, root: Entity)
 				BuildUIMenuItem,
 				Node {
 					height: Val::Percent(100.),
-					width: Val::Px(70.),
+					width: Val::Px(ITEM_SIZE),
 					display: Display::Grid,
 					grid_template_rows: vec![RepeatedGridTrack::px(1, 100.), RepeatedGridTrack::fr(1, 1.)],
 					..default()
@@ -227,8 +234,8 @@ fn draw_structure_ui(mut commands: Commands, root: Entity)
 				children![
 					(
 						Node {
-							height: Val::Px(70.),
-							width: Val::Px(70.),
+							height: Val::Px(ITEM_SIZE),
+							width: Val::Px(ITEM_SIZE),
 							..default()
 						},
 						Button,

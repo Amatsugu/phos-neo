@@ -10,6 +10,8 @@ use shared::tags::MainCamera;
 use world_generation::prelude::Map;
 use world_generation::states::GeneratorState;
 
+use crate::ui::states::UICaptureState;
+
 use super::components::*;
 
 pub struct PhosCameraPlugin;
@@ -23,7 +25,12 @@ impl Plugin for PhosCameraPlugin
 
 		app.add_systems(PreStartup, setup);
 
-		app.add_systems(Update, orbit_camera_upate.in_set(GameplaySystems));
+		app.add_systems(
+			Update,
+			orbit_camera_upate
+				.in_set(GameplaySystems)
+				.run_if(in_state(UICaptureState::None)),
+		);
 
 		app.add_systems(Update, init_bounds.run_if(in_state(GeneratorState::SpawnMap)));
 	}

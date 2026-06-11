@@ -268,6 +268,7 @@ fn spawn_map(
 			let chunk = commands
 				.spawn((
 					Mesh3d(meshes.add(chunk_mesh)),
+					Name::new(format!("Chunk {}", index)),
 					MeshMaterial3d(atlas.chunk_material_handle.clone()),
 					Transform::from_translation(pos),
 					PhosChunk::new(index),
@@ -281,6 +282,7 @@ fn spawn_map(
 					Mesh3d(water_mesh_handle),
 					MeshMaterial3d(atlas.water_material.clone()),
 					Transform::from_translation(pos),
+					Name::new(format!("Water {}", index)),
 					PhosChunk::new(index),
 					NotShadowCaster,
 					RenderDistanceVisibility::default().with_offset(visibility_offset),

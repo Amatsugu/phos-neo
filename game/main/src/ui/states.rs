@@ -8,3 +8,12 @@ pub enum BuildUIState
 	Update,
 	Cleanup,
 }
+
+#[derive(States, Debug, Clone, PartialEq, Eq, Hash, Default)]
+pub enum UICaptureState
+{
+	#[default]
+	None,
+	Cursor,
+	Keyboard,
+}

@@ -1,8 +1,10 @@
 use bevy::{input_focus::InputFocus, prelude::*};
+use bevy_inspector_egui::bevy_egui::EguiContexts;
 
 use crate::ui::{
 	components::*,
 	events::{Blur, Hover, Press},
+	states::UICaptureState,
 };
 
 pub struct BaseUIPlugin;
@@ -12,7 +14,8 @@ impl Plugin for BaseUIPlugin
 	fn build(&self, app: &mut App)
 	{
 		app.init_resource::<InputFocus>();
-		app.add_systems(Update, buttons);
+		app.init_state::<UICaptureState>();
+		app.add_systems(Update, (buttons, cursor_capture));
 		app.add_observer(on_hover_bg)
 			.add_observer(on_blur_bg)
 			.add_observer(on_press_bg)
@@ -26,6 +29,26 @@ impl Plugin for BaseUIPlugin
 		app.add_observer(base_color)
 			.add_observer(base_border_color)
 			.add_observer(base_text_color);
+	}
+}
+
+fn cursor_capture(
+	ui_nodes: Query<&Interaction, With<Node>>,
+	mut ctx: EguiContexts,
+	mut capture_state: ResMut<NextState<UICaptureState>>,
+)
+{
+	let bevy_ui = ui_nodes
+		.iter()
+		.any(|ui| *ui == Interaction::Hovered || *ui == Interaction::Pressed);
+	let egui_cursor = ctx.ctx_mut().map_or_else(|_| false, |ctx| ctx.wants_pointer_input());
+	let egui_keyboard = ctx.ctx_mut().map_or_else(|_| false, |ctx| ctx.wants_keyboard_input());
+	if egui_keyboard {
+		capture_state.set(UICaptureState::Keyboard);
+	} else if bevy_ui || egui_cursor {
+		capture_state.set(UICaptureState::Cursor);
+	} else {
+		capture_state.set(UICaptureState::None);
 	}
 }
 
