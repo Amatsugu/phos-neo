@@ -4,14 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = "0.18.0"
+bevy = { version = "0.19.0" }
 world_generation = { path = "../../engine/world_generation" }
 shared = { path = "../shared" }
 serde = { version = "1.0.228", features = ["derive"] }
 asset_loader = { path = "../../engine/asset_loader" }
-serde_json = "1.0.149"
-ron = "0.12.0"
-bevy_asset_loader = { version = "0.26.0", features = [
+serde_json = "1.0.150"
+ron = "0.12.2"
+bevy_asset_loader = { version = "0.27.0", features = [
 	"standard_dynamic_assets",
 	"3d",
 ] }

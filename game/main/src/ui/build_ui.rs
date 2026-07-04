@@ -52,8 +52,8 @@ impl Plugin for BuildUIPlugin
 		app.add_systems(
 			Update,
 			(
-				spawn_ui.run_if(in_state(AssetLoadState::LoadComplete).and(in_state(BuildUIState::Init))),
-				draw_menu_ui.run_if(in_state(AssetLoadState::LoadComplete).and(in_state(BuildUIState::DrawMenu))),
+				spawn_ui.run_if(in_state(AssetLoadState::LoadComplete).and_then(in_state(BuildUIState::Init))),
+				draw_menu_ui.run_if(in_state(AssetLoadState::LoadComplete).and_then(in_state(BuildUIState::DrawMenu))),
 			),
 		);
 		app.add_systems(PostUpdate, cleanup_ui.run_if(in_state(BuildUIState::Cleanup)));
@@ -164,7 +164,7 @@ fn spawn_ui(mut commands: Commands, mut next_state: ResMut<NextState<BuildUIStat
 									children![(
 										Text::new(format!("{:?}", btn)),
 										TextFont {
-											font_size: 15.,
+											font_size: FontSize::Px(15.),
 											..default()
 										},
 										BaseTextColor(LinearRgba::BLACK.into()),

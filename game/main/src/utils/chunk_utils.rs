@@ -1,3 +1,4 @@
+use avian3d::prelude::*;
 #[cfg(feature = "tracing")]
 use bevy::log::*;
 use bevy::{
@@ -6,7 +7,6 @@ use bevy::{
 	math::{IVec2, UVec2, Vec3},
 	mesh::Mesh,
 };
-use bevy_rapier3d::geometry::{Collider, TriMeshFlags};
 use hex::prelude::*;
 use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 use world_generation::{
@@ -39,10 +39,8 @@ pub fn paint_chunk(
 	mappers: &Res<Assets<TileMapperAsset>>,
 )
 {
-	for z in 0..Chunk::SIZE
-	{
-		for x in 0..Chunk::SIZE
-		{
+	for z in 0..Chunk::SIZE {
+		for x in 0..Chunk::SIZE {
 			let idx = x + z * Chunk::SIZE;
 			let height = chunk.heights[idx];
 			let biome_id = chunk.biome_id[idx];
@@ -92,8 +90,7 @@ pub fn prepare_chunk_mesh_with_collider(
 	{
 		#[cfg(feature = "tracing")]
 		let _collider_span = info_span!("Create Collider Trimesh").entered();
-		collider = Collider::trimesh_with_flags(col_verts, col_indicies, TriMeshFlags::DELETE_DUPLICATE_TRIANGLES)
-			.expect("Failed to generate chunk collision mesh");
+		collider = Collider::trimesh(col_verts, col_indicies);
 	}
 	return (chunk_mesh, water_mesh, collider, pos, index);
 }

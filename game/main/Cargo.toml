@@ -7,28 +7,25 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "0.18.1" }
-bevy-inspector-egui = "0.36.0"
+bevy = { version = "0.19.0" }
+bevy-inspector-egui = "0.37.0"
 # iyes_perf_ui = "0.3.0"
 noise = "0.9.0"
 world_generation = { path = "../../engine/world_generation" }
-bevy_rapier3d = { version = "0.34.0", features = [
-	"simd-stable",
-	"parallel",
-] }
-rayon = "1.11.0"
+rayon = "1.12.0"
 buildings = { path = "../buildings" }
 units = { path = "../units" }
 shared = { path = "../shared" }
-bevy_asset_loader = { version = "0.26.0", features = [
+bevy_asset_loader = { version = "0.27.0", features = [
 	"standard_dynamic_assets",
 	"3d",
 ] }
-ron = "0.12.0"
-image = "0.25.9"
+ron = "0.12.2"
+image = "0.25.10"
 hex = { path = "../../engine/hex" }
 strum = "0.28.0"
 strum_macros = "0.28.0"
+avian3d = { version = "0.7.0", features = ["parallel", "simd"]}
 
 # bevy_lunex = "0.2.4"
 
@@ -51,7 +48,7 @@ dev = [
 	"bevy/file_watcher",
 	"bevy/embedded_watcher",
 ]
-phys = ["dev", "bevy_rapier3d/debug-render-3d"]
+phys = ["dev", "avian3d/debug-plugin", "avian3d/validate"]
 inspect = ["dev"]
 
 [lints.clippy]

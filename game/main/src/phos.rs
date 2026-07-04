@@ -7,13 +7,11 @@ use crate::ui::ui_base::BaseUIPlugin;
 #[cfg(debug_assertions)]
 use crate::utils::debug_plugin::DebugPlugin;
 use crate::utils::tile_selection_plugin::TileSelectionPlugin;
+use avian3d::prelude::*;
 use bevy::diagnostic::{EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin};
 use bevy::light::CascadeShadowConfig;
 use bevy::{pbr::wireframe::WireframeConfig, prelude::*};
 use bevy_asset_loader::prelude::*;
-use bevy_rapier3d::dynamics::{Ccd, RigidBody, Velocity};
-use bevy_rapier3d::geometry::Collider;
-use bevy_rapier3d::plugin::{NoUserData, RapierPhysicsPlugin};
 use shared::sets::GameplaySystems;
 use shared::states::{GameplayState, MenuState};
 use shared::{despawn::DespawnPlugin, states::AssetLoadState};
@@ -65,12 +63,13 @@ impl Plugin for PhosGamePlugin
 		// .add_plugins(PerfUiPlugin);
 
 		//Physics
-		app.add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
+		app.add_plugins(PhysicsPlugins::default());
 		// app.add_plugins(RapierDebugRenderPlugin::default());
 
 		app.insert_resource(WireframeConfig {
 			global: false,
 			default_color: Srgba::hex("FF0064").unwrap().into(),
+			..default()
 		});
 	}
 }
@@ -116,7 +115,7 @@ fn init_game(mut commands: Commands, mut materials: ResMut<Assets<StandardMateri
 
 	commands.spawn((
 		DirectionalLight {
-			shadows_enabled: true,
+			shadow_maps_enabled: true,
 			..default()
 		},
 		CascadeShadowConfig {
@@ -150,10 +149,10 @@ fn spawn_sphere(
 			Mesh3d(meshes.add(Sphere::new(0.3))),
 			MeshMaterial3d(mat.0.clone()),
 			Transform::from_translation(cam.translation),
-			Collider::ball(0.3),
+			Collider::sphere(0.3),
 			RigidBody::Dynamic,
-			Ccd::enabled(),
-			Velocity::linear(cam.forward() * 50.),
+			// Ccd::enabled(),
+			LinearVelocity(cam.forward() * 50.),
 		));
 	}
 }

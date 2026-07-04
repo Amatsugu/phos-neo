@@ -41,8 +41,12 @@ fn cursor_capture(
 	let bevy_ui = ui_nodes
 		.iter()
 		.any(|ui| *ui == Interaction::Hovered || *ui == Interaction::Pressed);
-	let egui_cursor = ctx.ctx_mut().map_or_else(|_| false, |ctx| ctx.wants_pointer_input());
-	let egui_keyboard = ctx.ctx_mut().map_or_else(|_| false, |ctx| ctx.wants_keyboard_input());
+	let egui_cursor = ctx
+		.ctx_mut()
+		.map_or_else(|_| false, |ctx| ctx.egui_wants_pointer_input());
+	let egui_keyboard = ctx
+		.ctx_mut()
+		.map_or_else(|_| false, |ctx| ctx.egui_wants_keyboard_input());
 	if egui_keyboard {
 		capture_state.set(UICaptureState::Keyboard);
 	} else if bevy_ui || egui_cursor {
@@ -82,13 +86,12 @@ fn buttons(
 	for (entity, interaction, mut button) in &mut buttons {
 		match *interaction {
 			Interaction::Pressed => {
-				input_focus.set(entity);
+				input_focus.set(entity, bevy::input_focus::FocusCause::Pressed);
 				button.set_changed();
 				commands.entity(entity).trigger(Press);
 			}
 			Interaction::Hovered => {
-				input_focus.set(entity);
-				button.set_changed();
+				input_focus.clear();
 				commands.entity(entity).trigger(Hover);
 			}
 			Interaction::None => {

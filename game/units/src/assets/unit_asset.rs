@@ -12,7 +12,7 @@ pub struct UnitAsset
 	pub size: u32,
 	pub prefab_path: String,
 	#[serde(skip)]
-	pub prefab: Handle<Scene>,
+	pub prefab: Handle<Gltf>,
 	pub unit_type: UnitType,
 	pub domain: UnitDomain,
 }

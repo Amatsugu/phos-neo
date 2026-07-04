@@ -57,13 +57,13 @@ impl BuildingAsset
 				if let Some(gltf_mesh) = meshes.get(mesh_handle.id()) {
 					if let Some(primitive) = gltf_mesh.primitives.first() {
 						let mesh = primitive.mesh.clone();
-						let mat = primitive
-							.material
-							.clone()
-							.unwrap_or_else(|| panic!("Mesh '{}' does not have a material", primitive.name.as_str()));
+						// let mat = primitive
+						// 	.material
+						// 	.clone()
+						// 	.unwrap_or_else(|| panic!("Mesh '{}' does not have a material", primitive.name.as_str()));
 						let mut entity = commands.spawn((
 							Mesh3d(mesh),
-							MeshMaterial3d(mat),
+							// MeshMaterial3d(mat),
 							Transform::from_translation(pos).with_rotation(rot),
 							Building,
 						));
@@ -100,11 +100,11 @@ impl BuildingAsset
 			if let Some(gltf_mesh) = meshes.get(mesh.id()) {
 				if let Some(primitive) = gltf_mesh.primitives.first() {
 					let mesh = primitive.mesh.clone();
-					let mat = primitive
-						.material
-						.clone()
-						.unwrap_or_else(|| panic!("Mesh '{}' does not have a meterial", primitive.name.as_str()));
-					let mut entity = commands.spawn((Mesh3d(mesh), MeshMaterial3d(mat), node.transform, Building));
+					// let mat = primitive
+					// 	.material
+					// 	.clone()
+					// 	.unwrap_or_else(|| panic!("Mesh '{}' does not have a meterial", primitive.name.as_str()));
+					let mut entity = commands.spawn((Mesh3d(mesh), node.transform, Building));
 					entity.with_children(|b| {
 						for child in &node.children {
 							let child_node = nodes.get(child.id());

@@ -125,7 +125,7 @@ fn finalize_texture(
 	mut next_load_state: ResMut<NextState<AssetLoadState>>,
 )
 {
-	let image = images.get_mut(atlas.handle.id()).unwrap();
+	let mut image = images.get_mut(atlas.handle.id()).unwrap();
 
 	let array_layers = image.height() / image.width();
 	image
@@ -213,7 +213,7 @@ fn configure_water_material(
 	heightmap: Res<Map>,
 )
 {
-	if let Some(material) = water_materials.get_mut(atlas.water_material.id()) {
+	if let Some(mut material) = water_materials.get_mut(atlas.water_material.id()) {
 		material.extension.settings.surface_level = heightmap.sealevel;
 	}
 }
