@@ -41,7 +41,7 @@ impl Plugin for BuildingPlugin
 		app.add_systems(Update, init.run_if(in_state(AssetLoadState::Loading)));
 		app.add_systems(
 			Update,
-			hq_placement.run_if(in_state(GameplayState::PlaceHQ).and(in_state(GeneratorState::Idle))),
+			hq_placement.run_if(in_state(GameplayState::PlaceHQ).and_then(in_state(GeneratorState::Idle))),
 		);
 		app.add_systems(
 			PreUpdate,

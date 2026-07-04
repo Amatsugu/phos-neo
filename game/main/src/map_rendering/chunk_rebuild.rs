@@ -53,13 +53,7 @@ fn chunk_rebuilder(
 				prepare_chunk_mesh(&chunk_data, chunk_data.sealevel, chunk_offset, chunk_index, map_size);
 			#[cfg(feature = "tracing")]
 			let trimesh_span = info_span!("Chunk Trimesh").entered();
-			let c = Collider::default();
-			// let c = Collider::trimesh_with_flags(
-			// 	collider_data.0,
-			// 	collider_data.1,
-			// 	TriMeshFlags::DELETE_DUPLICATE_TRIANGLES,
-			// )
-			// .expect("Failed to build chunk mesh");
+			let c = Collider::trimesh(collider_data.0, collider_data.1).expect("Failed to build chunk mesh");
 			#[cfg(feature = "tracing")]
 			drop(trimesh_span);
 			queue.push(move |world: &mut World| {

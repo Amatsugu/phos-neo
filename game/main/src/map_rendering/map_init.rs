@@ -75,7 +75,7 @@ impl Plugin for MapInitPlugin
 		app.add_systems(
 			Update,
 			(spawn_map, configure_water_material)
-				.run_if(in_state(AssetLoadState::LoadComplete).and(in_state(GeneratorState::SpawnMap))),
+				.run_if(in_state(AssetLoadState::LoadComplete).and_then(in_state(GeneratorState::SpawnMap))),
 		);
 
 		app.insert_resource(TileManager::default());
