@@ -79,6 +79,7 @@ impl Plugin for MapInitPlugin
 		app.add_systems(
 			Update,
 			(spawn_map, configure_water_material)
+				.chain()
 				.run_if(in_state(AssetLoadState::LoadComplete).and_then(in_state(GeneratorState::SpawnMap))),
 		);
 
@@ -153,6 +154,7 @@ fn create_heightmap(
 	biome_painter: Res<BiomePainter>,
 )
 {
+	info!("Generate Heightmap");
 	let config = GenerationConfig {
 		biome_blend: 32,
 		biome_dither: 10.,
@@ -217,6 +219,7 @@ fn configure_water_material(
 	heightmap: Res<Map>,
 )
 {
+	info!("Update sealevel");
 	if let Some(mut material) = water_materials.get_mut(atlas.water_material.id()) {
 		material.extension.settings.surface_level = heightmap.sealevel;
 	}
@@ -245,13 +248,10 @@ fn spawn_map(
 		.par_iter()
 		.map(|chunk: &Chunk| {
 			let index = offset_to_index(chunk.chunk_offset, heightmap.width);
-			return prepare_chunk_mesh_with_collider(
-				&heightmap.get_chunk_mesh_data(index),
-				heightmap.sealevel,
-				chunk.chunk_offset,
-				index,
-				map_size,
-			);
+			let world_pos = chunk.world_position();
+			let (chunk_mesh, water_mesh, collider) =
+				prepare_chunk_mesh_with_collider(&heightmap.get_chunk_mesh_data(index), heightmap.sealevel, map_size);
+			return (chunk_mesh, water_mesh, collider, world_pos, index);
 		})
 		.collect();
 
@@ -302,6 +302,8 @@ fn spawn_map(
 
 	commands.insert_resource(registry);
 	generator_state.set(GeneratorState::Idle);
+	info!("Generator Idle");
+
 	if cur_game_state.get() != &MenuState::InGame {
 		game_state.set(MenuState::InGame);
 		gameplay_state.set(GameplayState::PlaceHQ);

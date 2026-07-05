@@ -4,7 +4,7 @@ use bevy::log::*;
 use bevy::{
 	asset::Assets,
 	ecs::system::Res,
-	math::{IVec2, UVec2, Vec3},
+	math::{UVec2, Vec3},
 	mesh::Mesh,
 };
 use hex::prelude::*;
@@ -53,44 +53,26 @@ pub fn paint_chunk(
 	}
 }
 
-pub fn prepare_chunk_mesh(
-	chunk: &MeshChunkData,
-	sealevel: f32,
-	chunk_offset: IVec2,
-	chunk_index: usize,
-	map_size: UVec2,
-) -> (Mesh, Mesh, (Vec<Vec3>, Vec<[u32; 3]>), Vec3, usize)
+pub fn prepare_chunk_mesh(chunk: &MeshChunkData, sealevel: f32, map_size: UVec2) -> (Mesh, Mesh)
 {
 	#[cfg(feature = "tracing")]
-	let _gen_mesh = info_span!("Generate Chunk").entered();
+	let _gen_mesh = info_span!("Generate Chunk Mesh").entered();
 	let chunk_mesh = generate_chunk_mesh(chunk);
 	let water_mesh = generate_chunk_water_mesh(chunk, sealevel, map_size.x as usize, map_size.y as usize);
-	let col_data = generate_chunk_collider(chunk);
 
-	return (
-		chunk_mesh,
-		water_mesh,
-		col_data,
-		offset_to_world(chunk_offset * Chunk::SIZE as i32, 0.),
-		chunk_index,
-	);
+	return (chunk_mesh, water_mesh);
 }
 
-pub fn prepare_chunk_mesh_with_collider(
-	chunk: &MeshChunkData,
-	sealevel: f32,
-	chunk_offset: IVec2,
-	chunk_index: usize,
-	map_size: UVec2,
-) -> (Mesh, Mesh, Collider, Vec3, usize)
+pub fn prepare_chunk_mesh_with_collider(chunk: &MeshChunkData, sealevel: f32, map_size: UVec2)
+-> (Mesh, Mesh, Collider)
 {
-	let (chunk_mesh, water_mesh, (col_verts, col_indicies), pos, index) =
-		prepare_chunk_mesh(chunk, sealevel, chunk_offset, chunk_index, map_size);
+	let (chunk_mesh, water_mesh) = prepare_chunk_mesh(chunk, sealevel, map_size);
 	let collider: Collider;
 	{
 		#[cfg(feature = "tracing")]
 		let _collider_span = info_span!("Create Collider Trimesh").entered();
+		let (col_verts, col_indicies) = generate_chunk_collider(chunk);
 		collider = Collider::trimesh(col_verts, col_indicies);
 	}
-	return (chunk_mesh, water_mesh, collider, pos, index);
+	return (chunk_mesh, water_mesh, collider);
 }

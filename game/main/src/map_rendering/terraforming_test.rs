@@ -17,9 +17,7 @@ impl Plugin for TerraFormingTestPlugin
 	{
 		app.add_systems(
 			Update,
-			deform
-				.run_if(in_state(GeneratorState::Idle))
-				.run_if(in_state(GameplayState::Playing)),
+			deform.run_if(in_state(GeneratorState::Idle).and_then(in_state(GameplayState::Playing))),
 		);
 	}
 }

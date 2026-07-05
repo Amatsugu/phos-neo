@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use shared::tags::MainCamera;
+use world_generation::states::GeneratorState;
 
 pub struct RenderDistancePlugin;
 
@@ -8,8 +9,11 @@ impl Plugin for RenderDistancePlugin
 	fn build(&self, app: &mut bevy::prelude::App)
 	{
 		app.register_type::<RenderDistanceSettings>();
-		app.add_systems(PostUpdate, render_distance_system)
-			.insert_resource(RenderDistanceSettings::default());
+		app.add_systems(
+			PostUpdate,
+			render_distance_system.run_if(in_state(GeneratorState::Idle)),
+		)
+		.insert_resource(RenderDistanceSettings::default());
 	}
 }
 
@@ -68,15 +72,11 @@ fn render_distance_system(
 )
 {
 	let cam_pos = Vec3::new(camera.translation.x, 0.0, camera.translation.z);
-	for (t, mut vis, r) in objects.iter_mut()
-	{
+	for (t, mut vis, r) in objects.iter_mut() {
 		let dist = (cam_pos - (t.translation + r.offset)).length();
-		if settings.render_distance < dist
-		{
+		if settings.render_distance < dist {
 			*vis = Visibility::Hidden;
-		}
-		else
-		{
+		} else {
 			*vis = Visibility::Visible;
 		}
 	}

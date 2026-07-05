@@ -1,4 +1,4 @@
-use crate::SHORT_DIAGONAL;
+use crate::{SHORT_DIAGONAL, hex_coord::offset_to_world};
 use bevy::prelude::*;
 
 #[derive(Clone)]
@@ -79,5 +79,10 @@ impl Chunk
 		}
 
 		return data;
+	}
+
+	pub fn world_position(&self) -> Vec3
+	{
+		offset_to_world(self.chunk_offset * Chunk::SIZE as i32, 0.)
 	}
 }

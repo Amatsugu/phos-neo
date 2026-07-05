@@ -15,20 +15,16 @@ impl Plugin for DebugPlugin
 {
 	fn build(&self, app: &mut App)
 	{
-		app.insert_state(DebugState::Base);
+		app.insert_state(DebugState::Verbose);
 
 		app.add_systems(
 			Update,
-			show_tile_heights
-				.run_if(in_state(GeneratorState::Idle))
-				.run_if(not(in_state(DebugState::None))),
+			show_tile_heights.run_if(in_state(GeneratorState::Idle).and_then(not(in_state(DebugState::None)))),
 		);
 
 		app.add_systems(
 			Update,
-			verbose_data
-				.run_if(in_state(GeneratorState::Idle))
-				.run_if(in_state(DebugState::Verbose)),
+			verbose_data.run_if(in_state(GeneratorState::Idle).and_then(in_state(DebugState::Verbose))),
 		);
 
 		app.add_systems(Update, camera_debug.in_set(GameplaySystems));
@@ -71,8 +67,9 @@ fn regenerate_map(
 
 fn show_tile_heights(map: Res<Map>, mut gizmos: Gizmos, shape: Res<Shape>, tile_under_cursor: Res<TileUnderCursor>)
 {
-	if let Some(contact) = tile_under_cursor.0 && map.is_in_bounds(&contact.tile){
-
+	if let Some(contact) = tile_under_cursor.0
+		&& map.is_in_bounds(&contact.tile)
+	{
 		let height = map.sample_height(&contact.tile);
 		gizmos.primitive_3d(&shape.0, contact.tile.to_world(height + 0.01), Color::WHITE);
 
@@ -106,4 +103,10 @@ fn camera_debug(cam_query: Single<(&PhosCamera, &PhosOrbitCamera)>, mut gizmos: 
 	gizmos.circle(cam_proxy, 0.3, LinearRgba::rgb(1.0, 1.0, 0.0));
 }
 
-fn verbose_data() {}
+fn verbose_data(mut gizmos: Gizmos, map: Res<Map>)
+{
+	for chunk in &map.chunks {
+		let pos = chunk.world_position();
+		gizmos.line(pos, pos.with_y(100.), LinearRgba::GREEN);
+	}
+}

@@ -9,6 +9,7 @@ use world_generation::states::GeneratorState;
 
 use crate::prelude::RebuildChunk;
 use crate::prelude::WaterMesh;
+use crate::utils::chunk_utils::prepare_chunk_mesh_with_collider;
 use crate::{
 	prelude::{PhosChunk, PhosChunkRegistry},
 	utils::chunk_utils::prepare_chunk_mesh,
@@ -43,21 +44,22 @@ fn chunk_rebuilder(
 		info!("Rebuilding Chunk");
 		let chunk_index = idx.index;
 		let chunk_data = heightmap.get_chunk_mesh_data(chunk_index);
-		let chunk_offset = heightmap.chunks[chunk_index].chunk_offset;
 
 		let task = pool.spawn(async move {
 			#[cfg(feature = "tracing")]
 			let _spawn_span = info_span!("Rebuild Task").entered();
 			let mut queue = CommandQueue::default();
-			let (mesh, water_mesh, collider_data, _, _) =
-				prepare_chunk_mesh(&chunk_data, chunk_data.sealevel, chunk_offset, chunk_index, map_size);
+			let (mesh, water_mesh, collider) =
+				prepare_chunk_mesh_with_collider(&chunk_data, chunk_data.sealevel, map_size);
 			#[cfg(feature = "tracing")]
 			let trimesh_span = info_span!("Chunk Trimesh").entered();
-			let c = Collider::trimesh(collider_data.0, collider_data.1);
 			#[cfg(feature = "tracing")]
 			drop(trimesh_span);
 			queue.push(move |world: &mut World| {
-				world.entity_mut(chunk_entity).insert(c).remove::<ChunkRebuildTask>();
+				world
+					.entity_mut(chunk_entity)
+					.insert(collider)
+					.remove::<ChunkRebuildTask>();
 			});
 
 			return (queue, mesh, water_mesh);

@@ -8,6 +8,7 @@ use crate::ui::ui_base::BaseUIPlugin;
 use crate::utils::debug_plugin::DebugPlugin;
 use crate::utils::tile_selection_plugin::TileSelectionPlugin;
 use avian3d::prelude::*;
+use bevy::dev_tools::diagnostics_overlay::{DiagnosticsOverlay, DiagnosticsOverlayPlugin};
 use bevy::diagnostic::{EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin};
 use bevy::light::CascadeShadowConfig;
 use bevy::{pbr::wireframe::WireframeConfig, prelude::*};
@@ -57,9 +58,12 @@ impl Plugin for PhosGamePlugin
 		app.add_systems(Update, spawn_sphere);
 
 		//Perf UI
-		app.add_plugins(FrameTimeDiagnosticsPlugin::default())
-			.add_plugins(EntityCountDiagnosticsPlugin::default())
-			.add_plugins(bevy::diagnostic::SystemInformationDiagnosticsPlugin);
+		app.add_plugins((
+			FrameTimeDiagnosticsPlugin::default(),
+			EntityCountDiagnosticsPlugin::default(),
+			bevy::diagnostic::SystemInformationDiagnosticsPlugin,
+			DiagnosticsOverlayPlugin,
+		));
 		// .add_plugins(PerfUiPlugin);
 
 		//Physics
@@ -105,13 +109,7 @@ fn configure_gameplay_set(app: &mut App)
 
 fn init_game(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>)
 {
-	// commands.spawn((
-	// 	PerfUiRoot::default(),
-	// 	PerfUiEntryFPS::default(),
-	// 	PerfUiEntryFPSWorst::default(),
-	// 	PerfUiEntryFrameTime::default(),
-	// 	PerfUiEntryFrameTimeWorst::default(),
-	// ));
+	commands.spawn(DiagnosticsOverlay::fps());
 
 	commands.spawn((
 		DirectionalLight {
