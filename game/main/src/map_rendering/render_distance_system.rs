@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use hex::{SHORT_DIAGONAL, prelude::Chunk};
 use shared::tags::MainCamera;
 use world_generation::states::GeneratorState;
 
@@ -61,7 +62,13 @@ impl Default for RenderDistanceVisibility
 {
 	fn default() -> Self
 	{
-		Self { offset: Vec3::ZERO }
+		Self {
+			offset: Vec3::new(
+				(Chunk::SIZE / 2) as f32 * SHORT_DIAGONAL,
+				0.,
+				(Chunk::SIZE / 2) as f32 * 1.5,
+			),
+		}
 	}
 }
 

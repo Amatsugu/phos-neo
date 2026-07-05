@@ -31,13 +31,13 @@ impl PhosChunk
 }
 
 #[derive(Component)]
-pub struct WaterMesh(pub AssetId<Mesh>);
+pub struct WaterMesh(pub AssetId<Mesh>, pub Entity);
 
 #[derive(Resource, Default)]
 pub struct PhosChunkRegistry
 {
 	pub chunks: Vec<Entity>,
-	pub waters: Vec<Entity>,
+	pub waters: Vec<Option<Entity>>,
 }
 
 impl PhosChunkRegistry

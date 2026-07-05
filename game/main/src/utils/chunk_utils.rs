@@ -1,12 +1,7 @@
 use avian3d::prelude::*;
 #[cfg(feature = "tracing")]
 use bevy::log::*;
-use bevy::{
-	asset::Assets,
-	ecs::system::Res,
-	math::{UVec2, Vec3},
-	mesh::Mesh,
-};
+use bevy::{light::NotShadowCaster, prelude::*};
 use hex::prelude::*;
 use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 use world_generation::{
@@ -19,6 +14,8 @@ use world_generation::{
 	tile_manager::TileAsset,
 	tile_mapper::TileMapperAsset,
 };
+
+use crate::{map_rendering::render_distance_system::RenderDistanceVisibility, prelude::PhosChunk};
 
 pub fn paint_map(
 	map: &mut Map,
@@ -53,7 +50,7 @@ pub fn paint_chunk(
 	}
 }
 
-pub fn prepare_chunk_mesh(chunk: &MeshChunkData, sealevel: f32, map_size: UVec2) -> (Mesh, Mesh)
+pub fn prepare_chunk_mesh(chunk: &MeshChunkData, sealevel: f32, map_size: UVec2) -> (Mesh, Option<Mesh>)
 {
 	#[cfg(feature = "tracing")]
 	let _gen_mesh = info_span!("Generate Chunk Mesh").entered();
@@ -63,8 +60,11 @@ pub fn prepare_chunk_mesh(chunk: &MeshChunkData, sealevel: f32, map_size: UVec2)
 	return (chunk_mesh, water_mesh);
 }
 
-pub fn prepare_chunk_mesh_with_collider(chunk: &MeshChunkData, sealevel: f32, map_size: UVec2)
--> (Mesh, Mesh, Collider)
+pub fn prepare_chunk_mesh_with_collider(
+	chunk: &MeshChunkData,
+	sealevel: f32,
+	map_size: UVec2,
+) -> (Mesh, Option<Mesh>, Collider)
 {
 	let (chunk_mesh, water_mesh) = prepare_chunk_mesh(chunk, sealevel, map_size);
 	let collider: Collider;
@@ -75,4 +75,22 @@ pub fn prepare_chunk_mesh_with_collider(chunk: &MeshChunkData, sealevel: f32, ma
 		collider = Collider::trimesh(col_verts, col_indicies);
 	}
 	return (chunk_mesh, water_mesh, collider);
+}
+
+pub fn create_water_chunk(
+	position: Vec3,
+	index: usize,
+	water_mesh: Handle<Mesh>,
+	water_material: Handle<impl bevy::pbr::Material>,
+) -> impl Bundle
+{
+	(
+		Mesh3d(water_mesh),
+		MeshMaterial3d(water_material),
+		Transform::from_translation(position),
+		Name::new(format!("Water {}", index)),
+		PhosChunk::new(index),
+		NotShadowCaster,
+		RenderDistanceVisibility::default(),
+	)
 }

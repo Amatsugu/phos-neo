@@ -40,14 +40,11 @@ pub fn generate_chunk_mesh(chunk: &MeshChunkData) -> Mesh
 		}
 	}
 
-	let mesh = Mesh::new(
-		PrimitiveTopology::TriangleList,
-		RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
-	)
-	.with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, verts)
-	.with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uvs)
-	.with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, normals)
-	.with_inserted_indices(Indices::U32(indices));
+	let mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::RENDER_WORLD)
+		.with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, verts)
+		.with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uvs)
+		.with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, normals)
+		.with_inserted_indices(Indices::U32(indices));
 	return mesh;
 }
 
@@ -92,7 +89,12 @@ fn create_tile(
 }
 
 #[allow(unused)]
-pub fn generate_chunk_water_mesh(chunk: &MeshChunkData, sealevel: f32, map_width: usize, map_height: usize) -> Mesh
+pub fn generate_chunk_water_mesh(
+	chunk: &MeshChunkData,
+	sealevel: f32,
+	map_width: usize,
+	map_height: usize,
+) -> Option<Mesh>
 {
 	#[cfg(feature = "tracing")]
 	let _gen_mesh = info_span!("Generate Water Surface Mesh").entered();
@@ -126,6 +128,10 @@ pub fn generate_chunk_water_mesh(chunk: &MeshChunkData, sealevel: f32, map_width
 			);
 		}
 	}
+	if verts.len() == 0 {
+		return None;
+	}
+
 	let mesh = Mesh::new(
 		PrimitiveTopology::TriangleList,
 		RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
@@ -134,7 +140,7 @@ pub fn generate_chunk_water_mesh(chunk: &MeshChunkData, sealevel: f32, map_width
 	.with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uvs)
 	.with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, normals)
 	.with_inserted_indices(Indices::U32(indices));
-	return mesh;
+	return Some(mesh);
 }
 
 fn create_tile_water_surface(

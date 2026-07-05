@@ -45,9 +45,10 @@ impl Plugin for DebugPlugin
 #[derive(Resource)]
 struct Shape(pub Polyline3d);
 
-#[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(States, Debug, Clone, PartialEq, Eq, Hash, Default)]
 pub enum DebugState
 {
+	#[default]
 	Base,
 	None,
 	Verbose,

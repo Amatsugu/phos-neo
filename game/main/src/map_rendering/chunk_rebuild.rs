@@ -1,19 +1,18 @@
-use avian3d::prelude::*;
 use bevy::ecs::world::CommandQueue;
 use bevy::prelude::*;
 use bevy::tasks::*;
 use shared::events::ChunkModifiedEvent;
 use shared::events::TileModifiedEvent;
+use shared::states::AssetLoadState;
 use world_generation::prelude::Map;
 use world_generation::states::GeneratorState;
 
+use crate::prelude::PhosAssets;
 use crate::prelude::RebuildChunk;
 use crate::prelude::WaterMesh;
+use crate::prelude::{PhosChunk, PhosChunkRegistry};
+use crate::utils::chunk_utils::create_water_chunk;
 use crate::utils::chunk_utils::prepare_chunk_mesh_with_collider;
-use crate::{
-	prelude::{PhosChunk, PhosChunkRegistry},
-	utils::chunk_utils::prepare_chunk_mesh,
-};
 
 pub struct ChunkRebuildPlugin;
 
@@ -25,7 +24,10 @@ impl Plugin for ChunkRebuildPlugin
 		app.add_message::<ChunkModifiedEvent>();
 		app.add_message::<TileModifiedEvent>();
 		app.add_systems(PreUpdate, chunk_rebuilder.run_if(in_state(GeneratorState::Idle)));
-		app.add_systems(PostUpdate, collider_task_resolver);
+		app.add_systems(
+			PostUpdate,
+			collider_task_resolver.run_if(in_state(AssetLoadState::LoadComplete)),
+		);
 	}
 }
 
@@ -73,20 +75,51 @@ fn chunk_rebuilder(
 }
 
 fn collider_task_resolver(
-	mut chunks: Query<(&mut ChunkRebuildTask, &Mesh3d, &WaterMesh), With<PhosChunk>>,
+	mut chunks: Query<(
+		Entity,
+		&Transform,
+		&mut ChunkRebuildTask,
+		&Mesh3d,
+		&PhosChunk,
+		Option<&WaterMesh>,
+	)>,
 	mut commands: Commands,
 	mut meshes: ResMut<Assets<Mesh>>,
+	atlas: Res<PhosAssets>,
 )
 {
-	for (mut task, mesh_handle, water_mesh_handle) in &mut chunks {
+	for (entity, transform, mut task, mesh_handle, phos_chunk, water_mesh_handle) in &mut chunks {
 		if let Some((mut c, chunk_mesh, water_mesh)) = futures::check_ready(&mut task.task) {
 			commands.append(&mut c);
 			meshes
 				.insert(mesh_handle.id(), chunk_mesh)
 				.expect("Failed to update chunk mesh");
-			meshes
-				.insert(water_mesh_handle.0, water_mesh)
-				.expect("Failed to update chink water mesh");
+			if let Some(water_mesh_handle) = water_mesh_handle {
+				if let Some(water_mesh) = water_mesh {
+					meshes
+						.insert(water_mesh_handle.0, water_mesh)
+						.expect("Failed to update chink water mesh");
+				} else {
+					info!("Despawn water {}", phos_chunk.index);
+					meshes.remove(water_mesh_handle.0);
+					commands.entity(water_mesh_handle.1).despawn();
+					commands.entity(entity).remove::<WaterMesh>();
+				}
+			} else {
+				if let Some(water_mesh) = water_mesh {
+					info!("Spawn water {}", phos_chunk.index);
+					let handle = meshes.add(water_mesh);
+					let water_entity = commands
+						.spawn(create_water_chunk(
+							transform.translation,
+							phos_chunk.index,
+							handle.clone(),
+							atlas.water_material.clone(),
+						))
+						.id();
+					commands.entity(entity).insert(WaterMesh(handle.id(), water_entity));
+				}
+			}
 		}
 	}
 }
@@ -94,5 +127,5 @@ fn collider_task_resolver(
 #[derive(Component)]
 struct ChunkRebuildTask
 {
-	pub task: Task<(CommandQueue, Mesh, Mesh)>,
+	pub task: Task<(CommandQueue, Mesh, Option<Mesh>)>,
 }

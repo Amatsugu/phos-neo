@@ -8,21 +8,16 @@ use world_generation::{prelude::Map, states::GeneratorState};
 
 use crate::prelude::{PhosChunkRegistry, RebuildChunk};
 
-#[allow(dead_code)]
 pub struct TerraFormingTestPlugin;
 
 impl Plugin for TerraFormingTestPlugin
 {
 	fn build(&self, app: &mut App)
 	{
-		app.add_systems(
-			Update,
-			deform.run_if(in_state(GeneratorState::Idle).and_then(in_state(GameplayState::Playing))),
-		);
+		app.add_systems(Update, deform.run_if(in_state(GeneratorState::Idle)));
 	}
 }
 
-#[allow(dead_code)]
 fn deform(
 	mut commands: Commands,
 	mouse: Res<ButtonInput<MouseButton>>,

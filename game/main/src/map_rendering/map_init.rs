@@ -4,7 +4,7 @@ use avian3d::{
 };
 #[cfg(feature = "tracing")]
 use bevy::log::*;
-use bevy::{light::NotShadowCaster, pbr::ExtendedMaterial, prelude::*};
+use bevy::{pbr::ExtendedMaterial, prelude::*};
 use bevy_asset_loader::prelude::*;
 
 use bevy_inspector_egui::quick::ResourceInspectorPlugin;
@@ -28,7 +28,7 @@ use crate::{
 		chunk_material::ChunkMaterial,
 		water_material::{WaterMaterial, WaterSettings},
 	},
-	utils::chunk_utils::{paint_map, prepare_chunk_mesh_with_collider},
+	utils::chunk_utils::{create_water_chunk, paint_map, prepare_chunk_mesh_with_collider},
 };
 
 use super::{chunk_rebuild::ChunkRebuildPlugin, render_distance_system::RenderDistanceVisibility};
@@ -202,7 +202,7 @@ fn create_heightmap(
 		},
 		sea_level: 8.5,
 		border_size: 64.,
-		size: UVec2::splat(16),
+		size: UVec2::new(4, 4),
 		// size: UVec2::splat(1),
 	};
 	let (heightmap, biome_map) = generate_heightmap(&config, 42069, &biome_painter);
@@ -261,46 +261,44 @@ fn spawn_map(
 	{
 		#[cfg(feature = "tracing")]
 		let _spawn_span = info_span!("Spawn Chunks").entered();
-		let visibility_offset = Vec3::new(
-			(Chunk::SIZE / 2) as f32 * SHORT_DIAGONAL,
-			0.,
-			(Chunk::SIZE / 2) as f32 * 1.5,
-		);
+
 		for (chunk_mesh, water_mesh, collider, pos, index) in chunk_meshes {
-			// let mesh_handle = meshes.a
-			let water_mesh_handle = meshes.add(water_mesh);
+			let chunk_handle = meshes.add(chunk_mesh);
 			let chunk = commands
 				.spawn((
-					Mesh3d(meshes.add(chunk_mesh)),
+					Mesh3d(chunk_handle),
 					Name::new(format!("Chunk {}", index)),
 					MeshMaterial3d(atlas.chunk_material_handle.clone()),
 					Transform::from_translation(pos),
 					PhosChunk::new(index),
-					WaterMesh(water_mesh_handle.id()),
-					RenderDistanceVisibility::default().with_offset(visibility_offset),
+					RenderDistanceVisibility::default(),
 					RigidBody::Static,
 					SpeculativeMargin(0.5),
 					CollisionMargin(0.1),
 					collider,
 				))
 				.id();
-			let water = commands
-				.spawn((
-					Mesh3d(water_mesh_handle),
-					MeshMaterial3d(atlas.water_material.clone()),
-					Transform::from_translation(pos),
-					Name::new(format!("Water {}", index)),
-					PhosChunk::new(index),
-					NotShadowCaster,
-					RenderDistanceVisibility::default().with_offset(visibility_offset),
-				))
-				.id();
+			if let Some(water_mesh) = water_mesh {
+				let water_mesh_handle = meshes.add(water_mesh);
+				let water = commands
+					.spawn(create_water_chunk(
+						pos,
+						index,
+						water_mesh_handle.clone(),
+						atlas.water_material.clone(),
+					))
+					.id();
+				commands.entity(chunk).insert(WaterMesh(water_mesh_handle.id(), water));
+				registry.waters.push(Some(water));
+			} else {
+				registry.waters.push(None);
+			}
 			registry.chunks.push(chunk);
-			registry.waters.push(water);
 		}
 	}
 
 	commands.insert_resource(registry);
+
 	generator_state.set(GeneratorState::Idle);
 	info!("Generator Idle");
 
@@ -320,6 +318,7 @@ fn despawn_map(
 	biome_painter: Res<BiomePainter>,
 )
 {
+	info!("Despawn Map");
 	for chunk in chunks.iter() {
 		commands.entity(chunk).despawn();
 	}
