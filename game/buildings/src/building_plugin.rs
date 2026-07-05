@@ -4,8 +4,8 @@ use bevy::{
 	prelude::*,
 };
 use bevy_asset_loader::loading_state::{
-	config::{ConfigureLoadingState, LoadingStateConfig},
 	LoadingStateAppExt,
+	config::{ConfigureLoadingState, LoadingStateConfig},
 };
 use shared::{
 	despawn::Despawn,
@@ -162,20 +162,20 @@ fn update_building_heights(
 )
 {
 	for event in tile_updates.read() {
-		if let TileModifiedEvent::HeightChanged(coord, new_height) = event {
-			if let Some(building) = building_map.get_building(coord) {
-				let mut queue = CommandQueue::default();
-				let e = building.entity;
-				let h = *new_height;
-				queue.push(move |world: &mut World| {
-					let mut emut = world.entity_mut(e);
-					if let Some(mut transform) = emut.get_mut::<Transform>() {
-						transform.translation.y = h;
-					}
-				});
+		if let TileModifiedEvent::HeightChanged(coord, new_height) = event
+			&& let Some(building) = building_map.get_building(coord)
+		{
+			let mut queue = CommandQueue::default();
+			let e = building.entity;
+			let h = *new_height;
+			queue.push(move |world: &mut World| {
+				let mut emut = world.entity_mut(e);
+				if let Some(mut transform) = emut.get_mut::<Transform>() {
+					transform.translation.y = h;
+				}
+			});
 
-				commands.append(&mut queue);
-			}
+			commands.append(&mut queue);
 		}
 	}
 }

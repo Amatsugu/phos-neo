@@ -50,6 +50,7 @@ dev = [
 ]
 phys = ["dev", "avian3d/debug-plugin", "avian3d/validate"]
 inspect = ["dev"]
+terraforming = []
 
 [lints.clippy]
 # Bevy supplies arguments to systems via dependency injection, so it's natural for systems to

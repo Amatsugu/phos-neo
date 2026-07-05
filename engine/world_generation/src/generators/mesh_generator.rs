@@ -128,7 +128,7 @@ pub fn generate_chunk_water_mesh(
 			);
 		}
 	}
-	if verts.len() == 0 {
+	if verts.is_empty() {
 		return None;
 	}
 

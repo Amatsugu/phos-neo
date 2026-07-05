@@ -91,6 +91,6 @@ pub fn create_water_chunk(
 		Name::new(format!("Water {}", index)),
 		PhosChunk::new(index),
 		NotShadowCaster,
-		RenderDistanceVisibility::default(),
+		RenderDistanceVisibility::chunk_centered(),
 	)
 }

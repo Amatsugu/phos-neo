@@ -51,16 +51,7 @@ pub struct RenderDistanceVisibility
 
 impl RenderDistanceVisibility
 {
-	pub fn with_offset(mut self, offset: Vec3) -> Self
-	{
-		self.offset = offset;
-		return self;
-	}
-}
-
-impl Default for RenderDistanceVisibility
-{
-	fn default() -> Self
+	pub fn chunk_centered() -> Self
 	{
 		Self {
 			offset: Vec3::new(
@@ -69,6 +60,14 @@ impl Default for RenderDistanceVisibility
 				(Chunk::SIZE / 2) as f32 * 1.5,
 			),
 		}
+	}
+}
+
+impl Default for RenderDistanceVisibility
+{
+	fn default() -> Self
+	{
+		Self { offset: Vec3::ZERO }
 	}
 }
 

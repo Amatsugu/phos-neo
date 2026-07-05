@@ -2,6 +2,7 @@ use crate::camera_system::camera_plugin::PhosCameraPlugin;
 use crate::camera_system::components::PhosCamera;
 use crate::map_rendering::map_init::MapInitPlugin;
 use crate::map_rendering::render_distance_system::RenderDistancePlugin;
+#[cfg(feature = "terraforming")]
 use crate::map_rendering::terraforming_test::TerraFormingTestPlugin;
 use crate::ui::build_ui::BuildUIPlugin;
 use crate::ui::ui_base::BaseUIPlugin;
@@ -40,6 +41,7 @@ impl Plugin for PhosGamePlugin
 			// BuildingPugin,
 			BaseUIPlugin,
 			BuildUIPlugin,
+			#[cfg(feature = "terraforming")]
 			TerraFormingTestPlugin,
 			// SimpleAnimationPlugin,
 			// UnitsPlugin,

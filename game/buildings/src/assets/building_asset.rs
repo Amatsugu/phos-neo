@@ -52,36 +52,34 @@ impl BuildingAsset
 	) -> Option<Entity>
 	{
 		let base_node = &gltf.named_nodes[&self.base_mesh_path.clone().into_boxed_str()];
-		if let Some(node) = nodes.get(base_node.id()) {
-			if let Some(mesh_handle) = &node.mesh {
-				if let Some(gltf_mesh) = meshes.get(mesh_handle.id()) {
-					if let Some(primitive) = gltf_mesh.primitives.first() {
-						let mesh = primitive.mesh.clone();
-						// let mat = primitive
-						// 	.material
-						// 	.clone()
-						// 	.unwrap_or_else(|| panic!("Mesh '{}' does not have a material", primitive.name.as_str()));
-						let mut entity = commands.spawn((
-							Mesh3d(mesh),
-							// MeshMaterial3d(mat),
-							Transform::from_translation(pos).with_rotation(rot),
-							Building,
-						));
-						entity.with_children(|b| {
-							for child in &node.children {
-								let child_node = nodes.get(child.id());
-								if child_node.is_none() {
-									continue;
-								}
-								self.process_node(child_node.unwrap(), meshes, nodes, b, &node.name);
-							}
-						});
-						let component = self.get_component_def(&format!("/{0}", node.name))?;
-						component.apply(&mut entity);
-						return Some(entity.id());
+		if let Some(node) = nodes.get(base_node.id())
+			&& let Some(mesh_handle) = &node.mesh
+			&& let Some(gltf_mesh) = meshes.get(mesh_handle.id())
+			&& let Some(primitive) = gltf_mesh.primitives.first()
+		{
+			let mesh = primitive.mesh.clone();
+			// let mat = primitive
+			// 	.material
+			// 	.clone()
+			// 	.unwrap_or_else(|| panic!("Mesh '{}' does not have a material", primitive.name.as_str()));
+			let mut entity = commands.spawn((
+				Mesh3d(mesh),
+				// MeshMaterial3d(mat),
+				Transform::from_translation(pos).with_rotation(rot),
+				Building,
+			));
+			entity.with_children(|b| {
+				for child in &node.children {
+					let child_node = nodes.get(child.id());
+					if child_node.is_none() {
+						continue;
 					}
+					self.process_node(child_node.unwrap(), meshes, nodes, b, &node.name);
 				}
-			}
+			});
+			let component = self.get_component_def(&format!("/{0}", node.name))?;
+			component.apply(&mut entity);
+			return Some(entity.id());
 		}
 		return None;
 	}
@@ -96,30 +94,29 @@ impl BuildingAsset
 	) -> Option<Entity>
 	{
 		let path = format!("{0}/{1}", parent, node.name);
-		if let Some(mesh) = &node.mesh {
-			if let Some(gltf_mesh) = meshes.get(mesh.id()) {
-				if let Some(primitive) = gltf_mesh.primitives.first() {
-					let mesh = primitive.mesh.clone();
-					// let mat = primitive
-					// 	.material
-					// 	.clone()
-					// 	.unwrap_or_else(|| panic!("Mesh '{}' does not have a meterial", primitive.name.as_str()));
-					let mut entity = commands.spawn((Mesh3d(mesh), node.transform, Building));
-					entity.with_children(|b| {
-						for child in &node.children {
-							let child_node = nodes.get(child.id());
-							if child_node.is_none() {
-								continue;
-							}
-							self.process_node(child_node.unwrap(), meshes, nodes, b, &path);
-						}
-					});
-					if let Some(component) = self.get_component_def(&path) {
-						component.apply(&mut entity);
+		if let Some(mesh) = &node.mesh
+			&& let Some(gltf_mesh) = meshes.get(mesh.id())
+			&& let Some(primitive) = gltf_mesh.primitives.first()
+		{
+			let mesh = primitive.mesh.clone();
+			// let mat = primitive
+			// 	.material
+			// 	.clone()
+			// 	.unwrap_or_else(|| panic!("Mesh '{}' does not have a meterial", primitive.name.as_str()));
+			let mut entity = commands.spawn((Mesh3d(mesh), node.transform, Building));
+			entity.with_children(|b| {
+				for child in &node.children {
+					let child_node = nodes.get(child.id());
+					if child_node.is_none() {
+						continue;
 					}
-					return Some(entity.id());
+					self.process_node(child_node.unwrap(), meshes, nodes, b, &path);
 				}
+			});
+			if let Some(component) = self.get_component_def(&path) {
+				component.apply(&mut entity);
 			}
+			return Some(entity.id());
 		}
 		return None;
 	}

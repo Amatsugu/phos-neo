@@ -25,30 +25,30 @@ impl PrefabDefination
 	)
 	{
 		let mesh_handle = &gltf.named_meshes[&self.path.clone().into_boxed_str()];
-		if let Some(gltf_mesh) = meshes.get(mesh_handle.id()) {
-			if let Some(primitive) = gltf_mesh.primitives.first() {
-				let mesh = primitive.mesh.clone();
-				// let mat_handle = primitive
-				// 	.material
-				// 	.clone()
-				// 	.unwrap_or_else(|| panic!("Mesh '{}' does not have a meterial", primitive.name.as_str()));
-				let mut entity = commands.spawn((
-					Mesh3d(mesh),
-					// MeshMaterial3d(mat_handle),
-					Transform::from_translation(self.pos).with_rotation(Quat::from_euler(
-						bevy::math::EulerRot::XYZ,
-						self.rot.x,
-						self.rot.y,
-						self.rot.z,
-					)),
-				));
-				if let Some(children) = &self.children {
-					entity.with_children(|b| {
-						for child in children {
-							child.spawn_recursive(gltf, b, meshes);
-						}
-					});
-				}
+		if let Some(gltf_mesh) = meshes.get(mesh_handle.id())
+			&& let Some(primitive) = gltf_mesh.primitives.first()
+		{
+			let mesh = primitive.mesh.clone();
+			// let mat_handle = primitive
+			// 	.material
+			// 	.clone()
+			// 	.unwrap_or_else(|| panic!("Mesh '{}' does not have a meterial", primitive.name.as_str()));
+			let mut entity = commands.spawn((
+				Mesh3d(mesh),
+				// MeshMaterial3d(mat_handle),
+				Transform::from_translation(self.pos).with_rotation(Quat::from_euler(
+					bevy::math::EulerRot::XYZ,
+					self.rot.x,
+					self.rot.y,
+					self.rot.z,
+				)),
+			));
+			if let Some(children) = &self.children {
+				entity.with_children(|b| {
+					for child in children {
+						child.spawn_recursive(gltf, b, meshes);
+					}
+				});
 			}
 		}
 	}

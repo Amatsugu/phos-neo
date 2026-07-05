@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use bevy::{
 	ecs::world::CommandQueue,
 	prelude::*,
-	tasks::{futures, AsyncComputeTaskPool},
+	tasks::{AsyncComputeTaskPool, futures},
 };
 use hex::prelude::*;
 use pathfinding::prelude::astar;
@@ -148,11 +148,11 @@ fn dispatch_path_requests(
 					queue.push(move |world: &mut World| {
 						let mut unit_e = world.entity_mut(entitiy_req.entity);
 
-						if let Some(pending_task) = unit_e.get::<PathTaskPending>() {
-							if pending_task.0 == id {
-								unit_e.insert(path);
-								unit_e.remove::<PathTaskPending>();
-							}
+						if let Some(pending_task) = unit_e.get::<PathTaskPending>()
+							&& pending_task.0 == id
+						{
+							unit_e.insert(path);
+							unit_e.remove::<PathTaskPending>();
 						}
 					});
 				}

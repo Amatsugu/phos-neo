@@ -1,4 +1,5 @@
 pub mod chunk_utils;
+#[cfg(debug_assertions)]
 pub mod debug_plugin;
 #[cfg(feature = "editor")]
 pub mod editor_plugin;

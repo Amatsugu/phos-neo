@@ -2,7 +2,6 @@ use bevy::{platform::collections::HashSet, prelude::*};
 use shared::{
 	events::{ChunkModifiedEvent, TileModifiedEvent},
 	resources::TileUnderCursor,
-	states::GameplayState,
 };
 use world_generation::{prelude::Map, states::GeneratorState};
 

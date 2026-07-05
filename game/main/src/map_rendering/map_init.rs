@@ -271,7 +271,7 @@ fn spawn_map(
 					MeshMaterial3d(atlas.chunk_material_handle.clone()),
 					Transform::from_translation(pos),
 					PhosChunk::new(index),
-					RenderDistanceVisibility::default(),
+					RenderDistanceVisibility::chunk_centered(),
 					RigidBody::Static,
 					SpeculativeMargin(0.5),
 					CollisionMargin(0.1),
