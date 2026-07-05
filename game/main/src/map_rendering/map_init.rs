@@ -1,3 +1,7 @@
+use avian3d::{
+	collision::collider::CollisionMargin,
+	dynamics::{ccd::SpeculativeMargin, rigid_body::RigidBody},
+};
 #[cfg(feature = "tracing")]
 use bevy::log::*;
 use bevy::{light::NotShadowCaster, pbr::ExtendedMaterial, prelude::*};
@@ -232,8 +236,8 @@ fn spawn_map(
 	biome_painter: Res<BiomePainter>,
 )
 {
+	info!("Spawn Map");
 	paint_map(&mut heightmap, &biome_painter, &tile_assets, &tile_mappers);
-
 	//Prepare Mesh Data
 	let map_size = UVec2::new(heightmap.width as u32, heightmap.height as u32);
 	let chunk_meshes: Vec<_> = heightmap
@@ -274,6 +278,9 @@ fn spawn_map(
 					PhosChunk::new(index),
 					WaterMesh(water_mesh_handle.id()),
 					RenderDistanceVisibility::default().with_offset(visibility_offset),
+					RigidBody::Static,
+					SpeculativeMargin(0.5),
+					CollisionMargin(0.1),
 					collider,
 				))
 				.id();

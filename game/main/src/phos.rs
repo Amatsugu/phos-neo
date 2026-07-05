@@ -78,28 +78,28 @@ fn configure_gameplay_set(app: &mut App)
 {
 	app.configure_sets(
 		Update,
-		GameplaySystems.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
+		GameplaySystems.run_if(in_state(GeneratorState::Idle).and_then(in_state(MenuState::InGame))),
 	);
 	app.configure_sets(
 		PreUpdate,
-		GameplaySystems.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
+		GameplaySystems.run_if(in_state(GeneratorState::Idle).and_then(in_state(MenuState::InGame))),
 	);
 	app.configure_sets(
 		PostUpdate,
-		GameplaySystems.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
+		GameplaySystems.run_if(in_state(GeneratorState::Idle).and_then(in_state(MenuState::InGame))),
 	);
 
 	app.configure_sets(
 		FixedUpdate,
-		GameplaySystems.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
+		GameplaySystems.run_if(in_state(GeneratorState::Idle).and_then(in_state(MenuState::InGame))),
 	);
 	app.configure_sets(
 		FixedPreUpdate,
-		GameplaySystems.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
+		GameplaySystems.run_if(in_state(GeneratorState::Idle).and_then(in_state(MenuState::InGame))),
 	);
 	app.configure_sets(
 		FixedPostUpdate,
-		GameplaySystems.run_if(in_state(GeneratorState::Idle).and(in_state(MenuState::InGame))),
+		GameplaySystems.run_if(in_state(GeneratorState::Idle).and_then(in_state(MenuState::InGame))),
 	);
 }
 

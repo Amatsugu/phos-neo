@@ -71,7 +71,8 @@ fn regenerate_map(
 
 fn show_tile_heights(map: Res<Map>, mut gizmos: Gizmos, shape: Res<Shape>, tile_under_cursor: Res<TileUnderCursor>)
 {
-	if let Some(contact) = tile_under_cursor.0 {
+	if let Some(contact) = tile_under_cursor.0 && map.is_in_bounds(&contact.tile){
+
 		let height = map.sample_height(&contact.tile);
 		gizmos.primitive_3d(&shape.0, contact.tile.to_world(height + 0.01), Color::WHITE);
 
