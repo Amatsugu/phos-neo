@@ -43,7 +43,7 @@ impl Default for RenderDistanceSettings
 	}
 }
 
-#[derive(Component)]
+#[derive(Component, FromTemplate, Clone)]
 pub struct RenderDistanceVisibility
 {
 	pub offset: Vec3,

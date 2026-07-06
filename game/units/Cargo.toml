@@ -21,7 +21,7 @@ pathfinding = "4.15.0"
 ordered-float = "5.3.0"
 
 [features]
-tracing = ["bevy/trace_tracy"]
+tracing = []
 
 [lints.clippy]
 # Bevy supplies arguments to systems via dependency injection, so it's natural for systems to

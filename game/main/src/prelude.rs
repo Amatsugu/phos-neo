@@ -16,7 +16,7 @@ pub struct PhosAssets
 	pub water_material: Handle<ExtendedMaterial<StandardMaterial, WaterMaterial>>,
 }
 
-#[derive(Component)]
+#[derive(Component, Clone, Copy, FromTemplate)]
 pub struct PhosChunk
 {
 	pub index: usize,
@@ -29,6 +29,10 @@ impl PhosChunk
 		return Self { index };
 	}
 }
+
+#[derive(Component, Default)]
+#[require(Name("Root".into()), Transform)]
+pub struct MapRoot;
 
 #[derive(Component)]
 pub struct WaterMesh(pub AssetId<Mesh>, pub Entity);

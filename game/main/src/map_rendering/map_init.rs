@@ -1,7 +1,3 @@
-use avian3d::{
-	collision::collider::CollisionMargin,
-	dynamics::{ccd::SpeculativeMargin, rigid_body::RigidBody},
-};
 #[cfg(feature = "tracing")]
 use bevy::log::*;
 use bevy::{pbr::ExtendedMaterial, prelude::*};
@@ -23,15 +19,16 @@ use world_generation::{
 };
 
 use crate::{
-	prelude::{PhosAssets, PhosChunk, PhosChunkRegistry, WaterMesh},
+	map_rendering::prefabs::ChunkPrefab,
+	prelude::{MapRoot, PhosAssets, PhosChunkRegistry, WaterMesh},
 	shader_extensions::{
 		chunk_material::ChunkMaterial,
 		water_material::{WaterMaterial, WaterSettings},
 	},
-	utils::chunk_utils::{create_water_chunk, paint_map, prepare_chunk_mesh_with_collider},
+	utils::chunk_utils::{paint_map, prepare_chunk_mesh_with_collider},
 };
 
-use super::{chunk_rebuild::ChunkRebuildPlugin, render_distance_system::RenderDistanceVisibility};
+use super::chunk_rebuild::ChunkRebuildPlugin;
 
 pub struct MapInitPlugin;
 
@@ -202,7 +199,7 @@ fn create_heightmap(
 		},
 		sea_level: 8.5,
 		border_size: 64.,
-		size: UVec2::new(4, 4),
+		size: UVec2::new(16, 16),
 		// size: UVec2::splat(1),
 	};
 	let (heightmap, biome_map) = generate_heightmap(&config, 42069, &biome_painter);
@@ -241,6 +238,8 @@ fn spawn_map(
 {
 	info!("Spawn Map");
 	paint_map(&mut heightmap, &biome_painter, &tile_assets, &tile_mappers);
+
+	let root = commands.spawn(MapRoot).id();
 	//Prepare Mesh Data
 	let map_size = UVec2::new(heightmap.width as u32, heightmap.height as u32);
 	let chunk_meshes: Vec<_> = heightmap
@@ -265,34 +264,33 @@ fn spawn_map(
 		for (chunk_mesh, water_mesh, collider, pos, index) in chunk_meshes {
 			let chunk_handle = meshes.add(chunk_mesh);
 			let chunk = commands
-				.spawn((
-					Mesh3d(chunk_handle),
-					Name::new(format!("Chunk {}", index)),
-					MeshMaterial3d(atlas.chunk_material_handle.clone()),
-					Transform::from_translation(pos),
-					PhosChunk::new(index),
-					RenderDistanceVisibility::chunk_centered(),
-					RigidBody::Static,
-					SpeculativeMargin(0.5),
-					CollisionMargin(0.1),
+				.spawn(ChunkPrefab::terrain(
+					pos,
+					chunk_handle,
+					atlas.chunk_material_handle.clone(),
 					collider,
+					index,
 				))
 				.id();
 			if let Some(water_mesh) = water_mesh {
 				let water_mesh_handle = meshes.add(water_mesh);
 				let water = commands
-					.spawn(create_water_chunk(
-						pos,
-						index,
+					.spawn(ChunkPrefab::water(
+						Vec3::ZERO,
 						water_mesh_handle.clone(),
 						atlas.water_material.clone(),
+						index,
 					))
 					.id();
-				commands.entity(chunk).insert(WaterMesh(water_mesh_handle.id(), water));
+				commands
+					.entity(chunk)
+					.insert(WaterMesh(water_mesh_handle.id(), water))
+					.add_child(water);
 				registry.waters.push(Some(water));
 			} else {
 				registry.waters.push(None);
 			}
+			commands.entity(root).add_child(chunk);
 			registry.chunks.push(chunk);
 		}
 	}
@@ -313,15 +311,13 @@ fn despawn_map(
 	mut heightmap: ResMut<Map>,
 	mut biome_map: ResMut<BiomeMap>,
 	cfg: Res<GenerationConfig>,
-	chunks: Query<Entity, With<PhosChunk>>,
+	map_root: Single<Entity, With<MapRoot>>,
 	mut next_state: ResMut<NextState<GeneratorState>>,
 	biome_painter: Res<BiomePainter>,
 )
 {
 	info!("Despawn Map");
-	for chunk in chunks.iter() {
-		commands.entity(chunk).despawn();
-	}
+	commands.entity(map_root.into_inner()).despawn();
 
 	(*heightmap, *biome_map) = generate_heightmap(&cfg, 4, &biome_painter);
 	next_state.set(GeneratorState::SpawnMap);

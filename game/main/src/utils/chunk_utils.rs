@@ -1,7 +1,7 @@
 use avian3d::prelude::*;
 #[cfg(feature = "tracing")]
 use bevy::log::*;
-use bevy::{light::NotShadowCaster, prelude::*};
+use bevy::prelude::*;
 use hex::prelude::*;
 use rayon::iter::{IntoParallelRefMutIterator, ParallelIterator};
 use world_generation::{
@@ -14,8 +14,6 @@ use world_generation::{
 	tile_manager::TileAsset,
 	tile_mapper::TileMapperAsset,
 };
-
-use crate::{map_rendering::render_distance_system::RenderDistanceVisibility, prelude::PhosChunk};
 
 pub fn paint_map(
 	map: &mut Map,
@@ -75,22 +73,4 @@ pub fn prepare_chunk_mesh_with_collider(
 		collider = Collider::trimesh(col_verts, col_indicies);
 	}
 	return (chunk_mesh, water_mesh, collider);
-}
-
-pub fn create_water_chunk(
-	position: Vec3,
-	index: usize,
-	water_mesh: Handle<Mesh>,
-	water_material: Handle<impl bevy::pbr::Material>,
-) -> impl Bundle
-{
-	(
-		Mesh3d(water_mesh),
-		MeshMaterial3d(water_material),
-		Transform::from_translation(position),
-		Name::new(format!("Water {}", index)),
-		PhosChunk::new(index),
-		NotShadowCaster,
-		RenderDistanceVisibility::chunk_centered(),
-	)
 }
