@@ -6562,6 +6562,7 @@ dependencies = [
  "shared",
  "strum",
  "strum_macros",
+ "tile_viz",
  "units",
  "world_generation",
 ]
@@ -7828,6 +7829,17 @@ checksum = "965fe0c26be5c56c94e38ba547249074803efd52adfb66de62107d95aab3eaca"
 dependencies = [
  "libc",
  "tikv-jemalloc-sys",
+]
+
+[[package]]
+name = "tile_viz"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy_asset_loader",
+ "hex",
+ "shared",
+ "world_generation",
 ]
 
 [[package]]

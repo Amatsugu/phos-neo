@@ -1,12 +1,13 @@
 use bevy::{
-	camera::{visibility::RenderLayers, CameraOutputMode},
+	camera::{CameraOutputMode, visibility::RenderLayers},
 	input_focus::InputFocus,
 	prelude::*,
 	render::render_resource::BlendState,
 };
-use shared::states::AssetLoadState;
+use shared::{resources::TileUnderCursor, states::AssetLoadState};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
+use tile_viz::components::HexAreaSelection;
 
 use crate::ui::{components::*, events::Press, states::BuildUIState};
 pub struct BuildUIPlugin;
@@ -56,6 +57,8 @@ impl Plugin for BuildUIPlugin
 				draw_menu_ui.run_if(in_state(AssetLoadState::LoadComplete).and_then(in_state(BuildUIState::DrawMenu))),
 			),
 		);
+		app.init_resource::<SelectionEntity>();
+		app.add_systems(Update, selection_test.run_if(in_state(BuildUIState::Update)));
 		app.add_systems(PostUpdate, cleanup_ui.run_if(in_state(BuildUIState::Cleanup)));
 	}
 }
@@ -253,5 +256,29 @@ fn cleanup_ui(mut commands: Commands, ui_items: Query<Entity, With<BuildUIItem>>
 {
 	for entity in ui_items.iter() {
 		commands.entity(entity).despawn();
+	}
+}
+
+#[derive(Resource, Default)]
+struct SelectionEntity(pub Option<Entity>);
+
+fn selection_test(
+	mut commands: Commands,
+	mut selection: ResMut<SelectionEntity>,
+	cursor: Res<TileUnderCursor>,
+	area: Query<&HexAreaSelection>,
+)
+{
+	if let Some(tile) = cursor.0 {
+		if let Some(e) = selection.0
+			&& let Ok(area) = area.get(e)
+		{
+			if area.0 != tile.tile {
+				commands.entity(e).insert(HexAreaSelection(tile.tile, 4));
+			}
+		} else {
+			let sel = commands.spawn(HexAreaSelection(tile.tile, 4)).id();
+			selection.0 = Some(sel);
+		}
 	}
 }

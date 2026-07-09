@@ -6,6 +6,7 @@ members = [
 	"game/buildings",
 	"game/units",
 	"game/resources",
+	"game/tile_viz",
     "engine/world_generation",
 	"engine/asset_loader",
 	"engine/data",

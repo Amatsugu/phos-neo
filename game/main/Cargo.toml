@@ -9,12 +9,12 @@ edition = "2024"
 [dependencies]
 bevy = { version = "0.19.0" }
 bevy-inspector-egui = "0.37.0"
-# iyes_perf_ui = "0.3.0"
 noise = "0.9.0"
 world_generation = { path = "../../engine/world_generation" }
 rayon = "1.12.0"
 buildings = { path = "../buildings" }
 units = { path = "../units" }
+tile_viz = { path = "../tile_viz" }
 shared = { path = "../shared" }
 bevy_asset_loader = { version = "0.27.0", features = [
 	"standard_dynamic_assets",
@@ -38,19 +38,20 @@ tracing = [
 	"buildings/tracing",
 	"units/tracing",
 	"shared/tracing",
+	"tile_viz/tracing",
 ]
 dev = [
-	"bevy/bevy_dev_tools",
-	"bevy/bevy_ui_debug",
+	"inspect",
+	"bevy/dev",
 	# Improve error messages coming from Bevy
 	"bevy/track_location",
-	"inspect",
 	"bevy/file_watcher",
 	"bevy/embedded_watcher",
 ]
 phys = ["dev", "avian3d/debug-plugin", "avian3d/validate"]
 inspect = ["dev"]
 terraforming = []
+wireframe=[]
 
 [lints.clippy]
 # Bevy supplies arguments to systems via dependency injection, so it's natural for systems to

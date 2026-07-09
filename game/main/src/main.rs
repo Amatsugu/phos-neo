@@ -1,5 +1,4 @@
 use bevy::image::{ImageAddressMode, ImageFilterMode, ImageSamplerDescriptor};
-use bevy::pbr::wireframe::WireframePlugin;
 use bevy::prelude::*;
 use bevy::window::PresentMode;
 #[cfg(debug_assertions)]
@@ -49,7 +48,6 @@ fn main()
 				}),
 			EguiPlugin::default(),
 			WorldInspectorPlugin::new(),
-			WireframePlugin::default(),
 			PhosGamePlugin,
 		))
 		.run();

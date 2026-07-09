@@ -13,11 +13,14 @@ use avian3d::prelude::*;
 use bevy::dev_tools::diagnostics_overlay::{DiagnosticsOverlay, DiagnosticsOverlayPlugin};
 use bevy::diagnostic::{EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin};
 use bevy::light::CascadeShadowConfig;
-use bevy::{pbr::wireframe::WireframeConfig, prelude::*};
+#[cfg(feature = "wireframe")]
+use bevy::pbr::wireframe::{WireframeConfig, WireframePlugin};
+use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use shared::sets::GameplaySystems;
 use shared::states::{GameplayState, MenuState};
 use shared::{despawn::DespawnPlugin, states::AssetLoadState};
+use tile_viz::tile_viz_plugin::TileVizPlugin;
 use world_generation::states::GeneratorState;
 
 pub struct PhosGamePlugin;
@@ -47,10 +50,13 @@ impl Plugin for PhosGamePlugin
 			// UnitsPlugin,
 			DespawnPlugin,
 			TileSelectionPlugin,
+			TileVizPlugin,
 			#[cfg(feature = "editor")]
 			crate::utils::editor_plugin::EditorPlugin,
 			#[cfg(debug_assertions)]
 			DebugPlugin,
+			#[cfg(feature = "wireframe")]
+			WireframePlugin::default(),
 		));
 
 		configure_gameplay_set(app);
@@ -74,8 +80,9 @@ impl Plugin for PhosGamePlugin
 		app.add_plugins(PhysicsPlugins::default());
 		// app.add_plugins(RapierDebugRenderPlugin::default());
 
+		#[cfg(feature = "wireframe")]
 		app.insert_resource(WireframeConfig {
-			global: false,
+			global: true,
 			default_color: Srgba::hex("FF0064").unwrap().into(),
 			..default()
 		});
