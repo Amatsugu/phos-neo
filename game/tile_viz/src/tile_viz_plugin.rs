@@ -54,7 +54,7 @@ fn spawn_hex_area(
 {
 	if let Ok((selection, children)) = entities.get(added.entity) {
 		#[cfg(feature = "tracing")]
-		_ = info_span!("Hex Area Visualization").entered();
+		let _ = info_span!("Hex Area Visualization").entered();
 		if let Some(children) = children {
 			for e in children {
 				commands.entity(*e).despawn();
