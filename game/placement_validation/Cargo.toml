@@ -1,0 +1,8 @@
+[package]
+name = "placement_validation"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+hex = { path = "../../engine/hex" }
+world_generation = { path = "../../engine/world_generation" }

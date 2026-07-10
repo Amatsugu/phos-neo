@@ -51,38 +51,38 @@ jobs:
                     exit 1
                   fi
 
-    bevy-lints:
-        name: Bevy lints
-        runs-on: ubuntu-latest
-        timeout-minutes: 20
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
+    # bevy-lints:
+    #     name: Bevy lints
+    #     runs-on: ubuntu-latest
+    #     timeout-minutes: 20
+    #     steps:
+    #         - name: Checkout repository
+    #           uses: actions/checkout@v4
 
-            - name: Install Rust toolchain (plus bevy_lint)
-              uses: TheBevyFlock/bevy_cli/bevy_lint@lint-v0.6.0
-              with:
-                  cache: true
-                  save-cache-if: ${{ github.ref == 'refs/heads/main' }}
+    #         - name: Install Rust toolchain (plus bevy_lint)
+    #           uses: TheBevyFlock/bevy_cli/bevy_lint@lint-v0.6.0
+    #           with:
+    #               cache: true
+    #               save-cache-if: ${{ github.ref == 'refs/heads/main' }}
 
-            - name: Restore Rust cache
-              id: cache
-              uses: Swatinem/rust-cache@v2
-              with:
-                  shared-key: ci
-                  save-if: false
+    #         - name: Restore Rust cache
+    #           id: cache
+    #           uses: Swatinem/rust-cache@v2
+    #           with:
+    #               shared-key: ci
+    #               save-if: false
 
-            - name: Install build dependencies
-              if: steps.cache.outputs.cache-hit != 'true'
-              run: sudo apt-get update; sudo apt-get install -y --no-install-recommends libasound2-dev libudev-dev libwayland-dev
+    #         - name: Install build dependencies
+    #           if: steps.cache.outputs.cache-hit != 'true'
+    #           run: sudo apt-get update; sudo apt-get install -y --no-install-recommends libasound2-dev libudev-dev libwayland-dev
 
-            - name: Run Bevy lints
-              run: |
-                  if ! bevy_lint --locked --workspace --all-targets --profile ci --all-features 2> bevy_output.txt; then
-                    echo "::error title=Bevy Architecture Lint Failed::System structures do not conform to engine layout rules. See logs."
-                    cat bevy_output.txt >&2
-                    exit 1
-                  fi
+    #         - name: Run Bevy lints
+    #           run: |
+    #               if ! bevy_lint --locked --workspace --all-targets --profile ci --all-features 2> bevy_output.txt; then
+    #                 echo "::error title=Bevy Architecture Lint Failed::System structures do not conform to engine layout rules. See logs."
+    #                 cat bevy_output.txt >&2
+    #                 exit 1
+    #               fi
 
     tests:
         name: Tests

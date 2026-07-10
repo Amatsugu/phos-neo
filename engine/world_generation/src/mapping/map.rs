@@ -177,6 +177,16 @@ impl Map
 		self.chunks[pos.to_chunk_index(self.width)].heights[pos.to_chunk_local_index()] = height;
 	}
 
+	pub fn is_underwater(&self, pos: &HexCoord) -> bool
+	{
+		self.sealevel < self.sample_height(pos)
+	}
+
+	pub fn is_on_land(&self, pos: &HexCoord) -> bool
+	{
+		self.sealevel >= self.sample_height(pos)
+	}
+
 	pub fn create_crater(&mut self, pos: &HexCoord, radius: usize, depth: f32) -> Vec<(HexCoord, f32)>
 	{
 		assert!(radius != 0, "Radius cannot be zero");
@@ -335,5 +345,20 @@ impl Map
 		}
 
 		return result;
+	}
+
+	pub fn first<OP>(&self, op: OP) -> Option<HexCoord>
+	where
+		OP: (Fn(&HexCoord) -> bool) + Sync + Send,
+	{
+		for y in 0..self.get_tile_height() {
+			for x in 0..self.get_tile_width() {
+				let pos = HexCoord::from_offset_pos(x, y);
+				if op(&pos) {
+					return Some(pos);
+				}
+			}
+		}
+		None
 	}
 }
