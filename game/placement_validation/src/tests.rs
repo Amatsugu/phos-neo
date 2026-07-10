@@ -14,11 +14,11 @@ fn on_land()
 	let v: OnLand = OnLand::default();
 
 	let result = v.validate_placement(pos, &map);
-	assert_eq!(result.is_valid, true, "Validation failed: Expected on land");
+	assert!(result.is_valid, "Validation failed: Expected on land");
 
 	let pos = HexCoord::from_offset_pos(Chunk::SIZE - 1, Chunk::SIZE - 1);
 	let result = v.validate_placement(pos, &map);
-	assert_eq!(result.is_valid, false, "Validation failed: Expected on water");
+	assert!(!result.is_valid, "Validation failed: Expected on water");
 }
 
 #[test]
@@ -29,11 +29,11 @@ fn on_water()
 	let v: OnWater = Default::default();
 
 	let result = v.validate_placement(pos, &map);
-	assert_eq!(result.is_valid, true, "Validation failed: Expected on water");
+	assert!(result.is_valid, "Validation failed: Expected on water");
 
 	let pos = HexCoord::from_offset_pos(1, 1);
 	let result = v.validate_placement(pos, &map);
-	assert_eq!(result.is_valid, false, "Validation failed: Expected on land");
+	assert!(!result.is_valid, "Validation failed: Expected on land");
 }
 
 #[test]
@@ -45,11 +45,11 @@ fn not()
 	let v: Not<OnLand> = Default::default();
 
 	let result = v.validate_placement(pos, &map);
-	assert_eq!(result.is_valid, true, "Validation failed: Expected on water");
+	assert!(result.is_valid, "Validation failed: Expected on water");
 
 	let pos = HexCoord::from_offset_pos(1, 1);
 	let result = v.validate_placement(pos, &map);
-	assert_eq!(result.is_valid, false, "Validation failed: Expected on land");
+	assert!(!result.is_valid, "Validation failed: Expected on land");
 }
 
 #[test]
@@ -61,11 +61,11 @@ fn or()
 	let v: Or<OnLand, OnWater> = Default::default();
 
 	let result = v.validate_placement(pos, &map);
-	assert_eq!(result.is_valid, true, "Validation failed: Expected on water");
+	assert!(result.is_valid, "Validation failed: Expected on water");
 
 	let pos = HexCoord::from_offset_pos(1, 1);
 	let result = v.validate_placement(pos, &map);
-	assert_eq!(result.is_valid, true, "Validation failed: Expected on land");
+	assert!(result.is_valid, "Validation failed: Expected on land");
 }
 
 #[test]
@@ -77,7 +77,7 @@ fn on_shore()
 			if map.is_on_land(c) {
 				c.get_neighbors()
 					.iter()
-					.any(|n| map.is_in_bounds(&n) && map.is_underwater(&n))
+					.any(|n| map.is_in_bounds(n) && map.is_underwater(n))
 			} else {
 				false
 			}
@@ -86,14 +86,11 @@ fn on_shore()
 	let v: OnLand<NextToWater> = Default::default();
 
 	let result = v.validate_placement(pos, &map);
-	assert_eq!(result.is_valid, true, "Validation failed: On shore");
+	assert!(result.is_valid, "Validation failed: On shore");
 
 	let pos = HexCoord::from_offset_pos(1, 1);
-	pos.get_neighbors().iter().for_each(|p| {
-		println!("{:?}: {:?}", p, map.is_underwater(&p));
-	});
 	let result = v.validate_placement(pos, &map);
-	assert_eq!(result.is_valid, false, "Validation failed: Inland");
+	assert!(!result.is_valid, "Validation failed: Inland");
 }
 
 fn create_test_map() -> Map
@@ -118,7 +115,7 @@ fn test_chunk() -> Chunk
 	Chunk {
 		min_level: 0.0,
 		max_level: 5.0,
-		heights: heights,
+		heights,
 		..Default::default()
 	}
 }
