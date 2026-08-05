@@ -1,7 +1,7 @@
 use hex::prelude::HexCoord;
 use world_generation::mapping::map::Map;
 
-use crate::{ValidationResult, traits::PlacementValidator, validators::Always};
+use crate::{ValidationDisplay, ValidationResult, traits::PlacementValidator, validators::Always};
 
 #[derive(Default)]
 pub struct OnLand<T: PlacementValidator = Always>
@@ -17,7 +17,13 @@ impl<T: PlacementValidator> PlacementValidator for OnLand<T>
 		let on_land = map.is_on_land(&pos);
 		ValidationResult {
 			is_valid: on_land,
-			display: Vec::default(),
+			display: vec![ValidationDisplay::Tile {
+				coord: pos,
+				validation: match on_land {
+					true => crate::ValidationType::Footprint,
+					false => crate::ValidationType::Invalid,
+				},
+			}],
 		}
 	}
 

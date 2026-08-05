@@ -7846,6 +7846,7 @@ dependencies = [
  "bevy",
  "bevy_asset_loader",
  "hex",
+ "placement_validation",
  "shared",
  "world_generation",
 ]

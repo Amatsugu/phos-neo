@@ -12,3 +12,4 @@ bevy_asset_loader = "0.27.0"
 shared = { path = "../shared" }
 hex = { path = "../../engine/hex" }
 world_generation = { path = "../../engine/world_generation" }
+placement_validation = { path = "../placement_validation" }

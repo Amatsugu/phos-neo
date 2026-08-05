@@ -1,4 +1,4 @@
-use crate::{ValidationResult, traits::PlacementValidator, validators::Always};
+use crate::{ValidationDisplay, ValidationResult, traits::PlacementValidator, validators::Always};
 
 #[derive(Default)]
 pub struct NextToWater<T: PlacementValidator = Always>
@@ -22,7 +22,13 @@ impl<T: PlacementValidator> PlacementValidator for NextToWater<T>
 			.any(|t| map.is_in_bounds(t) && map.is_underwater(t));
 		ValidationResult {
 			is_valid: neighboring_water,
-			..Default::default()
+			display: vec![ValidationDisplay::Tile {
+				coord: pos,
+				validation: match neighboring_water {
+					true => crate::ValidationType::Footprint,
+					false => crate::ValidationType::Invalid,
+				},
+			}],
 		}
 	}
 

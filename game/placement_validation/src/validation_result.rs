@@ -1,3 +1,5 @@
+use hex::prelude::HexCoord;
+
 #[derive(Default)]
 pub struct ValidationResult
 {
@@ -7,19 +9,35 @@ pub struct ValidationResult
 
 impl ValidationResult
 {
-	pub fn merge_with(self, other: Self) -> Self
+	pub fn merge_with(mut self, mut other: Self) -> Self
 	{
-		Self {
-			is_valid: self.is_valid && other.is_valid,
-			..Default::default()
-		}
+		self.display.append(&mut other.display);
+		self.is_valid = self.is_valid && other.is_valid;
+		return self;
 	}
 }
 
+#[derive(Clone, Copy)]
+pub enum ValidationType
+{
+	Footprint,
+	Invalid,
+	Powered,
+	Buffed,
+}
+
+#[derive(Clone, Copy)]
 pub enum ValidationDisplay
 {
-	Footprint(),
-	Invalid(),
-	Powered(),
-	Buffed(),
+	Tile
+	{
+		coord: HexCoord,
+		validation: ValidationType,
+	},
+	Hex
+	{
+		center: HexCoord,
+		radius: usize,
+		validation: ValidationType,
+	},
 }
