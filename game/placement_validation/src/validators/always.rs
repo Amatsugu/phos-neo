@@ -1,4 +1,4 @@
-use crate::{ValidationDisplay, ValidationResult, traits::PlacementValidator};
+use crate::{ValidationResult, traits::PlacementValidator};
 
 #[derive(Default)]
 pub struct Always {}
@@ -9,16 +9,13 @@ impl PlacementValidator for Always
 
 	fn validate_self(
 		&self,
-		pos: hex::prelude::HexCoord,
+		_pos: hex::prelude::HexCoord,
 		_map: &world_generation::prelude::Map,
 	) -> crate::ValidationResult
 	{
 		ValidationResult {
 			is_valid: true,
-			display: vec![ValidationDisplay::Tile {
-				coord: pos,
-				validation: crate::ValidationType::Footprint,
-			}],
+			..Default::default()
 		}
 	}
 

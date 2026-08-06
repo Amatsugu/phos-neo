@@ -13,7 +13,7 @@ impl ValidationResult
 	{
 		self.display.append(&mut other.display);
 		self.is_valid = self.is_valid && other.is_valid;
-		return self;
+		self
 	}
 }
 

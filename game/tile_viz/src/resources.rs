@@ -11,7 +11,6 @@ pub struct TileSurfaceMaterials
 {
 	pub selection_material: Handle<StandardMaterial>,
 	pub invalid_material: Handle<StandardMaterial>,
-	pub valid_material: Handle<StandardMaterial>,
 	pub powered_material: Handle<StandardMaterial>,
 	pub buff_material: Handle<StandardMaterial>,
 }

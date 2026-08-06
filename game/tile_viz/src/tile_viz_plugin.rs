@@ -1,5 +1,9 @@
-use bevy::prelude::*;
-use shared::states::AssetLoadState;
+use bevy::{
+	light::{NotShadowCaster, NotShadowReceiver},
+	prelude::*,
+};
+use bevy_asset_loader::prelude::*;
+use shared::{asset_collections::TileVizTextures, states::AssetLoadState};
 use world_generation::mapping::map::Map;
 
 use crate::{
@@ -20,6 +24,12 @@ impl Plugin for TileVizPlugin
 			(setup_meshes, setup_materials).run_if(in_state(AssetLoadState::FinalizeAssets)),
 		);
 		app.add_observer(spawn_hex_area);
+
+		app.configure_loading_state(
+			LoadingStateConfig::new(AssetLoadState::Loading)
+				.with_dynamic_assets_file::<StandardDynamicAssetCollection>("tile_viz_textures.ron")
+				.load_collection::<TileVizTextures>(),
+		);
 	}
 }
 
@@ -30,13 +40,45 @@ fn setup_meshes(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>)
 	commands.insert_resource(VisualzationMeshes { tile_surface: handle });
 	info!("add mesh");
 }
-fn setup_materials(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>)
+fn setup_materials(
+	mut commands: Commands,
+	mut materials: ResMut<Assets<StandardMaterial>>,
+	viz_textures: Res<TileVizTextures>,
+)
 {
 	commands.insert_resource(TileSurfaceMaterials {
 		selection_material: materials.add(StandardMaterial {
 			base_color: Color::WHITE,
 			alpha_mode: AlphaMode::Add,
+			base_color_texture: Some(viz_textures.select.clone()),
+			emissive_texture: Some(viz_textures.select_emission.clone()),
 			unlit: true,
+			depth_bias: 1.0,
+			..Default::default()
+		}),
+		invalid_material: materials.add(StandardMaterial {
+			base_color: Color::linear_rgb(1.0, 0.0, 0.0),
+			alpha_mode: AlphaMode::Add,
+			base_color_texture: Some(viz_textures.x.clone()),
+			unlit: true,
+			depth_bias: 1.0,
+			..Default::default()
+		}),
+		powered_material: materials.add(StandardMaterial {
+			base_color: Color::linear_rgb(1.0, 1.0, 0.0),
+			alpha_mode: AlphaMode::Add,
+			base_color_texture: Some(viz_textures.powered.clone()),
+			unlit: true,
+			depth_bias: 1.0,
+			..Default::default()
+		}),
+		buff_material: materials.add(StandardMaterial {
+			base_color: Color::linear_rgb(1.0, 1.0, 0.0),
+			alpha_mode: AlphaMode::Add,
+			base_color_texture: Some(viz_textures.star.clone()),
+			emissive_texture: Some(viz_textures.star_emission.clone()),
+			unlit: true,
+			depth_bias: 1.0,
 			..Default::default()
 		}),
 		..default()
@@ -64,7 +106,7 @@ fn spawn_hex_area(
 			tile_surface(
 				c.to_world(h.max(map.sealevel)),
 				meshes.tile_surface.clone(),
-				materials.selection_material.clone(),
+				materials.invalid_material.clone(),
 			)
 		});
 
@@ -83,5 +125,7 @@ fn tile_surface<M: Material>(translation: Vec3, mesh: Handle<Mesh>, material: Ha
 		MeshMaterial3d(material),
 		Transform::from_translation(translation),
 		TileSurfaceVisualization,
+		NotShadowCaster,
+		NotShadowReceiver,
 	)
 }
