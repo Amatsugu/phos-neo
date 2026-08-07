@@ -2,6 +2,7 @@ use bevy::reflect::Reflect;
 use serde::{Deserialize, Serialize};
 
 pub mod animation_plugin;
+pub mod asset_collections;
 pub mod building;
 pub mod component_defination;
 pub mod coords;
