@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use shared::states::GameplayState;
 use shared::{resources::TileUnderCursor, sets::GameplaySystems};
+use world_generation::biome_asset::BiomeAsset;
+use world_generation::biome_painter::BiomePainterAsset;
 use world_generation::{
 	consts::{HEX_CORNERS, WATER_HEX_CORNERS},
 	prelude::Map,
@@ -29,6 +31,10 @@ impl Plugin for DebugPlugin
 
 		app.add_systems(Update, camera_debug.in_set(GameplaySystems));
 		app.add_systems(Update, regenerate_map.run_if(in_state(GeneratorState::Idle)));
+		app.add_systems(
+			PreUpdate,
+			rebuild_biome_painter.run_if(in_state(GeneratorState::Regenerate)),
+		);
 
 		app.insert_resource(Shape(Polyline3d::new([
 			HEX_CORNERS[0],
@@ -52,6 +58,19 @@ pub enum DebugState
 	Base,
 	None,
 	Verbose,
+}
+
+fn rebuild_biome_painter(
+	mut commands: Commands,
+	mut next_generator_state: ResMut<NextState<GeneratorState>>,
+	biome_painter: Res<BiomePainterAsset>,
+	biomes: Res<Assets<BiomeAsset>>,
+)
+{
+	info!("Rebuild biomoe painter");
+	let painter = biome_painter.build(&biomes);
+	commands.insert_resource(painter);
+	next_generator_state.set(GeneratorState::GenerateHeightmap);
 }
 
 fn regenerate_map(

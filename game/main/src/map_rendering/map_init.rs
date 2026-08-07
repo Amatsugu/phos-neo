@@ -199,7 +199,7 @@ fn create_heightmap(
 		},
 		sea_level: 8.5,
 		border_size: 64.,
-		size: UVec2::new(16, 16),
+		size: UVec2::splat(12),
 		// size: UVec2::splat(1),
 	};
 	let (heightmap, biome_map) = generate_heightmap(&config, 42069, &biome_painter);

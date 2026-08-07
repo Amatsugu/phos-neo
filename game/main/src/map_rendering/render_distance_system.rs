@@ -39,7 +39,11 @@ impl Default for RenderDistanceSettings
 {
 	fn default() -> Self
 	{
-		Self::new(500.)
+		#[cfg(debug_assertions)]
+		const DEFAULT_RENDER_DISTANCE: f32 = f32::MAX;
+		#[cfg(not(debug_assertions))]
+		const DEFAULT_RENDER_DISTANCE: f32 = 500.;
+		Self::new(DEFAULT_RENDER_DISTANCE)
 	}
 }
 

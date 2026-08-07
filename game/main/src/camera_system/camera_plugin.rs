@@ -32,14 +32,14 @@ impl Plugin for PhosCameraPlugin
 				.run_if(in_state(UICaptureState::None)),
 		);
 
-		app.add_systems(Update, init_bounds.run_if(in_state(GeneratorState::SpawnMap)));
+		app.add_systems(PostUpdate, init_bounds.run_if(in_state(GeneratorState::SpawnMap)));
 	}
 }
 
 fn init_bounds(mut commands: Commands, cam: Single<(&mut Transform, Entity), With<PhosCamera>>, heightmap: Res<Map>)
 {
 	let (mut cam_t, cam_entity) = cam.into_inner();
-	cam_t.translation = heightmap.get_center();
+	// cam_t.translation = heightmap.get_center();
 	commands
 		.entity(cam_entity)
 		.insert(CameraBounds::from_size(heightmap.get_world_size()))
