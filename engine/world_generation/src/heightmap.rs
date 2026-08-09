@@ -1,4 +1,3 @@
-use core::f32;
 
 use bevy::math::{IVec2, UVec2};
 use bevy::prelude::{FloatExt, Vec2};
