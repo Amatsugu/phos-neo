@@ -1,4 +1,3 @@
-
 use bevy::math::{IVec2, UVec2};
 use bevy::prelude::{FloatExt, Vec2};
 use bevy::utils::default;

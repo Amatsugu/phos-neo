@@ -2,6 +2,7 @@ use bevy::anti_alias::taa::TemporalAntiAliasing;
 use bevy::camera::visibility::RenderLayers;
 use bevy::core_pipeline::prepass::DepthPrepass;
 use bevy::input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel};
+use bevy::math::VectorSpace;
 use bevy::prelude::*;
 use bevy::window::{CursorGrabMode, CursorOptions, PrimaryWindow};
 use hex::prelude::*;
@@ -39,7 +40,13 @@ impl Plugin for PhosCameraPlugin
 fn init_bounds(mut commands: Commands, cam: Single<(&mut Transform, Entity), With<PhosCamera>>, heightmap: Res<Map>)
 {
 	let (mut cam_t, cam_entity) = cam.into_inner();
-	// cam_t.translation = heightmap.get_center();
+	#[cfg(debug_assertions)]
+	{
+		if cam_t.translation != Vec3::ZERO {
+			return;
+		}
+	}
+	cam_t.translation = heightmap.get_center();
 	commands
 		.entity(cam_entity)
 		.insert(CameraBounds::from_size(heightmap.get_world_size()))
@@ -54,7 +61,7 @@ fn setup(mut commands: Commands)
 	commands
 		.spawn((
 			Camera3d::default(),
-			Transform::from_xyz(0., 30., 0.).looking_to(Vec3::NEG_Z, Vec3::Y),
+			Transform::from_translation(Vec3::ZERO).looking_to(Vec3::NEG_Z, Vec3::Y),
 			PhosCamera::default(),
 			MainCamera,
 			DepthPrepass,

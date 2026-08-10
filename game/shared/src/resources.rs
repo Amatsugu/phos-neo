@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 use hex::prelude::*;
 
-#[derive(Resource, Default)]
+#[derive(Resource, Default, Reflect)]
 pub struct TileUnderCursor(pub Option<TileContact>);
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Reflect)]
 pub struct TileContact
 {
 	pub tile: HexCoord,

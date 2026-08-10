@@ -23,7 +23,7 @@ impl Plugin for ChunkRebuildPlugin
 		app.init_resource::<PhosChunkRegistry>();
 		app.add_message::<ChunkModifiedEvent>();
 		app.add_message::<TileModifiedEvent>();
-		app.add_systems(PreUpdate, chunk_rebuilder.run_if(in_state(GeneratorState::Idle)));
+		app.add_systems(PreUpdate, chunk_builder.run_if(in_state(GeneratorState::Idle)));
 		app.add_systems(
 			PostUpdate,
 			collider_task_resolver.run_if(in_state(AssetLoadState::LoadComplete)),
@@ -31,7 +31,7 @@ impl Plugin for ChunkRebuildPlugin
 	}
 }
 
-fn chunk_rebuilder(
+fn chunk_builder(
 	mut commands: Commands,
 	chunk_query: Query<(Entity, &PhosChunk), (With<RebuildChunk>, Without<ChunkRebuildTask>)>,
 	heightmap: Res<Map>,

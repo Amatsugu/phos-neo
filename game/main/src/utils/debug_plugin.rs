@@ -60,17 +60,11 @@ pub enum DebugState
 	Verbose,
 }
 
-fn rebuild_biome_painter(
-	mut commands: Commands,
-	mut next_generator_state: ResMut<NextState<GeneratorState>>,
-	biome_painter: Res<BiomePainterAsset>,
-	biomes: Res<Assets<BiomeAsset>>,
-)
+fn rebuild_biome_painter(mut commands: Commands, biome_painter: Res<BiomePainterAsset>, biomes: Res<Assets<BiomeAsset>>)
 {
 	info!("Rebuild biomoe painter");
 	let painter = biome_painter.build(&biomes);
 	commands.insert_resource(painter);
-	next_generator_state.set(GeneratorState::GenerateHeightmap);
 }
 
 fn regenerate_map(

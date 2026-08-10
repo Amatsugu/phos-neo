@@ -1,6 +1,15 @@
+use avian3d::{
+	collision::collider::{Collider, CollisionMargin},
+	dynamics::{ccd::SpeculativeMargin, rigid_body::RigidBody},
+};
 #[cfg(feature = "tracing")]
 use bevy::log::*;
-use bevy::{pbr::ExtendedMaterial, prelude::*};
+use bevy::{
+	light::NotShadowCaster,
+	pbr::ExtendedMaterial,
+	prelude::*,
+	tasks::{AsyncComputeTaskPool, Task, futures},
+};
 use bevy_asset_loader::prelude::*;
 
 use bevy_inspector_egui::quick::ResourceInspectorPlugin;
@@ -19,8 +28,8 @@ use world_generation::{
 };
 
 use crate::{
-	map_rendering::prefabs::ChunkPrefab,
-	prelude::{MapRoot, PhosAssets, PhosChunkRegistry, WaterMesh},
+	map_rendering::{prefabs::ChunkPrefab, render_distance_system::RenderDistanceVisibility},
+	prelude::{MapRoot, PhosAssets, PhosChunk, PhosChunkRegistry, WaterMesh},
 	shader_extensions::{
 		chunk_material::ChunkMaterial,
 		water_material::{WaterMaterial, WaterSettings},
@@ -68,6 +77,11 @@ impl Plugin for MapInitPlugin
 
 		app.add_systems(
 			Update,
+			resolve_heightmap_task.run_if(in_state(GeneratorState::WaitForHeightmap)),
+		);
+
+		app.add_systems(
+			Update,
 			(finalize_texture, setup_materials, finalize_biome_painter)
 				.run_if(in_state(AssetLoadState::FinalizeAssets)),
 		);
@@ -75,8 +89,11 @@ impl Plugin for MapInitPlugin
 		app.add_systems(Update, despawn_map.run_if(in_state(GeneratorState::Regenerate)));
 		app.add_systems(
 			Update,
-			(spawn_map, configure_water_material)
-				.chain()
+			(start_chunk_build, configure_water_material).run_if(in_state(GeneratorState::BuildChunkMesh)),
+		);
+		app.add_systems(
+			Update,
+			chunk_build_finalize
 				.run_if(in_state(AssetLoadState::LoadComplete).and_then(in_state(GeneratorState::SpawnMap))),
 		);
 
@@ -151,7 +168,7 @@ fn create_heightmap(
 	biome_painter: Res<BiomePainter>,
 )
 {
-	info!("Generate Heightmap");
+	info!("Start Heightmap Generation");
 	let config = GenerationConfig {
 		biome_blend: 32,
 		biome_dither: 10.,
@@ -202,12 +219,34 @@ fn create_heightmap(
 		size: UVec2::splat(12),
 		// size: UVec2::splat(1),
 	};
-	let (heightmap, biome_map) = generate_heightmap(&config, 42069, &biome_painter);
 
-	commands.insert_resource(heightmap);
-	commands.insert_resource(biome_map);
-	commands.insert_resource(config);
-	next_state.set(GeneratorState::SpawnMap);
+	commands.insert_resource(config.clone());
+	let config = config.clone();
+	let biome_painter = biome_painter.clone();
+	let task_pool = AsyncComputeTaskPool::get();
+	let task = task_pool.spawn(async move {
+		return generate_heightmap(&config, 42069, &biome_painter);
+	});
+
+	commands.spawn(HeightmapGenerationTask(task));
+
+	next_state.set(GeneratorState::WaitForHeightmap);
+}
+
+fn resolve_heightmap_task(
+	heightmap_task: Single<(Entity, &mut HeightmapGenerationTask)>,
+	mut commands: Commands,
+	mut next_state: ResMut<NextState<GeneratorState>>,
+)
+{
+	let (entity, mut task) = heightmap_task.into_inner();
+	if let Some((map, biomes)) = futures::check_ready(&mut task.0) {
+		info!("Heightmap Generation Complete");
+		commands.insert_resource(map);
+		commands.insert_resource(biomes);
+		next_state.set(GeneratorState::BuildChunkMesh);
+		commands.entity(entity).despawn();
+	}
 }
 
 fn configure_water_material(
@@ -222,94 +261,92 @@ fn configure_water_material(
 	}
 }
 
-fn spawn_map(
+fn start_chunk_build(
 	mut heightmap: ResMut<Map>,
 	mut commands: Commands,
-	mut meshes: ResMut<Assets<Mesh>>,
-	atlas: Res<PhosAssets>,
 	tile_assets: Res<Assets<TileAsset>>,
 	tile_mappers: Res<Assets<TileMapperAsset>>,
-	mut generator_state: ResMut<NextState<GeneratorState>>,
+	biome_painter: Res<BiomePainter>,
+	mut next_state: ResMut<NextState<GeneratorState>>,
+)
+{
+	info!("Start Chunk Build");
+	paint_map(&mut heightmap, &biome_painter, &tile_assets, &tile_mappers);
+	let root = commands.spawn(MapRoot).id();
+	let task_pool = AsyncComputeTaskPool::get();
+	let map_size = UVec2::new(heightmap.width as u32, heightmap.height as u32);
+
+	for chunk in &heightmap.chunks {
+		let index = offset_to_index(chunk.chunk_offset, heightmap.width);
+		let mesh_data = heightmap.get_chunk_mesh_data(index);
+		let sealevel = heightmap.sealevel;
+		let task = task_pool.spawn(async move { prepare_chunk_mesh_with_collider(&mesh_data, sealevel, map_size) });
+		let chunk_entity = commands
+			.spawn((
+				PhosChunk::new(index),
+				Name::new(format!("Chunk {}", index)),
+				ChunkBuildTask(task),
+				Transform::from_translation(chunk.world_position()),
+				InheritedVisibility::VISIBLE,
+				SpeculativeMargin(0.5),
+				RigidBody::Static,
+				CollisionMargin(0.1),
+			))
+			.id();
+		commands.entity(root).add_child(chunk_entity);
+	}
+	next_state.set(GeneratorState::SpawnMap);
+}
+
+fn chunk_build_finalize(
+	build_tasks: Query<(Entity, &PhosChunk, &mut ChunkBuildTask)>,
+	atlas: Res<PhosAssets>,
+	mut meshes: ResMut<Assets<Mesh>>,
+	mut next_state: ResMut<NextState<GeneratorState>>,
 	cur_game_state: Res<State<MenuState>>,
 	mut game_state: ResMut<NextState<MenuState>>,
 	mut gameplay_state: ResMut<NextState<GameplayState>>,
-	biome_painter: Res<BiomePainter>,
+	mut commands: Commands,
 )
 {
-	info!("Spawn Map");
-	paint_map(&mut heightmap, &biome_painter, &tile_assets, &tile_mappers);
-
-	let root = commands.spawn(MapRoot).id();
-	//Prepare Mesh Data
-	let map_size = UVec2::new(heightmap.width as u32, heightmap.height as u32);
-	let chunk_meshes: Vec<_> = heightmap
-		.chunks
-		.par_iter()
-		.map(|chunk: &Chunk| {
-			let index = offset_to_index(chunk.chunk_offset, heightmap.width);
-			let world_pos = chunk.world_position();
-			let (chunk_mesh, water_mesh, collider) =
-				prepare_chunk_mesh_with_collider(&heightmap.get_chunk_mesh_data(index), heightmap.sealevel, map_size);
-			return (chunk_mesh, water_mesh, collider, world_pos, index);
-		})
-		.collect();
-
-	let mut registry = PhosChunkRegistry::new(chunk_meshes.len());
-
-	//Spawn Chunks
-	{
-		#[cfg(feature = "tracing")]
-		let _spawn_span = info_span!("Spawn Chunks").entered();
-
-		for (chunk_mesh, water_mesh, collider, pos, index) in chunk_meshes {
-			let chunk_handle = meshes.add(chunk_mesh);
-			let chunk = commands
-				.spawn(ChunkPrefab::terrain(
-					pos,
-					chunk_handle,
-					atlas.chunk_material_handle.clone(),
-					collider,
-					index,
+	if build_tasks.is_empty() {
+		info!("All chunks spawned");
+		next_state.set(GeneratorState::Idle); 
+		if cur_game_state.get() != &MenuState::InGame {
+			game_state.set(MenuState::InGame);
+			gameplay_state.set(GameplayState::PlaceHQ);
+		}
+		return;
+	}
+	for (entity, chunk, mut task) in build_tasks {
+		let Some((terrain_mesh, water_mesh, collider)) = futures::check_ready(&mut task.0) else {
+			continue;
+		};
+		commands.entity(entity).insert((
+			Mesh3d(meshes.add(terrain_mesh)),
+			MeshMaterial3d(atlas.chunk_material_handle.clone()),
+			RenderDistanceVisibility::chunk_centered(),
+			collider,
+		));
+		if let Some(water_mesh) = water_mesh {
+			let water_entity = commands
+				.spawn((
+					Mesh3d(meshes.add(water_mesh)),
+					MeshMaterial3d(atlas.water_material.clone()),
+					chunk.clone(),
+					Name::new(format!("Water {}", chunk.index)),
+					NotShadowCaster,
+					Transform::from_translation(Vec3::ZERO),
 				))
 				.id();
-			if let Some(water_mesh) = water_mesh {
-				let water_mesh_handle = meshes.add(water_mesh);
-				let water = commands
-					.spawn(ChunkPrefab::water(
-						Vec3::ZERO,
-						water_mesh_handle.clone(),
-						atlas.water_material.clone(),
-						index,
-					))
-					.id();
-				commands
-					.entity(chunk)
-					.insert(WaterMesh(water_mesh_handle.id(), water))
-					.add_child(water);
-				registry.waters.push(Some(water));
-			} else {
-				registry.waters.push(None);
-			}
-			commands.entity(root).add_child(chunk);
-			registry.chunks.push(chunk);
+			commands.entity(entity).add_child(water_entity);
 		}
-	}
-
-	commands.insert_resource(registry);
-
-	generator_state.set(GeneratorState::Idle);
-	info!("Generator Idle");
-
-	if cur_game_state.get() != &MenuState::InGame {
-		game_state.set(MenuState::InGame);
-		gameplay_state.set(GameplayState::PlaceHQ);
+		commands.entity(entity).remove::<ChunkBuildTask>();
 	}
 }
 
 fn despawn_map(
 	mut commands: Commands,
-	mut heightmap: ResMut<Map>,
-	mut biome_map: ResMut<BiomeMap>,
 	cfg: Res<GenerationConfig>,
 	map_root: Single<Entity, With<MapRoot>>,
 	mut next_state: ResMut<NextState<GeneratorState>>,
@@ -319,6 +356,19 @@ fn despawn_map(
 	info!("Despawn Map");
 	commands.entity(map_root.into_inner()).despawn();
 
-	(*heightmap, *biome_map) = generate_heightmap(&cfg, 4, &biome_painter);
-	next_state.set(GeneratorState::SpawnMap);
+	let config = cfg.clone();
+	let biome_painter = biome_painter.clone();
+	let task_pool = AsyncComputeTaskPool::get();
+	let task = task_pool.spawn(async move {
+		return generate_heightmap(&config, 42069, &biome_painter);
+	});
+
+	commands.spawn(HeightmapGenerationTask(task));
+	next_state.set(GeneratorState::WaitForHeightmap);
 }
+
+#[derive(Component)]
+struct HeightmapGenerationTask(pub Task<(Map, BiomeMap)>);
+
+#[derive(Component)]
+struct ChunkBuildTask(pub Task<(Mesh, Option<Mesh>, Collider)>);
