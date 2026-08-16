@@ -36,6 +36,9 @@ impl Plugin for DebugPlugin
 			rebuild_biome_painter.run_if(in_state(GeneratorState::Regenerate)),
 		);
 
+		app.add_systems(OnEnter(GeneratorState::Idle), || info!("Generator Idle"));
+		app.add_systems(OnEnter(GeneratorState::Regenerate), || info!("Generator Regen"));
+
 		app.insert_resource(Shape(Polyline3d::new([
 			HEX_CORNERS[0],
 			HEX_CORNERS[1],

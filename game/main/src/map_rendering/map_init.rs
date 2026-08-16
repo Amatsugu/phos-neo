@@ -14,7 +14,6 @@ use bevy_asset_loader::prelude::*;
 
 use bevy_inspector_egui::quick::ResourceInspectorPlugin;
 use hex::prelude::*;
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use shared::states::{AssetLoadState, GameplayState, MenuState};
 
 use world_generation::{
@@ -28,8 +27,8 @@ use world_generation::{
 };
 
 use crate::{
-	map_rendering::{prefabs::ChunkPrefab, render_distance_system::RenderDistanceVisibility},
-	prelude::{MapRoot, PhosAssets, PhosChunk, PhosChunkRegistry, WaterMesh},
+	map_rendering::render_distance_system::RenderDistanceVisibility,
+	prelude::{MapRoot, PhosAssets, PhosChunk},
 	shader_extensions::{
 		chunk_material::ChunkMaterial,
 		water_material::{WaterMaterial, WaterSettings},
@@ -70,10 +69,7 @@ impl Plugin for MapInitPlugin
 				.load_collection::<BiomePainterAsset>(),
 		);
 
-		app.add_systems(
-			Update,
-			create_heightmap.run_if(in_state(GeneratorState::GenerateHeightmap)),
-		);
+		app.add_systems(OnEnter(GeneratorState::GenerateHeightmap), create_heightmap);
 
 		app.add_systems(
 			Update,
@@ -81,15 +77,15 @@ impl Plugin for MapInitPlugin
 		);
 
 		app.add_systems(
-			Update,
-			(finalize_texture, setup_materials, finalize_biome_painter)
-				.run_if(in_state(AssetLoadState::FinalizeAssets)),
+			OnEnter(AssetLoadState::FinalizeAssets),
+			(finalize_texture, setup_materials, finalize_biome_painter),
 		);
 
 		app.add_systems(Update, despawn_map.run_if(in_state(GeneratorState::Regenerate)));
+		app.add_systems(OnEnter(GeneratorState::BuildChunkMesh), configure_water_material);
 		app.add_systems(
 			Update,
-			(start_chunk_build, configure_water_material).run_if(in_state(GeneratorState::BuildChunkMesh)),
+			start_chunk_build.run_if(in_state(GeneratorState::BuildChunkMesh)),
 		);
 		app.add_systems(
 			Update,
@@ -110,6 +106,7 @@ fn setup_materials(
 		base: StandardMaterial {
 			base_color: Color::srgb(0., 0.878, 1.),
 			alpha_mode: AlphaMode::Blend,
+			double_sided: true,
 			metallic: 1.0,
 			..Default::default()
 		},
@@ -311,7 +308,7 @@ fn chunk_build_finalize(
 {
 	if build_tasks.is_empty() {
 		info!("All chunks spawned");
-		next_state.set(GeneratorState::Idle); 
+		next_state.set(GeneratorState::Idle);
 		if cur_game_state.get() != &MenuState::InGame {
 			game_state.set(MenuState::InGame);
 			gameplay_state.set(GameplayState::PlaceHQ);

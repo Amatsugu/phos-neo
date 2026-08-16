@@ -14,13 +14,16 @@ impl Plugin for TileSelectionPlugin
 	fn build(&self, app: &mut App)
 	{
 		app.init_resource::<TileUnderCursor>();
-		app.add_systems(PreUpdate, setup_cursor_castor.run_if(in_state(GeneratorState::Startup)));
+		app.add_systems(OnEnter(GeneratorState::Startup), setup_cursor_castor);
+		// app.add_systems(
+		// 	PreUpdate,
+		// 	update_tile_under_cursor.run_if(in_state(GeneratorState::Idle)),
+		// );
+
 		app.add_systems(
 			PreUpdate,
-			update_tile_under_cursor.run_if(in_state(GeneratorState::Idle)),
+			(update_caster, update_tile_under_cursor).run_if(in_state(GeneratorState::Idle)),
 		);
-
-		app.add_systems(PostUpdate, update_caster.run_if(in_state(GeneratorState::Idle)));
 	}
 }
 

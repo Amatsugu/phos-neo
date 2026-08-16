@@ -19,6 +19,7 @@ members = [
 # Enable a small amount of optimization in the dev profile.
 [profile.dev]
 opt-level = 1
+debug = "line-tables-only"
 
 # Enable a large amount of optimization in the dev profile for dependencies.
 [profile.dev.package."*"]

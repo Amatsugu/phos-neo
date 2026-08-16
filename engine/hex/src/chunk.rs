@@ -1,4 +1,4 @@
-use crate::{SHORT_DIAGONAL, hex_coord::offset_to_world};
+use crate::{SHORT_DIAGONAL, hex_coord::offset_to_world, surface_feature::SurfaceFeature};
 use bevy::prelude::*;
 
 #[derive(Clone)]
@@ -6,8 +6,8 @@ pub struct Chunk
 {
 	pub heights: [f32; Chunk::AREA],
 	pub textures: [[u32; 2]; Chunk::AREA],
-	// pub biome_data: [BiomeData; Chunk::AREA],
 	pub biome_id: [usize; Chunk::AREA],
+	pub surface_features: [SurfaceFeature; Chunk::AREA],
 	pub chunk_offset: IVec2,
 	pub min_level: f32,
 	pub max_level: f32,
@@ -20,8 +20,8 @@ impl Default for Chunk
 		Self {
 			heights: [0.; Chunk::AREA],
 			textures: [[0; 2]; Chunk::AREA],
-			// biome_data: [BiomeData::default(); Chunk::AREA],
 			biome_id: [0; Chunk::AREA],
+			surface_features: [SurfaceFeature::None; Chunk::AREA],
 			chunk_offset: Default::default(),
 			min_level: 0.0,
 			max_level: 0.0,

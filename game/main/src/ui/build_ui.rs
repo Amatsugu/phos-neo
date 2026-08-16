@@ -8,6 +8,7 @@ use shared::{resources::TileUnderCursor, states::AssetLoadState};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 use tile_viz::components::HexAreaSelection;
+use world_generation::states::GeneratorState;
 
 use crate::ui::{components::*, events::Press, states::BuildUIState};
 pub struct BuildUIPlugin;
@@ -58,6 +59,8 @@ impl Plugin for BuildUIPlugin
 			),
 		);
 		app.init_resource::<SelectionEntity>();
+
+		app.add_systems(OnEnter(BuildUIState::Update), || info!("ui update"));
 		app.add_systems(Update, selection_test.run_if(in_state(BuildUIState::Update)));
 		app.add_systems(PostUpdate, cleanup_ui.run_if(in_state(BuildUIState::Cleanup)));
 	}

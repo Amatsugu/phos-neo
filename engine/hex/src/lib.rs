@@ -1,9 +1,11 @@
 mod chunk;
 mod hex_coord;
+mod surface_feature;
 pub mod prelude
 {
 	pub use crate::chunk::*;
 	pub use crate::hex_coord::*;
+	pub use crate::surface_feature::*;
 	pub use crate::*;
 }
 
