@@ -4,6 +4,7 @@ use bevy::{
 	prelude::*,
 	render::render_resource::BlendState,
 };
+use buildings::assets::{building_asset::BuildingAsset, building_database::BuildingDatabase};
 use shared::{resources::TileUnderCursor, states::AssetLoadState};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
@@ -208,6 +209,8 @@ fn draw_menu_ui(
 	menu_items: Query<Entity, With<BuildUIMenuItem>>,
 	menu_info: Res<BuildUIInfo>,
 	mut next: ResMut<NextState<BuildUIState>>,
+	building_db: Res<BuildingDatabase>,
+	buildings: Res<Assets<BuildingAsset>>,
 )
 {
 	for entity in menu_items.iter() {
@@ -215,7 +218,7 @@ fn draw_menu_ui(
 	}
 	info!("Draw Menu");
 	match menu_info.menu {
-		BuildUIMenu::Structure => draw_structure_ui(commands, menu_root.into_inner()),
+		BuildUIMenu::Structure => draw_structure_ui(commands, menu_root.into_inner(), building_db, buildings),
 		BuildUIMenu::Defense => (),
 		BuildUIMenu::Energy => (),
 		BuildUIMenu::Production => (),
@@ -224,33 +227,40 @@ fn draw_menu_ui(
 	next.set(BuildUIState::Update);
 }
 
-fn draw_structure_ui(mut commands: Commands, root: Entity)
+fn draw_structure_ui(
+	mut commands: Commands,
+	root: Entity,
+	building_db: Res<BuildingDatabase>,
+	buildings: Res<Assets<BuildingAsset>>,
+)
 {
 	commands.entity(root).with_children(|root| {
-		for i in 0..10 {
-			root.spawn((
-				BuildUIMenuItem,
-				Node {
-					height: Val::Percent(100.),
-					width: Val::Px(ITEM_SIZE),
-					display: Display::Grid,
-					grid_template_rows: vec![RepeatedGridTrack::px(1, 100.), RepeatedGridTrack::fr(1, 1.)],
-					..default()
-				},
-				children![
-					(
-						Node {
-							height: Val::Px(ITEM_SIZE),
-							width: Val::Px(ITEM_SIZE),
-							..default()
-						},
-						Button,
-						BaseColor(LinearRgba::RED.into()),
-						HoverColor(LinearRgba::BLUE.into())
-					),
-					(Text::new(format!("Icon {}", i))),
-				],
-			));
+		for handle in &building_db.buildings {
+			if let Some(building_asset) = buildings.get(handle.id()) {
+				root.spawn((
+					BuildUIMenuItem,
+					Node {
+						height: Val::Percent(100.),
+						width: Val::Px(ITEM_SIZE),
+						display: Display::Grid,
+						grid_template_rows: vec![RepeatedGridTrack::px(1, 100.), RepeatedGridTrack::fr(1, 1.)],
+						..default()
+					},
+					children![
+						(
+							Node {
+								height: Val::Px(ITEM_SIZE),
+								width: Val::Px(ITEM_SIZE),
+								..default()
+							},
+							Button,
+							BaseColor(LinearRgba::RED.into()),
+							HoverColor(LinearRgba::BLUE.into()),
+						),
+						(Text::new(building_asset.name.clone())),
+					],
+				));
+			};
 		}
 	});
 }
