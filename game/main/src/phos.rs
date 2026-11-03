@@ -17,6 +17,7 @@ use bevy::light::CascadeShadowConfig;
 use bevy::pbr::wireframe::{WireframeConfig, WireframePlugin};
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
+use buildings::BuildingPlugin;
 use shared::sets::GameplaySystems;
 use shared::states::{GameplayState, MenuState};
 use shared::{despawn::DespawnPlugin, states::AssetLoadState};
@@ -41,7 +42,7 @@ impl Plugin for PhosGamePlugin
 			PhosCameraPlugin,
 			MapInitPlugin,
 			RenderDistancePlugin,
-			// BuildingPugin,
+			BuildingPlugin,
 			BaseUIPlugin,
 			BuildUIPlugin,
 			#[cfg(feature = "terraforming")]
