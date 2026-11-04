@@ -9,9 +9,9 @@ use bevy_asset_loader::loading_state::{
 	config::{ConfigureLoadingState, LoadingStateConfig},
 };
 use shared::{
-	building::BuildingIdentifier,
 	despawn::Despawn,
 	events::TileModifiedEvent,
+	identifiers::BuildingIdentifier,
 	resources::TileUnderCursor,
 	states::{AssetLoadState, GameplayState},
 };

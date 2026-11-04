@@ -1,5 +1,5 @@
 use bevy::{asset::Handle, platform::collections::HashMap, prelude::Resource};
-use shared::building::BuildingIdentifier;
+use shared::identifiers::BuildingIdentifier;
 
 use super::building_asset::BuildingAsset;
 use bevy::prelude::*;

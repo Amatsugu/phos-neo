@@ -13,7 +13,7 @@ impl From<&String> for BuildingIdentifier
 		let mut hasher = DefaultHasher::new();
 		value.hash(&mut hasher);
 
-		return BuildingIdentifier(hasher.finish());
+		return Self(hasher.finish());
 	}
 }
 
@@ -24,6 +24,6 @@ impl From<&str> for BuildingIdentifier
 		let mut hasher = DefaultHasher::new();
 		value.hash(&mut hasher);
 
-		return BuildingIdentifier(hasher.finish());
+		return Self(hasher.finish());
 	}
 }

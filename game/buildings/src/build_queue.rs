@@ -1,6 +1,6 @@
 use bevy::prelude::Resource;
 use hex::prelude::*;
-use shared::building::BuildingIdentifier;
+use shared::identifiers::BuildingIdentifier;
 
 #[derive(Resource, Default)]
 pub struct BuildQueue
