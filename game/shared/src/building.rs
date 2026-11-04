@@ -1,37 +1,29 @@
+use std::hash::{DefaultHasher, Hash, Hasher};
+
 use bevy::reflect::Reflect;
 use serde::{Deserialize, Serialize};
 
-#[derive(Default, Reflect, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct BuildingIdentifier(pub usize);
+#[derive(Default, Reflect, Debug, PartialEq, Eq, Serialize, Deserialize, Hash)]
+pub struct BuildingIdentifier(pub u64);
 
-impl From<i32> for BuildingIdentifier
+impl From<&String> for BuildingIdentifier
 {
-	fn from(value: i32) -> Self
+	fn from(value: &String) -> Self
 	{
-		return BuildingIdentifier(value as usize);
+		let mut hasher = DefaultHasher::new();
+		value.hash(&mut hasher);
+
+		return BuildingIdentifier(hasher.finish());
 	}
 }
 
-impl From<u32> for BuildingIdentifier
+impl From<&str> for BuildingIdentifier
 {
-	fn from(value: u32) -> Self
+	fn from(value: &str) -> Self
 	{
-		return BuildingIdentifier(value as usize);
-	}
-}
+		let mut hasher = DefaultHasher::new();
+		value.hash(&mut hasher);
 
-impl From<usize> for BuildingIdentifier
-{
-	fn from(value: usize) -> Self
-	{
-		return BuildingIdentifier(value);
-	}
-}
-
-impl From<BuildingIdentifier> for usize
-{
-	fn from(value: BuildingIdentifier) -> usize
-	{
-		return value.0;
+		return BuildingIdentifier(hasher.finish());
 	}
 }

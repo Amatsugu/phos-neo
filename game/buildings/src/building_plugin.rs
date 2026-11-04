@@ -1,6 +1,7 @@
 use bevy::{
 	ecs::world::CommandQueue,
 	gltf::{GltfMesh, GltfNode},
+	platform::collections::HashMap,
 	prelude::*,
 };
 use bevy_asset_loader::loading_state::{
@@ -8,6 +9,7 @@ use bevy_asset_loader::loading_state::{
 	config::{ConfigureLoadingState, LoadingStateConfig},
 };
 use shared::{
+	building::BuildingIdentifier,
 	despawn::Despawn,
 	events::TileModifiedEvent,
 	resources::TileUnderCursor,
@@ -18,7 +20,7 @@ use world_generation::{mapping::map::Map, prelude::GenerationConfig, states::Gen
 use crate::{
 	assets::{
 		building_asset::{BuildingAsset, BuildingAssetPlugin},
-		building_database::BuildingDatabase,
+		building_database::{BuildingDatabase, BuildingLookup},
 	},
 	build_queue::{BuildQueue, QueueEntry},
 	buildings_map::{BuildingEntry, BuildingMap},
@@ -43,6 +45,7 @@ impl Plugin for BuildingPlugin
 			Update,
 			hq_placement.run_if(in_state(GameplayState::PlaceHQ).and_then(in_state(GeneratorState::Idle))),
 		);
+		app.add_systems(Update, prepare_lookup.run_if(in_state(AssetLoadState::FinalizeAssets)));
 		app.add_systems(
 			PreUpdate,
 			prepare_building_map.run_if(in_state(GeneratorState::SpawnMap)),
@@ -55,6 +58,18 @@ impl Plugin for BuildingPlugin
 
 		app.add_systems(PreUpdate, process_build_queue.run_if(in_state(GameplayState::Playing)));
 	}
+}
+
+fn prepare_lookup(db: Res<BuildingDatabase>, building_assets: Res<Assets<BuildingAsset>>, mut commands: Commands)
+{
+	let mut lookup = HashMap::new();
+	for handle in &db.buildings {
+		let Some(building) = building_assets.get(handle.id()) else {
+			continue;
+		};
+		lookup.insert(BuildingIdentifier::from(&building.id), handle.clone());
+	}
+	commands.insert_resource(BuildingLookup(lookup));
 }
 
 fn prepare_building_map(mut commands: Commands, cfg: Res<GenerationConfig>)
@@ -97,7 +112,7 @@ fn hq_placement(
 
 		if mouse.just_pressed(MouseButton::Left) {
 			build_queue.queue.push(QueueEntry {
-				building: 0.into(),
+				building: BuildingIdentifier::from("hq"),
 				pos: contact.tile,
 			});
 
@@ -121,7 +136,7 @@ fn show_indicators(positions: Vec<Vec3>, commands: &mut Commands, indicator: &In
 fn process_build_queue(
 	mut queue: ResMut<BuildQueue>,
 	mut commands: Commands,
-	db: Res<BuildingDatabase>,
+	lookup: Res<BuildingLookup>,
 	building_assets: Res<Assets<BuildingAsset>>,
 	gltf_assets: Res<Assets<Gltf>>,
 	gltf_meshes: Res<Assets<GltfMesh>>,
@@ -131,7 +146,7 @@ fn process_build_queue(
 )
 {
 	for item in &queue.queue {
-		let handle = &db.buildings[item.building.0];
+		let handle = &lookup.0[&item.building];
 		if let Some(building) = building_assets.get(handle.id()) {
 			let h = heightmap.sample_height(&item.pos);
 			println!("Spawning {} at {}", building.name, item.pos);

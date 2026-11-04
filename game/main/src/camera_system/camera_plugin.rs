@@ -2,7 +2,6 @@ use bevy::anti_alias::taa::TemporalAntiAliasing;
 use bevy::camera::visibility::RenderLayers;
 use bevy::core_pipeline::prepass::DepthPrepass;
 use bevy::input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel};
-use bevy::math::VectorSpace;
 use bevy::prelude::*;
 use bevy::window::{CursorGrabMode, CursorOptions, PrimaryWindow};
 use hex::prelude::*;

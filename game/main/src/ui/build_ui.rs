@@ -115,7 +115,7 @@ fn spawn_ui(mut commands: Commands, mut next_state: ResMut<NextState<BuildUIStat
 					Name::new("Build UI"),
 					Node {
 						width: Val::Px(500.),
-						height: Val::Px(TOOLBAR_SIZE + ITEM_SIZE),
+						height: Val::Auto,
 						justify_content: JustifyContent::Stretch,
 						flex_direction: FlexDirection::Column,
 						bottom: Val::Px(5.0),
@@ -129,7 +129,7 @@ fn spawn_ui(mut commands: Commands, mut next_state: ResMut<NextState<BuildUIStat
 						BuildMenuRoot,
 						Node {
 							width: Val::Percent(100.),
-							height: Val::Px(ITEM_SIZE + 4.0),
+							height: Val::Auto,
 							column_gap: Val::Px(5.),
 							padding: UiRect::all(Val::Px(2.)),
 							flex_direction: FlexDirection::Row,
@@ -243,7 +243,7 @@ fn draw_structure_ui(
 						height: Val::Percent(100.),
 						width: Val::Px(ITEM_SIZE),
 						display: Display::Grid,
-						grid_template_rows: vec![RepeatedGridTrack::px(1, 100.), RepeatedGridTrack::fr(1, 1.)],
+						grid_template_rows: vec![RepeatedGridTrack::px(1, ITEM_SIZE), RepeatedGridTrack::auto(1)],
 						..default()
 					},
 					children![
@@ -257,7 +257,19 @@ fn draw_structure_ui(
 							BaseColor(LinearRgba::RED.into()),
 							HoverColor(LinearRgba::BLUE.into()),
 						),
-						(Text::new(building_asset.name.clone())),
+						(
+							Node {
+								height: Val::Auto,
+								..default()
+							},
+							Text::new(building_asset.name.clone()),
+							TextFont {
+								font_size: FontSize::Px(13.),
+								..default()
+							},
+							BaseTextColor(LinearRgba::BLACK.into()),
+							HoverTextColor(Color::linear_rgb(0.0, 1.0, 0.0)),
+						),
 					],
 				));
 			};

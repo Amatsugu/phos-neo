@@ -9,9 +9,8 @@ use shared::{component_defination::ComponentDefination, identifiers::ResourceIde
 
 use crate::{
 	buildings::{
-		basic_building::BasicBuildingInfo, conduit_building::ResourceConduitInfo,
-		factory_building::FactoryBuildingInfo, resource_gathering::ResourceGatheringBuildingInfo,
-		tech_building::TechBuildingInfo,
+		conduit_building::ResourceConduitInfo, factory_building::FactoryBuildingInfo,
+		resource_gathering::ResourceGatheringBuildingInfo, tech_building::TechBuildingInfo,
 	},
 	footprint::BuildingFootprint,
 	prelude::Building,
@@ -20,8 +19,10 @@ use crate::{
 #[derive(Asset, TypePath, Debug, Serialize, Deserialize)]
 pub struct BuildingAsset
 {
+	pub id: String,
 	pub name: String,
 	pub description: String,
+	pub health: u32,
 	pub footprint: BuildingFootprint,
 	pub prefab_path: String,
 	#[serde(skip)]
@@ -31,8 +32,6 @@ pub struct BuildingAsset
 	pub cost: Vec<ResourceIdentifier>,
 	pub consumption: Vec<ResourceIdentifier>,
 	pub production: Vec<ResourceIdentifier>,
-
-	pub health: u32,
 
 	pub building_type: BuildingType,
 	pub components: Option<Vec<ComponentDefination>>,
@@ -137,7 +136,7 @@ impl BuildingAsset
 #[derive(Serialize, Deserialize, Debug, TypePath)]
 pub enum BuildingType
 {
-	Basic(BasicBuildingInfo),
+	Basic,
 	Gathering(ResourceGatheringBuildingInfo),
 	FactoryBuildingInfo(FactoryBuildingInfo),
 	ResourceConduit(ResourceConduitInfo),

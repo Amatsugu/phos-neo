@@ -1,4 +1,5 @@
-use bevy::{asset::Handle, prelude::Resource};
+use bevy::{asset::Handle, platform::collections::HashMap, prelude::Resource};
+use shared::building::BuildingIdentifier;
 
 use super::building_asset::BuildingAsset;
 use bevy::prelude::*;
@@ -10,3 +11,6 @@ pub struct BuildingDatabase
 	#[asset(key = "buildings", collection(typed))]
 	pub buildings: Vec<Handle<BuildingAsset>>,
 }
+
+#[derive(Resource)]
+pub struct BuildingLookup(pub HashMap<BuildingIdentifier, Handle<BuildingAsset>>);
